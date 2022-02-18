@@ -42,23 +42,13 @@ An Azure account with an active subscription. [Create an account for free](https
   - Oracle HTTP Server HTTPS port: `4444`
   - Oracle Vault Password： `Secret123456`
   - How would you like to provide required configuration： Upload exiting KeyStores
-  - Upload the certificate in resource/certs/mykeystore.jks
-  - Password: `mypassword`
+  - Upload your certificate for the OHS server
+  - Password: int put the certifcate password
   - Type of the certifcate: `JKS`
 
 - Keep other blads as default. Click **Review + create**.
 
 It will take half an hour for the offer completed.
-
-Scale out the server and leave the machine to install Forms and Reports.
-- Login admin console.
-- Lock & edit
-- Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Scaling**
-- **Desired Number of Running Servers:** 1
-- Click OK
-- Activate
-- Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Start/Stop**
-- Force stop all the servers.
 
 ## Create Windows VM and set up XServer
 
@@ -94,7 +84,7 @@ After the Windows server is completed, RDP to the server.
 
 Configure WebLogic VM:
 
-- SSH to **adminVM**, **mspVM1**, **mspVM2** and **ohsVM**, open ports for XServer by running the following commands:
+- SSH to **adminVM** open ports for XServer by running the following commands:
 
   ```
   sudo firewall-cmd --zone=public --add-port=6000/tcp
@@ -158,55 +148,19 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
   - The process should be completed without errors.
   - Remove the installation file to save space: `rm fmw_12.2.1.4.0_infrastructure.jar`
 
-
-Steps to install Oracle Fusion Middleware Infrastructure in managedServerVM:
-- Use the windowsXServer.
-- Open CMD
-- SSH to mspVM1 with command `ssh weblogic@mspVM1`
-- Stop WebLogic process
-    ```
-    sudo systemctl stop wls_nodemanager
-    ```
-- Use `oracle` user: `sudo su - oracle`
-- Get the private IP address of widnowsXServer, e.g. `10.0.0.8`
-- Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
-- Set Java env: 
-    ```
-    oracleHome=/u01/app/wls/install/oracle/middleware/oracle_home
-    . $oracleHome/oracle_common/common/bin/setWlstEnv.sh
-    ```
-- Install fmw_12.2.1.4.0_infrastructure.jar
-  - Launch the installer
-    ```
-    java -jar fmw_12.2.1.4.0_infrastructure.jar
-    ```
-  - Continue? Y
-  - Page1
-    - Inventory Directory: `/u01/oracle/oraInventory`
-    - Operating System Group: `oracle`
-  - Step 3
-    - Oracle Home: `/u01/app/wls/install/oracle/middleware/oracle_home`
-  - Step 4
-    - Select "Function Middleware infrastructure"
-  - Installation summary
-    - picture resources\images\screenshot-ofm-installation-summary.png
-  - The process should be completed without errors.
-  - Remove the installation file to save space: `rm fmw_12.2.1.4.0_infrastructure.jar`
-
-Install Oracle Fusion Middleware Infrastructure to all the managed server VMs following the above steps.
-
 ## Install Oracle Froms and Reports
 
 - Download wget.sh from https://www.oracle.com/middleware/technologies/forms/downloads.html#
   - Oracle Fusion Middleware 12c (12.2.1.4.0) Forms and Reports for Linux x86-64 for (Linux x86-64)
   - Oracle Fusion Middleware 12c (12.2.1.4.0) Forms and Reports for Linux x86-64 for (Linux x86-64)
 - Copy the wget.sh to `/u01/oracle/wget.sh`
-- Use the windowsXServer.
+- Use the windowsXServer ssh to adminVM: `ssh weblogic@adminVM`.
 - Use `oracle` user
 - Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
 - Edit the script, replace `--ask-password` with `--password <your-sso-password>`
-- Run the script in the admin machine and managed machines
+- Run the script
   - `bash wget.sh`
+  - input your SSO account name.
 - Unzip the zip files: ` unzip "*.zip"`, you will get `fmw_12.2.1.4.0_fr_linux64.bin` and `fmw_12.2.1.4.0_fr_linux64-2.zip`
 - Remove the zip files to save space
   ```
@@ -236,6 +190,100 @@ Install Oracle Fusion Middleware Infrastructure to all the managed server VMs fo
         sudo yum install libaio-devel
         sudo yum install motif
         ```
+  - The installation should be completed without errors.
+
+## Create schemas using RCU
+
+- Use the windowsXServer.
+- SSH to adminVM
+- Use `oracle` user
+- Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
+- `bash /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/bin/rcu`
+- Step2: Create Repository -> System Load and Product Load
+- Step3: Input the connection information of Oracle database.
+- Step4: please note down the prefix, whith will be used in the following configuration.
+  - STB
+  - OPSS
+  - IAU
+  - IAU_APPEND
+  - IAU_VIEWER
+  - MDS
+  - WLS
+- Step5: Use same passwords for all schemas. Value: `Secret123456`
+- The schema should be completed without error.
+
+## Configure Forms and Reports in the existing domain
+
+- Use the windowsXServer.
+- SSH to adminVM
+- Use `oracle` user
+- Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
+- `bash  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/config.sh`
+- Page1:
+  - Update an existing domain
+  - location: /01/domains/wlsd
+- Page2: 
+  - FADS
+  - Oracle Forms
+  - Oracle Reports Application
+  - Oracle Enterprise Manager
+  - Oracle Reports Tools
+  - Oracle WSM Policy Manager
+  - Oracle JRF
+  - ORacle WebLogic Coherence Cluster Extension
+- Page3:
+  - Application location: /u01/domains/applications
+- Page4: 
+  - RCU Data
+  - Host Name: the host name of database
+  - DBMS/Service: your dbms
+  - Schema Owner: <the-rcu-schema-prefix>_STB.
+  - Schema Password: `Secret123456`
+- Page7:
+  - Topology
+  - System Components
+  - Deployment and Services
+- Page14: Machines
+  - Remove AdminServerMachine
+- Page15: Assign Servers to Machine
+  - adminVM
+    - WLS_FORMS
+    - WLS_REPORTS
+- Page19: Assign System Component
+  - adminVM
+    - SystemComonent
+      - forms
+- Page20: Deployments Targeting
+  - AdminServer
+    - admin
+      - DMS Application#12.2.1.1.0
+      - coherence-transaction-rar
+      - em
+      - fads#1.0
+      - fads-ui#1.0
+      - opss-rest
+      - state-management-provider-menory...
+      - wlsm-pm
+- The process should be completed withour error.
+- Exit `oracle` user
+- Start node manager: sudo systemctl start wls_nodemanager
+- Start weblogic: sudo systemctl start wls_admin
+
+
+Start Forms and Reports server from admin console.
+- Open WebLogic Admin Console from browser, and login
+- Select Environment -> Servers -> Control
+- Start WLS_FORMS and WLS_REPORTS
+- The two servers should be running.
+
+## Validation
+
+- Admin console: http://<adminvm-ip>:7001/console
+- em: http://<adminvm-ip>:7001/em
+- forms: http://<adminvm-ip>:9001/forms/frmservlet
+- reports: http://<adminvm-ip>:9002/reports/rwservlet
+
+
 
 
  
