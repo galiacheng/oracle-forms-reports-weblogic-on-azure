@@ -2,15 +2,15 @@
 
 ## Contents
 
-* [Prerequisites]()
-* [Provision Azure WebLogic dynamic cluster offer]()
-* [Create Windows VM and set up XServer]()
-* [Create Oracle Database]()
-* [Install Oracle Fusion Middleware Infrastructure]()
-* [Install Oracle Froms and Reports]()
-* [Create schemas using RCU]()
-* [Configure Forms and Reports in the existing domain]()
-* [Verify]()
+* [Prerequisites](#prerequisites)
+* [Provision Azure WebLogic dynamic cluster offer](#provision-azure-weblogic-dynamic-cluster-offer)
+* [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
+* [Create Oracle Database](#create-oracle-database)
+* [Install Oracle Fusion Middleware Infrastructure](#install-oracle-fusion-middleware-infrastructure)
+* [Install Oracle Froms and Reports](#install-oracle-froms-and-reports)
+* [Create schemas using RCU](#create-schemas-using-rcu)
+* [Configure Forms and Reports in the existing domain](#configure-forms-and-reports-in-the-existing-domain)
+* [Verify](#validation)
 
 ## Prerequisites
 
@@ -266,8 +266,8 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
       - wlsm-pm
 - The process should be completed withour error.
 - Exit `oracle` user
-- Start node manager: sudo systemctl start wls_nodemanager
-- Start weblogic: sudo systemctl start wls_admin
+- Start node manager: `sudo systemctl start wls_nodemanager`
+- Start weblogic: `sudo systemctl start wls_admin`
 
 
 Start Forms and Reports server from admin console.
