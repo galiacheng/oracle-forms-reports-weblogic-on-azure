@@ -101,10 +101,10 @@ Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/w
 
 Download Oracle Fusion Middleware Infrastructure installer from https://download.oracle.com/otn/nt/middleware/12c/122140/fmw_12.2.1.4.0_infrastructure_Disk1_1of1.zip
 
-Unzip the file and copy `fmw_12.2.1.4.0_infrastructure.jar` to **adminVM**, **mspVM1**, **mspVM2** and **ohsVM**.
+Unzip the file and copy `fmw_12.2.1.4.0_infrastructure.jar` to **adminVM**.
 Make sure `fmw_12.2.1.4.0_infrastructure.jar` is copied to /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar, owner of the file is `oracle`.
 
-Now let's use the XServer to install Oracle Fusion Middleware Infrastructure in the *adminVM**, **mspVM1**, **mspVM2** and **ohsVM**.
+Now let's use the XServer to install Oracle Fusion Middleware Infrastructure in the *adminVM**.
 
 Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 
@@ -237,7 +237,7 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
   - RCU Data
   - Host Name: the host name of database
   - DBMS/Service: your dbms
-  - Schema Owner: <the-rcu-schema-prefix>_STB.
+  - Schema Owner: `<the-rcu-schema-prefix>_STB`
   - Schema Password: `Secret123456`
 - Page7:
   - Topology
@@ -278,10 +278,10 @@ Start Forms and Reports server from admin console.
 
 ## Validation
 
-- Admin console: http://<adminvm-ip>:7001/console
-- em: http://<adminvm-ip>:7001/em
-- forms: http://<adminvm-ip>:9001/forms/frmservlet
-- reports: http://<adminvm-ip>:9002/reports/rwservlet
+- Admin console: `http://<adminvm-ip>:7001/console`
+- em: `http://<adminvm-ip>:7001/em`
+- forms: `http://<adminvm-ip>:9001/forms/frmservlet`
+- reports: `http://<adminvm-ip>:9002/reports/rwservlet`
 
 
 
