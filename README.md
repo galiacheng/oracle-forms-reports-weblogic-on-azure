@@ -119,6 +119,10 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 
 - Open CMD
 - SSH to adminVM with command `ssh weblogic@adminVM`
+- Install depedency: if you are using RHEL, you must install `libXtst`
+  ```
+  sudo yum install -y libXtst
+  ```
 - Stop WebLogic process
     ```
     sudo systemctl stop wls_admin
@@ -157,6 +161,19 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
   - Oracle Fusion Middleware 12c (12.2.1.4.0) Forms and Reports for Linux x86-64 for (Linux x86-64)
 - Copy the wget.sh to `/u01/oracle/wget.sh`
 - Use the windowsXServer ssh to adminVM: `ssh weblogic@adminVM`.
+- Install denpendencies:
+  ```
+  # you must install the following packages in Oracle Linux 7.6.
+  sudo yum install -y compat-libcap1
+  sudo yum install -y compat-libstdc++-33
+  sudo yum install -y libstdc++-devel
+  sudo yum install -y gcc
+  sudo yum install -y gcc-c++
+  sudo yum install -y ksh
+  sudo yum install -y glibc-devel
+  sudo yum install -y libaio-devel
+  sudo yum install -y motif
+  ```
 - Use `oracle` user
 - Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
 - Edit the script, replace `--ask-password` with `--password <your-sso-password>`
@@ -179,19 +196,8 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
     - Forms and Reports Deployment
   - Step 5:
     - JDK Home: /u01/app/jdk/jdk1.8.0_291
-  - Step 6: if there are error of operation system packages, install the conrresponding package and run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
-    - Error like "Checking for compat-libcap1-1.10;Not found", then run `sudo yum install compat-libcap1`
-        ```
-        sudo yum install compat-libcap1
-        sudo yum install compat-libstdc++-33
-        sudo yum install libstdc++-devel
-        sudo yum install gcc
-        sudo yum install gcc-c++
-        sudo yum install ksh
-        sudo yum install glibc-devel
-        sudo yum install libaio-devel
-        sudo yum install motif
-        ```
+  - Step 6: if there is error of operation system packages, install the conrresponding package and run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
+    - Error like "Checking for compat-libcap1-1.10;Not found", then run `sudo yum install compat-libcap1` to install the `compat-libcap1` package.
   - The installation should be completed without errors.
 
 ## Create schemas using RCU
