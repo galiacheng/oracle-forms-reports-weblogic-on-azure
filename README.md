@@ -96,6 +96,8 @@ Configure WebLogic VM:
 
 Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create) to create an Oracle database
 
+If you follow the document to create Oracle database, write down the credentials to create Forms schema, username and password should be: `sys/OraPasswd1`
+
 
 ## Install Oracle Fusion Middleware Infrastructure
 
