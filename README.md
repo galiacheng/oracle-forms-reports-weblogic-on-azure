@@ -122,6 +122,8 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 - Install depedency: if you are using RHEL, you must install `libXtst`
   ```
   sudo yum install -y libXtst
+  sudu yum install -y libSM
+  sudo yum install -y libXrender
   ```
 - Stop WebLogic process
     ```
