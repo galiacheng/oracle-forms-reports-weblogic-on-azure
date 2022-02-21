@@ -187,7 +187,7 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
    rm V983392-01_2of2.zip
   ```
 - Install Forms: `./fmw_12.2.1.4.0_fr_linux64.bin`
-  - The installation dialog should prompt up, if no, set `export PS1="\$`, run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
+  - The installation dialog should prompt up, if no, set `export PS1="\$"`, run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
   - Inventory Directory: `/u01/oracle/oraInventory`
   - Operating System Group: `oracle`
   - Step 3:
