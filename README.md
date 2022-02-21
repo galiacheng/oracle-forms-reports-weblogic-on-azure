@@ -268,7 +268,13 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 - Exit `oracle` user
 - Start node manager: `sudo systemctl start wls_nodemanager`
 - Start weblogic: `sudo systemctl start wls_admin`
-
+- Open ports for Forms and Reports
+  ```
+  sudo firewall-cmd --zone=public --add-port=9001/tcp
+  sudo firewall-cmd --zone=public --add-port=90021/tcp
+  sudo firewall-cmd --runtime-to-permanent
+  sudo systemctl restart firewalld
+  ```
 
 Start Forms and Reports server from admin console.
 - Open WebLogic Admin Console from browser, and login
@@ -276,11 +282,25 @@ Start Forms and Reports server from admin console.
 - Start WLS_FORMS and WLS_REPORTS
 - The two servers should be running.
 
+Edit the security to allow access to Forms and Reports:
+- Open the resource group that your are working on.
+- Select resource wls-nsg
+- Select Settings -> Inbound security rules
+- Click add
+- Source: Any
+- Destination：IP Address
+- Destination IP addresses/CIDR ranges: IP address of adminVM
+- Destination port ranges: 9001,9002
+- Priority: 340
+- Name: Allow_FORMS_REPORTS
+- Click Save
+
 ## Validation
 
 - Admin console: `http://<adminvm-ip>:7001/console`
 - em: `http://<adminvm-ip>:7001/em`
 - forms: `http://<adminvm-ip>:9001/forms/frmservlet`
+  - Please use JRE 32 bit + IE to access Forms.
 - reports: `http://<adminvm-ip>:9002/reports/rwservlet`
 
 
