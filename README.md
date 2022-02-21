@@ -273,7 +273,7 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 - Open ports for Forms and Reports
   ```
   sudo firewall-cmd --zone=public --add-port=9001/tcp
-  sudo firewall-cmd --zone=public --add-port=90021/tcp
+  sudo firewall-cmd --zone=public --add-port=9002/tcp
   sudo firewall-cmd --runtime-to-permanent
   sudo systemctl restart firewalld
   ```
