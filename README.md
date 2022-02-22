@@ -10,6 +10,7 @@
 * [Install Oracle Froms and Reports](#install-oracle-froms-and-reports)
 * [Create schemas using RCU](#create-schemas-using-rcu)
 * [Configure Forms and Reports in the existing domain](#configure-forms-and-reports-in-the-existing-domain)
+* [Apply JRF to WebLogic managed servers](#apply-jrf-to-managed-server)
 * [Verify](#validation)
 
 ## Prerequisites
@@ -366,7 +367,7 @@ Copy the fmw_12.2.1.4.0_infrastructure.jar to /u01/oracle/fmw_12.2.1.4.0_infrast
   sudo systemctl start wls_nodemanager
   ```
 
-After completing the Oracle Fusion Middleware Infrastructure on all the mspVM*, start the managed servers from admin console.
+After install the Oracle Fusion Middleware Infrastructure on all the mspVM*, start the managed servers from admin console.
 - Login admin console.
 - Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Start/Stop**
 - Force start all the servers that has name starting with "msp".
