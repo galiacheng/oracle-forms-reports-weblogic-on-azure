@@ -119,7 +119,7 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 
 - Open CMD
 - SSH to adminVM with command `ssh weblogic@adminVM`
-- Install depedency: if you are using RHEL, you must install `libXtst`
+- Install depedency: if you are using RHEL, you must install the following packages
   ```
   sudo yum install -y libXtst
   sudu yum install -y libSM
@@ -304,6 +304,73 @@ Edit the security to allow access to Forms and Reports:
 - Priority: 340
 - Name: Allow_FORMS_REPORTS
 - Click Save
+
+## Apply JRF to managed server
+
+We have to apply JRF to WebLogic dynamic cluster, otherwise, we can not use admin console or em to managed the dynamic cluster.
+
+Stop WebLogic managed servers from admin console.
+- Login admin console.
+- Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Start/Stop**
+- Force stop all the servers that has name starting with "msp".
+
+Install Oracle Fusion Middleware Infrastructure on mspVM*.
+Copy the fmw_12.2.1.4.0_infrastructure.jar to /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar of mspVM*.
+- RDP to windowsXServer.
+- Setup XLaunch
+- SSH to mspVM* with command `ssh weblogic@mspVM*`
+- Install depedency: if you are using RHEL, you must install the packages.
+  ```
+  sudo yum install -y libXtst
+  sudu yum install -y libSM
+  sudo yum install -y libXrender
+  ```
+- Add Xport
+  ```
+  sudo firewall-cmd --zone=public --add-port=6000/tcp
+  sudo firewall-cmd --runtime-to-permanent
+  sudo systemctl restart firewalld
+  ```
+- Stop node manager
+  ```
+  sudo systemctl stop wls_nodemanager
+  ```
+- Use oracle user: `sudo su - oracle`
+- Get the private IP address of widnowsXServer, e.g. `10.0.0.8`
+- Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
+- Set Java env:
+  ```
+  oracleHome=/u01/app/wls/install/oracle/middleware/oracle_home
+  . $oracleHome/oracle_common/common/bin/setWlstEnv.sh
+  ```
+- Install fmw_12.2.1.4.0_infrastructure.jar
+  - Launch the installer
+    ```
+    java -jar fmw_12.2.1.4.0_infrastructure.jar
+    ```
+  - Continue? Y
+  - Page1
+    - Inventory Directory: `u01/oracle/oraInventory`
+    - Operating System Group: `oracle`
+  - Step 3
+    - Oracle Home: `/u01/app/wls/install/oracle/middleware/oracle_home`
+  - Step 4
+    - Select "Function Middleware infrastructure"
+  - Installation summary
+    - picture resources\images\screenshot-ofm-installation-summary.png
+  - The process should be completed without errors.
+  - Remove the installation file to save space: `rm fmw_12.2.1.4.0_infrastructure.jar`
+- Exit oracle user
+- Start node manager
+  ```
+  sudo systemctl start wls_nodemanager
+  ```
+
+After completing the Oracle Fusion Middleware Infrastructure on all the mspVM*, start the managed servers from admin console.
+- Login admin console.
+- Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Start/Stop**
+- Force start all the servers that has name starting with "msp".
+
 
 ## Validation
 
