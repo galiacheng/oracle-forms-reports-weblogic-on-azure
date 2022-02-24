@@ -315,8 +315,22 @@ Stop WebLogic managed servers from admin console.
 - Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Start/Stop**
 - Force stop all the servers that has name starting with "msp".
 
-Install Oracle Fusion Middleware Infrastructure on mspVM*.
-Copy the fmw_12.2.1.4.0_infrastructure.jar to /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar of mspVM*.
+
+Pack domain configuration from adminVM.
+- ssh to adminVM
+- Use oracle user
+- Pack domain
+  ```
+  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+  bash pack.sh -domain=/u01/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
+  ```
+- Exit oracle user
+- Copy the cluster.jar to mspVM*.
+  ```
+  sudo scp /tmp/cluster.jar weblogic@mspVM*:/tmp/cluster.jar
+  ```
+
+Install libs and unpack domain to managed servers.
 - RDP to windowsXServer.
 - Setup XLaunch
 - SSH to mspVM* with command `ssh weblogic@mspVM*`
@@ -336,38 +350,31 @@ Copy the fmw_12.2.1.4.0_infrastructure.jar to /u01/oracle/fmw_12.2.1.4.0_infrast
   ```
   sudo systemctl stop wls_nodemanager
   ```
-- Use oracle user: `sudo su - oracle`
-- Get the private IP address of widnowsXServer, e.g. `10.0.0.8`
-- Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
-- Set Java env:
+- Allow the oracle user to access cluster.jar
   ```
-  oracleHome=/u01/app/wls/install/oracle/middleware/oracle_home
-  . $oracleHome/oracle_common/common/bin/setWlstEnv.sh
+  sudo chown oracle:oracle /tmp/cluster.jar
   ```
-- Install fmw_12.2.1.4.0_infrastructure.jar
-  - Launch the installer
-    ```
-    java -jar fmw_12.2.1.4.0_infrastructure.jar
-    ```
-  - Continue? Y
-  - Page1
-    - Inventory Directory: `u01/oracle/oraInventory`
-    - Operating System Group: `oracle`
-  - Step 3
-    - Oracle Home: `/u01/app/wls/install/oracle/middleware/oracle_home`
-  - Step 4
-    - Select "Function Middleware infrastructure"
-  - Installation summary
-    - picture resources\images\screenshot-ofm-installation-summary.png
-  - The process should be completed without errors.
-  - Remove the installation file to save space: `rm fmw_12.2.1.4.0_infrastructure.jar`
+- Install Oracle Fusion Middleware Infrastructure on mspVM* following stpes in **Install Oracle Fusion Middleware Infrastructure** .
+- Install Forms and Reports on mspVM* following steps in **Install Oracle Froms and Reports**
+- Unpack the domain
+  ```
+  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+  unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
+  ```
+- Append class path for JRF.
+  - Edit /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/commExtEnv.sh with
+  - Append the content after `WEBLOGIC_CLASSPATH="${WL_HOME}/server/lib/postgresql-42.2.8.jar:${WL_HOME}/server/lib/mssql-jdbc-7.4.1.jre8.jar:${WEBLOGIC_CLASSPATH}"`.
+  ```
+  export JRF_JAR_PATH="${MW_HOME}/oracle_common/modules/oracle.jps/jps-manifest.jar:${MW_HOME}/oracle_common/modules/internal/features/jrf_wlsFmw_oracle.jrf.wls.classpath.jar"
+WEBLOGIC_CLASSPATH="${JRF_JAR_PATH}:${WEBLOGIC_CLASSPATH}"
+  ```
 - Exit oracle user
 - Start node manager
   ```
   sudo systemctl start wls_nodemanager
   ```
 
-After install the Oracle Fusion Middleware Infrastructure on all the mspVM*, start the managed servers from admin console.
+Start the managed servers from admin console.
 - Login admin console.
 - Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Start/Stop**
 - Force start all the servers that has name starting with "msp".
