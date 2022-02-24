@@ -146,7 +146,7 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
     ```
   - Continue? Y
   - Page1
-    - Inventory Directory: `u01/oracle/oraInventory`
+    - Inventory Directory: `/u01/oracle/oraInventory`
     - Operating System Group: `oracle`
   - Step 3
     - Oracle Home: `/u01/app/wls/install/oracle/middleware/oracle_home`
