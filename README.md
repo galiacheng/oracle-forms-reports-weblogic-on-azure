@@ -337,7 +337,7 @@ Install libs and unpack domain to managed servers.
 - Install depedency: if you are using RHEL, you must install the packages.
   ```
   sudo yum install -y libXtst
-  sudu yum install -y libSM
+  sudo yum install -y libSM
   sudo yum install -y libXrender
   ```
 - Add Xport
