@@ -476,7 +476,7 @@ Configure HTTPS Server in the existing domain
 - Unpack domain
   ```
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-  unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
+  bash unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
   ```
 - Append class path for JRF.
   - Edit /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/commExtEnv.sh with
