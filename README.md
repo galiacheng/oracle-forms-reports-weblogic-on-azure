@@ -485,6 +485,26 @@ Configure HTTPS Server in the existing domain
     export JRF_JAR_PATH="${MW_HOME}/oracle_common/modules/oracle.jps/jps-manifest.jar:${MW_HOME}/oracle_common/modules/internal/features/jrf_wlsFmw_oracle.jrf.wls.classpath.jar"
     WEBLOGIC_CLASSPATH="${JRF_JAR_PATH}:${WEBLOGIC_CLASSPATH}"
     ```
+- Config Forms location
+  ```
+  cat <<EOF >/u01/domains/wlsd/config/fmwconfig/forms.conf
+  <Location /forms/>
+        SetHandler weblogic-handler
+        WebLogicCluster adminVM:9001
+        DynamicServerList OFF
+  </Location>
+  EOF
+  ```
+- Config Reports location
+  ```
+  cat <<EOF >/u01/domains/wlsd/config/fmwconfig/reports_ohs.conf
+  <Location /reports>
+      SetHandler weblogic-handler
+      WebLogicHost adminVM
+      WebLogicPort 9002
+  </Location>
+  EOF
+  ```
 - Exit oracle user
 - Start node manager
   ```
