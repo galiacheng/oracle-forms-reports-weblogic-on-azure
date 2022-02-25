@@ -436,19 +436,21 @@ After the machine is created, ssh to weblogic@ohsVM2, and use `root` user.
 Configure HTTPS Server in the existing domain
 - Follow [steps](#configure-forms-and-reports-in-the-existing-domain)
 - Make sure changes are set
-  - Page2: Select HTTP Server
+  - Page2: 
+    - Make sure: Oracle HTTP Server is selected
   - Page14:
     - Add machine: ohsVM2, address: ohsVM2.
-  - Page18: add ohs component
+  - Page17: add ohs component
     - name: ohs
     - Component type: OHS
-  - Page19: 
+  - Page18: 
     - System component: ohs
     - Admin host: ohsVM2
     - admin port: 7779
     - Listen address: ohsVM2
+    - SSL port: 4444
     - Server name: http://ohsVM:7777
-  - Page20: assign component to ohsVM2.
+  - Page19: assign component to ohsVM2.
   - Update.
 - Pack domain:
   ```
