@@ -379,6 +379,115 @@ Start the managed servers from admin console.
 - Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Start/Stop**
 - Force start all the servers that has name starting with "msp".
 
+## Create OHS machine and join the domain
+
+Create machine from Azure Portal, use image: WebLogic Server 12.2.1.4 and JDK8 on OL7.6 - Gen1.
+- Name: ohsVM2.
+
+After the machine is created, ssh to weblogic@ohsVM2, and use `root` user.
+- Install denpendencies.
+  ```
+  # for XServer
+  sudo yum install -y libXtst
+  sudu yum install -y libSM
+  sudo yum install -y libXrender
+
+  # for FORMS and REPORTS
+  # you must install the following packages in Oracle Linux 7.6.
+  sudo yum install -y compat-libcap1
+  sudo yum install -y compat-libstdc++-33
+  sudo yum install -y libstdc++-devel
+  sudo yum install -y gcc
+  sudo yum install -y gcc-c++
+  sudo yum install -y ksh
+  sudo yum install -y glibc-devel
+  sudo yum install -y libaio-devel
+  sudo yum install -y motif
+  ```
+- Open port
+
+  ```
+  # for XServer
+  sudo firewall-cmd --zone=public --add-port=6000/tcp
+  
+  # for WLS cluster
+  sudo firewall-cmd --zone=public --add-port=7574/tcp
+  sudo firewall-cmd --zone=public --add-port=7574/tcp
+  sudo firewall-cmd --zone=public --add-port=7/tcp
+  sudo firewall-cmd --zone=public --add-port=5556/tcp
+
+  # for Coherence
+  sudo firewall-cmd --zone=public --add-port=42000-42200/tcp
+  sudo firewall-cmd --zone=public --add-port=42000-42200/udp  
+
+  # for OHS
+  sudo firewall-cmd --zone=public --add-port=7779/tcp
+  sudo firewall-cmd --zone=public --add-port=7777/tcp
+  sudo firewall-cmd --zone=public --add-port=4444/tcp
+  sudo firewall-cmd --runtime-to-permanent
+  sudo systemctl restart firewalld
+  ```
+
+- Install Oracle Fusion Middleware Infrastructure, see [steps](#install-oracle-fusion-middleware-infrastructure)
+- Install Oracle Froms and Reports, see [steps](#install-oracle-froms-and-reports)
+
+
+Configure HTTPS Server in the existing domain
+- Follow [steps](#configure-forms-and-reports-in-the-existing-domain)
+- Make sure changes are set
+  - Page2: Select HTTP Server
+  - Page14:
+    - Add machine: ohsVM2, address: ohsVM2.
+  - Page18: add ohs component
+    - name: ohs
+    - Component type: OHS
+  - Page19: 
+    - System component: ohs
+    - Admin host: ohsVM2
+    - admin port: 7779
+    - Listen address: ohsVM2
+    - Server name: http://ohsVM:7777
+  - Page20: assign component to ohsVM2.
+  - Update.
+- Pack domain:
+  ```
+  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+  bash pack.sh -domain=/u01/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
+  ```
+- Exit oracle user.
+- Copy the domain package to ohsVM2
+  ```
+  sudo scp /tmp/cluster.jar weblogic@ohsVM2:/tmp/cluster.jar
+  ```
+- Restart admin server.
+  ```
+  sudo systemctl stop wls_admin
+
+  sudo systemctl start wls_admin
+  ```
+- ssh to ohsVM2.
+- Allow the oracle user to access cluster.jar
+  ```
+  sudo chown oracle:oracle /tmp/cluster.jar
+  ```
+- Unpack domain
+  ```
+  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+  unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
+  ```
+- Append class path for JRF.
+  - Edit /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/commExtEnv.sh with
+  - Append the content after WEBLOGIC_CLASSPATH="${WL_HOME}/server/lib/postgresql-42.2.8.jar:${WL_HOME}/server/lib/mssql-jdbc-7.4.1.jre8.jar:${WEBLOGIC_CLASSPATH}".
+    ```
+    export JRF_JAR_PATH="${MW_HOME}/oracle_common/modules/oracle.jps/jps-manifest.jar:${MW_HOME}/oracle_common/modules/internal/features/jrf_wlsFmw_oracle.jrf.wls.classpath.jar"
+    WEBLOGIC_CLASSPATH="${JRF_JAR_PATH}:${WEBLOGIC_CLASSPATH}"
+    ```
+- Exit oracle user
+- Start node manager
+  ```
+  sudo systemctl start wls_nodemanager
+  ```
+
 
 ## Validation
 
