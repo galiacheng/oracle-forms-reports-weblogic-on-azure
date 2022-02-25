@@ -11,6 +11,7 @@
 * [Create schemas using RCU](#create-schemas-using-rcu)
 * [Configure Forms and Reports in the existing domain](#configure-forms-and-reports-in-the-existing-domain)
 * [Apply JRF to WebLogic managed servers](#apply-jrf-to-managed-server)
+* [Set up HTTP Server](#create-ohs-machine-and-join-the-domain)
 * [Verify](#validation)
 
 ## Prerequisites
@@ -488,6 +489,7 @@ Configure HTTPS Server in the existing domain
   sudo systemctl start wls_nodemanager
   ```
 
+Open EM from browser, and start the ohs server.
 
 ## Validation
 
