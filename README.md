@@ -446,12 +446,6 @@ Configure domain
   ```
   sudo scp /tmp/cluster.jar weblogic@ohsVM2:/tmp/cluster.jar
   ```
-- Restart admin server.
-  ```
-  sudo systemctl stop wls_admin
-
-  sudo systemctl start wls_admin
-  ```
 - ssh to ohsVM2.
 - Allow the oracle user to access cluster.jar
   ```
