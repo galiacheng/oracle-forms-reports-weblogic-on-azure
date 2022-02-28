@@ -485,7 +485,7 @@ Create OHS Server instance.
   - Click OK
 
 EM will create the OHS instance in ohsVM2.
-After the instance is completed, config Forms, Reports, WLs location.
+Once the instance is completed, config Forms, Reports, WLs location.
 
 Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are correct, may be string like: `mspVM1:8002,mspVM2:8003, mspVM3:8004`
 - SSH to ohsVM2
