@@ -433,25 +433,9 @@ After the machine is created, ssh to weblogic@ohsVM2, and use `root` user.
 - Install Oracle Froms and Reports, see [steps](#install-oracle-froms-and-reports)
 
 
-Configure HTTPS Server in the existing domain
-- Follow [steps](#configure-forms-and-reports-in-the-existing-domain)
-- Make sure changes are set
-  - Page2: 
-    - Make sure: Oracle HTTP Server is selected
-  - Page14:
-    - Add machine: ohsVM2, address: ohsVM2.
-  - Page17: add ohs component
-    - name: ohs
-    - Component type: OHS
-  - Page18: 
-    - System component: ohs
-    - Admin host: ohsVM2
-    - admin port: 7779
-    - Listen address: ohsVM2
-    - SSL port: 4444
-    - Server name: http://ohsVM:7777
-  - Page19: assign component to ohsVM2.
-  - Update.
+Configure domain
+- SSH to adminVM
+- Use `oracle` user
 - Pack domain:
   ```
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
@@ -485,19 +469,61 @@ Configure HTTPS Server in the existing domain
     export JRF_JAR_PATH="${MW_HOME}/oracle_common/modules/oracle.jps/jps-manifest.jar:${MW_HOME}/oracle_common/modules/internal/features/jrf_wlsFmw_oracle.jrf.wls.classpath.jar"
     WEBLOGIC_CLASSPATH="${JRF_JAR_PATH}:${WEBLOGIC_CLASSPATH}"
     ```
-- Config Forms location
+- Exit oracle user
+- Start node manager
   ```
-  cat <<EOF >/u01/domains/wlsd/config/fmwconfig/forms.conf
+  sudo systemctl start wls_nodemanager
+  ```
+
+Add the machine to existing domain.
+- Login to EM portal.
+- WebLogic Domain -> Environment -> Machines -> Create
+  - Name: ohsVM2
+  - Machine OS: Other
+  - Listen Address: mspVM2
+  - Listen Port: 5556
+
+Create OHS Server instance.
+- Login to EM portal.
+- WebLogic Domain -> Administration -> OHS Instances - Create
+  - Instance name: ohs
+  - Machine name: ohsVM2
+  - Click OK
+
+EM will create the OHS instance in ohsVM2.
+After the instance is completed, config Forms, Reports, WLs location.
+
+Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are correct, may be string like: `mspVM1:8002,mspVM2:8003, mspVM3:8004`
+- SSH to ohsVM2
+- Use oracle user.
+  ```
+  cat <<EOF >/u01/domains/wlsd/config/fmwconfig/components/OHS/instances/ohs/mod_wl_ohs.conf
+  # NOTE : This is a template to configure mod_weblogic.
+
+  LoadModule weblogic_module   "${PRODUCT_HOME}/modules/mod_wl_ohs.so"
+
+  # This empty block is needed to save mod_wl related configuration from EM to this file when changes are made at the Base Virtual Host Level
+  <IfModule weblogic_module>
+        WLIOTimeoutSecs 900
+        KeepAliveSecs 290
+        FileCaching ON
+        WLSocketTimeoutSecs 15
+        DynamicServerList ON
+        WLProxySSL ON
+        WebLogicCluster mspVM1:8002,mspVM2:8003, mspVM3:8004
+  </IfModule>
+
+  <Location >
+        SetHandler weblogic-handler
+        DynamicServerList ON
+        WLProxySSL ON
+        WebLogicCluster mspVM1:8002,mspVM2:8003, mspVM3:8004
+  </Location>
   <Location /forms/>
         SetHandler weblogic-handler
-        WebLogicCluster adminVM:9001
-        DynamicServerList OFF
+        WebLogicHost adminVM
+        WebLogicPort 9001
   </Location>
-  EOF
-  ```
-- Config Reports location
-  ```
-  cat <<EOF >/u01/domains/wlsd/config/fmwconfig/reports_ohs.conf
   <Location /reports>
       SetHandler weblogic-handler
       WebLogicHost adminVM
@@ -505,24 +531,24 @@ Configure HTTPS Server in the existing domain
   </Location>
   EOF
   ```
-- Exit oracle user
-- Start node manager
-  ```
-  sudo systemctl start wls_nodemanager
-  ```
+- Please double check the content.
+
+Start OHS instance.
 
 Open EM from browser, and start the ohs server.
+- Login to EM portal.
+- WebLogic Domain -> Administration -> OHS Instances - ohs
+  - Start up.
 
 ## Validation
 
 - Admin console: `http://<adminvm-ip>:7001/console`
 - em: `http://<adminvm-ip>:7001/em`
-- forms: `http://<adminvm-ip>:9001/forms/frmservlet`
+- forms: `http://<adminvm-ip>:9001/forms/frmservlet` and `http://<ohs-ip>:7777/forms/frmservlet`
   - Please use JRE 32 bit + IE to access Forms.
-- reports: `http://<adminvm-ip>:9002/reports/rwservlet`
-
-
-
-
- 
+- reports: `http://<adminvm-ip>:9002/reports/rwservlet` and `http://<ohs-ip>:7777/reports/rwservlet`
+- Validate WLS cluster, if you have an application deployed to WLS cluster, you will be able to access the app via `http://<ohs-ip>:7777/<app-path>`
+  ```
+  curl http://<ohs-ip>:7777/weblogic/ready
+  ```
 
