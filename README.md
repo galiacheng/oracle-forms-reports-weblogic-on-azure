@@ -487,7 +487,7 @@ Create OHS Server instance.
 EM will create the OHS instance in ohsVM2.
 Once the instance is completed, config Forms, Reports, WLs location.
 
-Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are correct, may be string like: `mspVM1:8002,mspVM2:8003, mspVM3:8004`
+Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are correct, may be string like: `mspVM1:8002,mspVM2:8003,mspVM3:8004`
 - SSH to ohsVM2
 - Use oracle user.
   ```
@@ -504,14 +504,14 @@ Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are
         WLSocketTimeoutSecs 15
         DynamicServerList ON
         WLProxySSL ON
-        WebLogicCluster mspVM1:8002,mspVM2:8003, mspVM3:8004
+        WebLogicCluster mspVM1:8002,mspVM2:8003,mspVM3:8004
   </IfModule>
 
   <Location >
         SetHandler weblogic-handler
         DynamicServerList ON
         WLProxySSL ON
-        WebLogicCluster mspVM1:8002,mspVM2:8003, mspVM3:8004
+        WebLogicCluster mspVM1:8002,mspVM2:8003,mspVM3:8004
   </Location>
   <Location /forms/>
         SetHandler weblogic-handler
