@@ -507,7 +507,7 @@ Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are
         WebLogicCluster mspVM1:8002,mspVM2:8003,mspVM3:8004
   </IfModule>
 
-  <Location >
+  <Location /weblogic>
         SetHandler weblogic-handler
         DynamicServerList ON
         WLProxySSL ON
