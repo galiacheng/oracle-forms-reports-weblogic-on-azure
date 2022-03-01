@@ -529,10 +529,10 @@ Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are
 
 Note: if you deploy new applications to your WebLogic cluster, please add an entry to mod_wl_ohs.conf and restart ohs instance.
 
-For an example, sample entry for application with context root `/myappllication`
+For an example, sample entry for application with context root `/myapplication`
 
 ```
-<Location /myappllication>
+<Location /myapplication>
         SetHandler weblogic-handler
         DynamicServerList ON
         WLProxySSL ON
