@@ -527,6 +527,20 @@ Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are
   ```
 - Please double check the content.
 
+Note: if you deploy new applications to your WebLogic cluster, please add an entry to mod_wl_ohs.conf and restart ohs instance.
+
+For an example, sample entry for application with context root `/myappllication`
+
+```
+<Location /myappllication>
+        SetHandler weblogic-handler
+        DynamicServerList ON
+        WLProxySSL ON
+        WebLogicCluster mspVM1:8002,mspVM2:8003,mspVM3:8004
+</Location>
+```
+
+
 Start OHS instance.
 
 Open EM from browser, and start the ohs server.
