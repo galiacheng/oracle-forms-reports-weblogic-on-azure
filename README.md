@@ -498,7 +498,7 @@ Add the machine to existing domain.
 - WebLogic Domain -> Environment -> Machines -> Create
   - Name: ohsVM2
   - Machine OS: Other
-  - Listen Address: mspVM2
+  - Listen Address: ohsVM2
   - Listen Port: 5556
 
 Create OHS Server instance.
@@ -511,7 +511,7 @@ Create OHS Server instance.
 EM will create the OHS instance in ohsVM2.
 Once the instance is completed, config Forms, Reports, WLs location.
 
-Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are correct, may be string like: `mspVM1:8002,mspVM2:8003,mspVM3:8004`
+Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are correct, may be string like: `mspVM1:8002,mspVM2:8003`
 - SSH to ohsVM2
 - Use oracle user.
   ```
@@ -528,14 +528,14 @@ Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are
         WLSocketTimeoutSecs 15
         DynamicServerList ON
         WLProxySSL ON
-        WebLogicCluster mspVM1:8002,mspVM2:8003,mspVM3:8004
+        WebLogicCluster mspVM1:8002,mspVM2:8003
   </IfModule>
 
   <Location /weblogic>
         SetHandler weblogic-handler
         DynamicServerList ON
         WLProxySSL ON
-        WebLogicCluster mspVM1:8002,mspVM2:8003,mspVM3:8004
+        WebLogicCluster mspVM1:8002,mspVM2:8003
   </Location>
   <Location /forms/>
         SetHandler weblogic-handler
@@ -560,7 +560,7 @@ For an example, sample entry for application with context root `/myapplication`
         SetHandler weblogic-handler
         DynamicServerList ON
         WLProxySSL ON
-        WebLogicCluster mspVM1:8002,mspVM2:8003,mspVM3:8004
+        WebLogicCluster mspVM1:8002,mspVM2:8003
 </Location>
 ```
 
