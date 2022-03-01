@@ -221,6 +221,7 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
   - MDS
   - WLS
 - Step5: Use same passwords for all schemas. Value: `Secret123456`
+  - Note: you must use the same password of WebLogic admin account.
 - The schema should be completed without error.
 
 ## Configure Forms and Reports in the existing domain
