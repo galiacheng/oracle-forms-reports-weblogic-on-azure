@@ -167,7 +167,6 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 - Use the windowsXServer ssh to adminVM: `ssh weblogic@adminVM`.
 - Install denpendencies:
   ```
-  # you must install the following packages in Oracle Linux 7.6.
   sudo yum install -y compat-libcap1
   sudo yum install -y compat-libstdc++-33
   sudo yum install -y libstdc++-devel
@@ -394,7 +393,6 @@ After the machine is created, ssh to weblogic@ohsVM2, and use `root` user.
   sudo yum install -y libXrender
 
   # for FORMS and REPORTS
-  # you must install the following packages in Oracle Linux 7.6.
   sudo yum install -y compat-libcap1
   sudo yum install -y compat-libstdc++-33
   sudo yum install -y libstdc++-devel
