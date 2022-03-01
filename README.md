@@ -4,8 +4,8 @@
 
 * [Prerequisites](#prerequisites)
 * [Provision Azure WebLogic dynamic cluster offer](#provision-azure-weblogic-dynamic-cluster-offer)
-* [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
 * [Create Oracle Database](#create-oracle-database)
+* [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
 * [Install Oracle Fusion Middleware Infrastructure](#install-oracle-fusion-middleware-infrastructure)
 * [Install Oracle Froms and Reports](#install-oracle-froms-and-reports)
 * [Create schemas using RCU](#create-schemas-using-rcu)
@@ -52,6 +52,13 @@ An Azure account with an active subscription. [Create an account for free](https
 
 It will take half an hour for the offer completed.
 
+
+## Create Oracle Database
+
+Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create) to create an Oracle database
+
+If you follow the document to create Oracle database, write down the credentials to create Forms schema, username and password should be: `sys/OraPasswd1`
+
 ## Create Windows VM and set up XServer
 
 After the offer is completed, open the resource group.
@@ -93,14 +100,6 @@ Configure WebLogic VM:
   sudo firewall-cmd --runtime-to-permanent
   sudo systemctl restart firewalld
   ```
-
-## Create Oracle Database
-
-Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create) to create an Oracle database
-
-If you follow the document to create Oracle database, write down the credentials to create Forms schema, username and password should be: `sys/OraPasswd1`
-
-
 ## Install Oracle Fusion Middleware Infrastructure
 
 Download Oracle Fusion Middleware Infrastructure installer from https://download.oracle.com/otn/nt/middleware/12c/122140/fmw_12.2.1.4.0_infrastructure_Disk1_1of1.zip
