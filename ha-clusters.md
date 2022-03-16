@@ -43,6 +43,20 @@ Create VMs for Forms and Reports based on the snapshot:
   - Set hostname: `hostnamectl set-hostname formsvm1`
   - Remove wlsd application folder: `rm /u01/app/wls/install/oracle/middleware/oracle_home/user_projects/applications/wlsd -f -r`
   - Remove wlsd domain folder: `rm /u01/domains/wlsd -f -r`
+  - Stop the services
+    ```bash
+    sudo systemctl stop wls_nodemanager
+    sudo systemctl stop wls_admin
+
+    ps -aux | grep "oracle"
+    ```
+
+    Kill the WLS process. There should have only one process like:
+    
+    ```text
+    [root@formsvm3 ~]# ps -aux | grep "oracle"
+    root     18756  0.0  0.0 114292  2360 pts/0    S+   09:12   0:00 grep --color=auto oracle
+    ```
 - Repeat above steps for `formsVM*` and `reportsVM*`.
 
 Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
@@ -325,7 +339,7 @@ Apply the configuration to managed server.
   ```
   sudo systemctl start wls_nodemanager
   ```
-- apply the above steps to `formsVM*` and `reportsVM*`.
+- apply the above steps to `formsVM*`, `reportsVM*` and `ohsVM*`.
 
 
 
