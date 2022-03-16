@@ -333,7 +333,7 @@ Apply the configuration to managed server.
 - Unpack the domain
   ```
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-  unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
+  bash unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
   ```
 - Make sure the node manager listen address is correct in `/u01/domains/wlsd/nodemanager/nodemanager.properties`
 - Exit oracle user
