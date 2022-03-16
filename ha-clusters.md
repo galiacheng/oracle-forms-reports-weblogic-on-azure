@@ -2,8 +2,8 @@
 
 ## Contents
 
-* [Prepare machines]()
-* [Set up configuration]()
+* [Prepare machines](#prepare-machines)
+* [Set up configuration](#set-up-configuration)
 * [Configure HTTP Servers]()
 * [Validate]()
 
@@ -129,16 +129,40 @@ Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
   - machine-reportsVM4
     - Node Manager Listen Address: `<private-ip-of-reportsvm4>`
     - Node Manager Listen Port: 5556
-- Page14: Machines
-  - Remove AdminServerMachine
-- Page15: Assign Servers to Machine
+  - ohsVM1
+    - Node Manager Listen Address: `<private-ip-of-ohsvm1>`
+    - Node Manager Listen Port: 5556
+  - ohsVM2
+    - Node Manager Listen Address: `<private-ip-of-ohsvm2>`
+    - Node Manager Listen Port: 5556
+  - ohsVM3
+    - Node Manager Listen Address: `<private-ip-of-ohsvm1>`
+    - Node Manager Listen Port: 5556
+- Page13: Assign Servers to Machines
   - adminVM
-    - WLS_FORMS
-    - WLS_REPORTS
-- Page19: Assign System Component
-  - adminVM
+    - admin
+- Page14: Virtual Targets
+  - no
+- Page15: Partitions
+  - no
+- Page16:
+  - forms1: FORMS, 3600, 0
+  - forms2: FORMS, 3600, 0
+  - forms3: FORMS, 3600, 0
+  - forms4: FORMS, 3600, 0
+- Page17: Assign System Component
+  - machine-formsVM1
     - SystemComonent
-      - forms
+      - forms1
+  - machine-formsVM2
+    - SystemComonent
+      - forms2
+  - machine-formsVM3
+    - SystemComonent
+      - forms3
+  - machine-formsVM4
+    - SystemComonent
+      - forms4
 - Page20: Deployments Targeting
   - AdminServer
     - admin
@@ -150,36 +174,158 @@ Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
       - opss-rest
       - state-management-provider-menory...
       - wlsm-pm
+      - Libraries: keep default
+  - Cluster
+    - cluster_forms
+      - AppDeployment
+        - DMS Application#12.2.1.1.0
+        - coherence-transaction-rar
+        - formsapp#12.2.1
+        - state-management-provider-menory...
+        - wsm-pm
+      - Liraries
+        - UIX (11,12.2.1.3.0)
+        - adf.oracle.businesseditor (1.0,12.2.1.3.0)
+        - adf.oracle.domain (1.0,12.2.1.3.0)
+        - adf.oracle.domain.groovy (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0)
+        - fads-dbtools-library
+        - fads-sqlcl-library
+        - jsf (2.0,1.0.0.0_2-2-8)
+        - jstl (1.2,1.2.0.1)
+        - odl.clickhistory (1.0,12.2.1)
+        - odl.clickhistory.webapp (1.0,12.2.1)
+        - ohw-rcf (5,12.2.1.3.0)
+        - ohw-uix (5,12.2.1.3.0)
+        - oracle.adf.dconfigbeans (1.0,12.2.1.3.0)
+        - oracle.adf.desktopintegration (1.0,12.2.1.3.0)
+        - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0)
+        - oracle.adf.management (1.0,12.2.1.3.0)
+        - oracle.bi.adf.model.slib (1.0,12.2.1.3.0)
+        - oracle.bi.adf.view.slib (1.0,12.2.1.3.0)
+        - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0)
+        - oracle.bi.composer (11.1.1,0.1)
+        - oracle.bi.jbips (11.1.1,0.1)
+        - oracle.dconfig-infra (2.0,12.2.1)
+        - ** oracle.formsapp.dependencieslib (12.2.1,12.2.1)**
+        - oracle.jrf.system.filter
+        - oracle.jsp.next (12.2.1,12.2.1)
+        - oracle.pwdgen (2.0,12.2.1)
+        - oracle.sdp.client (2.0,12.2.1.3.0)
+        - oracle.sdp.messaging (2.0,12.2.1.3.0)
+        - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3)
+        - oracle.wsm.seedpolicies (2.0,12.2.1.3)
+        - orai18n-adf (11,11.1.1.1.0)
+        - owasp.esapi (2.0,12.2.1)
+      - clusters_reports
+        - UIX (11,12.2.1.3.0)
+        - adf.oracle.businesseditor (1.0,12.2.1.3.0)
+        - adf.oracle.domain (1.0,12.2.1.3.0)
+        - adf.oracle.domain.groovy (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0)
+        - fads-dbtools-library
+        - fads-sqlcl-library
+        - jsf (2.0,1.0.0.0_2-2-8)
+        - jstl (1.2,1.2.0.1)
+        - odl.clickhistory (1.0,12.2.1)
+        - odl.clickhistory.webapp (1.0,12.2.1)
+        - ohw-rcf (5,12.2.1.3.0)
+        - ohw-uix (5,12.2.1.3.0)
+        - oracle.adf.dconfigbeans (1.0,12.2.1.3.0)
+        - oracle.adf.desktopintegration (1.0,12.2.1.3.0)
+        - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0)
+        - oracle.adf.management (1.0,12.2.1.3.0)
+        - oracle.bi.adf.model.slib (1.0,12.2.1.3.0)
+        - oracle.bi.adf.view.slib (1.0,12.2.1.3.0)
+        - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0)
+        - oracle.bi.composer (11.1.1,0.1)
+        - oracle.bi.jbips (11.1.1,0.1)
+        - oracle.dconfig-infra (2.0,12.2.1)
+        - oracle.jrf.system.filter
+        - oracle.jsp.next (12.2.1,12.2.1)
+        - oracle.pwdgen (2.0,12.2.1)
+        - ** oracle.reports.applib (12.2.1,12.2.1) **
+        - oracle.sdp.client (2.0,12.2.1.3.0)
+        - oracle.sdp.messaging (2.0,12.2.1.3.0)
+        - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3)
+        - oracle.wsm.seedpolicies (2.0,12.2.1.3)
+        - orai18n-adf (11,11.1.1.1.0)
+        - owasp.esapi (2.0,12.2.1)
+            
+
+- Page21: Service Targeting
+  - Admin Server
+    - keep default
+  - Cluster
+    - cluster_forms
+      - JDBSSystemResource
+        - opss-audit-DBDS
+        - opss-audit-viewDS
+        - opss-data-source
+    - cluster_reports
+      - JDBSSystemResource
+        - opss-audit-DBDS
+        - opss-audit-viewDS
+        - opss-data-source
 - The process should be completed withour error.
-- Exit `oracle` user
-- Start node manager: `sudo systemctl start wls_nodemanager`
-- Start weblogic: `sudo systemctl start wls_admin`
-- Open ports for Forms and Reports
+- Exit oracle user, use `root`
+- Pack domain
   ```
-  sudo firewall-cmd --zone=public --add-port=9001/tcp
-  sudo firewall-cmd --zone=public --add-port=9002/tcp
-  sudo firewall-cmd --runtime-to-permanent
-  sudo systemctl restart firewalld
+  rm /tmp/cluster.jar
+  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+  bash pack.sh -domain=/u01/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
+  ```
+- Copy the cluster.jar to formsVM* and reportsVM*.
+  ```
+  sudo scp /tmp/cluster.jar weblogic@mspVM*:/tmp/cluster.jar
   ```
 
-Start Forms and Reports server from admin console.
-- Open WebLogic Admin Console from browser, and login
-- Select Environment -> Servers -> Control
-- Start WLS_FORMS and WLS_REPORTS
-- The two servers should be running.
+Apply the configuration to managed server.
+- ssh to formsVM1. 
+- use `root` user
+   ```
+   chown oracle:oracle /tmp/cluster.jar
+   ```
+- Make sure there is not process for WLS and nodemanager, `ps -aux | grep "oracle`
+  ```
+  # if there are process then run the command to kill the service.
+  # stop admin server
+  sudo systemctl stop wls_admin
+  # stop node manager
+  sudo systemctl stop wls_nodemanager
 
-Edit the security to allow access to Forms and Reports:
-- Open the resource group that your are working on.
-- Select resource wls-nsg
-- Select Settings -> Inbound security rules
-- Click add
-- Source: Any
-- Destination：IP Address
-- Destination IP addresses/CIDR ranges: IP address of adminVM
-- Destination port ranges: 9001,9002
-- Priority: 340
-- Name: Allow_FORMS_REPORTS
-- Click Save
+  kill -9 processid
+  ```
+- use `oracle` user, `sudo su - oracle`
+- Unpack the domain
+  ```
+  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+  unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
+  ```
+- Exit oracle user
+- Start node manager
+  ```
+  sudo systemctl start wls_nodemanager
+  ```
+- apply the above steps to `formsVM*` and `reportsVM*`.
 
 
 
