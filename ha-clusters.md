@@ -52,7 +52,7 @@ Create VMs for Forms and Reports based on the snapshot:
     ```
 
     Kill the WLS process. There should have only one process like:
-    
+
     ```text
     [root@formsvm3 ~]# ps -aux | grep "oracle"
     root     18756  0.0  0.0 114292  2360 pts/0    S+   09:12   0:00 grep --color=auto oracle
@@ -313,8 +313,8 @@ Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
   ```
 
 Apply the configuration to managed server.
-- ssh to formsVM1. 
-- use `root` user
+- SSH to formsVM1. 
+- Use `root` user
    ```
    chown oracle:oracle /tmp/cluster.jar
    ```
@@ -328,12 +328,14 @@ Apply the configuration to managed server.
 
   kill -9 processid
   ```
-- use `oracle` user, `sudo su - oracle`
+- Stop firewall. `sudo systemctl stop firewalld`
+- Use `oracle` user, `sudo su - oracle`
 - Unpack the domain
   ```
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
   ```
+- Make sure the node manager listen address is correct in `/u01/domains/wlsd/nodemanager/nodemanager.properties`
 - Exit oracle user
 - Start node manager
   ```
