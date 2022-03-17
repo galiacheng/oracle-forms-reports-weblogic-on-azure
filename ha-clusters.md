@@ -335,9 +335,9 @@ Apply the configuration to managed server.
 
   rm /u01/domains/wlsd -f -r
   ```
-- Stop firewall. 
+- Disable firewall. 
   ```
-  sudo systemctl stop firewalld
+  sudo systemctl disable firewalld
   ```
 - Disable the wls_admin service
   ```
