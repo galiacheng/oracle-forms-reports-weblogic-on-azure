@@ -415,7 +415,7 @@ Before we start the OHS servers, we have to configure the entries.
   cat <<EOF >/u01/domains/wlsd/config/fmwconfig/components/OHS/instances/ohs1/mod_wl_ohs.conf
   # NOTE : This is a template to configure mod_weblogic.
 
-  LoadModule weblogic_module   "${PRODUCT_HOME}/modules/mod_wl_ohs.so"
+  LoadModule weblogic_module   "\${PRODUCT_HOME}/modules/mod_wl_ohs.so"
 
   # This empty block is needed to save mod_wl related configuration from EM to this file when changes are made at the Base Virtual Host Level
   <IfModule weblogic_module>
