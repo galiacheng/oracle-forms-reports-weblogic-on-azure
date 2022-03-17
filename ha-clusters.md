@@ -194,7 +194,7 @@ Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
       - AppDeployment
         - DMS Application#12.2.1.1.0
         - coherence-transaction-rar
-        - formsapp#12.2.1
+        - reportsapp#12.2.1
         - state-management-provider-menory...
         - wsm-pm
       - Liraries
@@ -230,7 +230,7 @@ Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
         - oracle.bi.composer (11.1.1,0.1)
         - oracle.bi.jbips (11.1.1,0.1)
         - oracle.dconfig-infra (2.0,12.2.1)
-        - ** oracle.formsapp.dependencieslib (12.2.1,12.2.1)**
+        - oracle.formsapp.dependencieslib (12.2.1,12.2.1)
         - oracle.jrf.system.filter
         - oracle.jsp.next (12.2.1,12.2.1)
         - oracle.pwdgen (2.0,12.2.1)
@@ -241,50 +241,55 @@ Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
         - orai18n-adf (11,11.1.1.1.0)
         - owasp.esapi (2.0,12.2.1)
       - clusters_reports
-        - UIX (11,12.2.1.3.0)
-        - adf.oracle.businesseditor (1.0,12.2.1.3.0)
-        - adf.oracle.domain (1.0,12.2.1.3.0)
-        - adf.oracle.domain.groovy (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0)
-        - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0)
-        - fads-dbtools-library
-        - fads-sqlcl-library
-        - jsf (2.0,1.0.0.0_2-2-8)
-        - jstl (1.2,1.2.0.1)
-        - odl.clickhistory (1.0,12.2.1)
-        - odl.clickhistory.webapp (1.0,12.2.1)
-        - ohw-rcf (5,12.2.1.3.0)
-        - ohw-uix (5,12.2.1.3.0)
-        - oracle.adf.dconfigbeans (1.0,12.2.1.3.0)
-        - oracle.adf.desktopintegration (1.0,12.2.1.3.0)
-        - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0)
-        - oracle.adf.management (1.0,12.2.1.3.0)
-        - oracle.bi.adf.model.slib (1.0,12.2.1.3.0)
-        - oracle.bi.adf.view.slib (1.0,12.2.1.3.0)
-        - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0)
-        - oracle.bi.composer (11.1.1,0.1)
-        - oracle.bi.jbips (11.1.1,0.1)
-        - oracle.dconfig-infra (2.0,12.2.1)
-        - oracle.jrf.system.filter
-        - oracle.jsp.next (12.2.1,12.2.1)
-        - oracle.pwdgen (2.0,12.2.1)
-        - ** oracle.reports.applib (12.2.1,12.2.1) **
-        - oracle.sdp.client (2.0,12.2.1.3.0)
-        - oracle.sdp.messaging (2.0,12.2.1.3.0)
-        - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3)
-        - oracle.wsm.seedpolicies (2.0,12.2.1.3)
-        - orai18n-adf (11,11.1.1.1.0)
-        - owasp.esapi (2.0,12.2.1)
-            
-
+        - AppDeployment
+          - DMS Application#12.2.1.1.0
+          - coherence-transaction-rar
+          - formsapp#12.2.1
+          - state-management-provider-menory...
+          - wsm-pm
+        - Liraries
+          - UIX (11,12.2.1.3.0)
+          - adf.oracle.businesseditor (1.0,12.2.1.3.0)
+          - adf.oracle.domain (1.0,12.2.1.3.0)
+          - adf.oracle.domain.groovy (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0)
+          - fads-dbtools-library
+          - fads-sqlcl-library
+          - jsf (2.0,1.0.0.0_2-2-8)
+          - jstl (1.2,1.2.0.1)
+          - odl.clickhistory (1.0,12.2.1)
+          - odl.clickhistory.webapp (1.0,12.2.1)
+          - ohw-rcf (5,12.2.1.3.0)
+          - ohw-uix (5,12.2.1.3.0)
+          - oracle.adf.dconfigbeans (1.0,12.2.1.3.0)
+          - oracle.adf.desktopintegration (1.0,12.2.1.3.0)
+          - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0)
+          - oracle.adf.management (1.0,12.2.1.3.0)
+          - oracle.bi.adf.model.slib (1.0,12.2.1.3.0)
+          - oracle.bi.adf.view.slib (1.0,12.2.1.3.0)
+          - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0)
+          - oracle.bi.composer (11.1.1,0.1)
+          - oracle.bi.jbips (11.1.1,0.1)
+          - oracle.dconfig-infra (2.0,12.2.1)
+          - oracle.jrf.system.filter
+          - oracle.jsp.next (12.2.1,12.2.1)
+          - oracle.pwdgen (2.0,12.2.1)
+          - oracle.reports.applib (12.2.1,12.2.1)
+          - oracle.sdp.client (2.0,12.2.1.3.0)
+          - oracle.sdp.messaging (2.0,12.2.1.3.0)
+          - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3)
+          - oracle.wsm.seedpolicies (2.0,12.2.1.3)
+          - orai18n-adf (11,11.1.1.1.0)
+          - owasp.esapi (2.0,12.2.1)
 - Page21: Service Targeting
   - Admin Server
     - keep default
@@ -341,7 +346,7 @@ Apply the configuration to managed server.
   ```
   sudo systemctl start wls_nodemanager
   ```
-- apply the above steps to `formsVM*`, `reportsVM*` and `ohsVM*`.
+- Apply above steps to `formsVM*`, `reportsVM*` and `ohsVM*`.
 
 
 
