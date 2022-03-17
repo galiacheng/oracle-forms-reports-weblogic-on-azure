@@ -451,3 +451,22 @@ Start OHS servers.
 - Click `ohs1` and start.
 - Click `ohs2` and start.
 - Click `ohs3` and start.
+
+## Validate
+
+Validate the Forms testing application.
+- Make sure the application is running in each managed server.
+  - Forms
+    - `http://<formsvm1-ip>:8002/forms/frmservlet`
+    - `http://<formsvm2-ip>:8003/forms/frmservlet`
+    - `http://<formsvm3-ip>:8004/forms/frmservlet`
+    - `http://<formsvm4-ip>:8005/forms/frmservlet`
+  - Reports
+    - `http://<reportsvm1-ip>:9002/reports/rwservlet`
+    - `http://<reportsvm2-ip>:9003/reports/rwservlet`
+    - `http://<reportsvm3-ip>:9004/reports/rwservlet`
+    - `http://<reportsvm4-ip>:9005/reports/rwservlet`
+- Make sure the OHS server are available
+  - `http://ohs1-ip:7777/forms/frmservlet`
+  - `http://ohs2-ip:7777/forms/frmservlet`
+  - `http://ohs3-ip:7777/forms/frmservlet`
