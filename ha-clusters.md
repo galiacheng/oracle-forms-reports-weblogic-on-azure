@@ -7,6 +7,9 @@
 * [Configure HTTP Servers]()
 * [Validate]()
 
+This document will create high available Oracle Forms and Reports clusters shown in the diagram.
+
+![Oracle Forms and Reports Architecture](ha-forms-reports-architecture.jpg)
 
 ## Prepare machines
 
