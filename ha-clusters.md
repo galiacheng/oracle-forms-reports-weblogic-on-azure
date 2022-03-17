@@ -337,6 +337,7 @@ Apply the configuration to managed server.
   ```
 - Disable firewall. 
   ```
+  sudo systemctl stop firewalld
   sudo systemctl disable firewalld
   ```
 - Disable the wls_admin service
