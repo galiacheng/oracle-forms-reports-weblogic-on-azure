@@ -323,7 +323,7 @@ Apply the configuration to managed server.
    ```
    chown oracle:oracle /tmp/cluster.jar
    ```
-- Make sure there is not process for WLS and nodemanager, `ps -aux | grep "oracle`
+- Make sure there is not process for WLS and nodemanager, `ps -aux | grep "oracle"`
   ```
   # if there are process then run the command to kill the service.
   # stop admin server
