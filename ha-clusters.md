@@ -333,7 +333,10 @@ Apply the configuration to managed server.
 
   kill -9 processid
   ```
-- Stop firewall. `sudo systemctl stop firewalld`
+- Stop firewall. 
+  ```
+  sudo systemctl stop firewalld
+  ```
 - Use `oracle` user, `sudo su - oracle`
 - Unpack the domain
   ```
@@ -352,7 +355,89 @@ Apply the configuration to managed server.
 Restart the admin server:
 - Use `root` user, stop the wls_admin service.
   ```
+  sudo systemctl stop wls_admin
+
+  # double chek the admin server process
+  ps -aux | grep "Dweblogic.Name=admin"
+
+  # please kill the process if there is
+  kill -9 <admin-process-id>
   ```
+- Start the service again
+  ```
+  sudo systemctl start wls_admin
+
+  # you can check the status
+  sudo systemctl status wls_admin
+  ```
+You shoud be able to access the admin console once it's ready.
 
 
+Start Forms and Reports server.
+- Login admin console
+  - Select wlsd -> Environment -> Clusters -> cluster_reports -> Control, start all the servers.
+  - Select wlsd -> Environment -> Clusters -> cluster_forms -> Control, start all the servers.
 
+## Configure HTTP Servers
+
+Now you have the Forms and Reports servers running, let's configure the HTTP Server.
+
+- Login EM portal.
+- Select WebLogic Domain -> Administration -> OHS Instances
+- Click the lock icon and select Lock & Edit
+- Click Create button to create OHS instance.
+  - ohs1
+    - Name: ohs1
+    - Machine name: ohsVM1
+  - ohs2
+    - Name: ohs2
+    - Machine name: ohsVM2
+  - ohs3
+    - Name: ohs3
+    - Machine name: ohsVM3
+- Click the lock icon and Activate changes.
+
+Before we start the OHS servers, we have to configure the entries.
+- SSH to ohsVM1
+- Use `oracle` user
+- Edit mod_wl_ohs.conf, please input the IP placehoder with real private IP. Make sure the ports are correct.
+  ```
+  cat <<EOF >/u01/domains/wlsd/config/fmwconfig/components/OHS/instances/ohs1/mod_wl_ohs.conf
+  # NOTE : This is a template to configure mod_weblogic.
+
+  LoadModule weblogic_module   "${PRODUCT_HOME}/modules/mod_wl_ohs.so"
+
+  # This empty block is needed to save mod_wl related configuration from EM to this file when changes are made at the Base Virtual Host Level
+  <IfModule weblogic_module>
+        WLIOTimeoutSecs 900
+        KeepAliveSecs 290
+        FileCaching ON
+        WLSocketTimeoutSecs 15
+        DynamicServerList ON
+        WLProxySSL ON
+        WebLogicCluster <formsvm1-ip>:8002,<formsvm2-ip>:8003,<formsvm3-ip>:8004,<formsvm4-ip>:8005
+  </IfModule>
+
+  <Location /forms/>
+        SetHandler weblogic-handler
+        DynamicServerList ON
+        WLProxySSL ON
+        WebLogicCluster <formsvm1-ip>:8002,<formsvm2-ip>:8003,<formsvm3-ip>:8004,<formsvm4-ip>:8005
+  </Location>
+
+  <Location /reports/>
+        SetHandler weblogic-handler
+        DynamicServerList ON
+        WLProxySSL ON
+        WebLogicCluster <reportsvm1-ip>:9002,<reportsvm2-ip>:9003,<reportsvm3-ip>:9004,<reportsvm4-ip>:9005
+  </Location>
+  EOF  
+  ```
+- Apply above steps to ohsVM2 and ohsVM3.
+
+Start OHS servers.
+- Login EM portal.
+- Select WebLogic Domain -> Administration -> OHS Instances
+- Click `ohs1` and start.
+- Click `ohs2` and start.
+- Click `ohs3` and start.
