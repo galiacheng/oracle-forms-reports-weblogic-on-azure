@@ -367,7 +367,7 @@ Restart the admin server:
   ```
   sudo systemctl stop wls_admin
 
-  # double chek the admin server process
+  # double check the admin server process
   ps -aux | grep "Dweblogic.Name=admin"
 
   # please kill the process if there is
