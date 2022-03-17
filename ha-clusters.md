@@ -244,7 +244,7 @@ Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
         - AppDeployment
           - DMS Application#12.2.1.1.0
           - coherence-transaction-rar
-          - formsapp#12.2.1
+          - reports#12.2.1
           - state-management-provider-menory...
           - wsm-pm
         - Liraries
@@ -347,6 +347,12 @@ Apply the configuration to managed server.
   sudo systemctl start wls_nodemanager
   ```
 - Apply above steps to `formsVM*`, `reportsVM*` and `ohsVM*`.
+
+
+Restart the admin server:
+- Use `root` user, stop the wls_admin service.
+  ```
+  ```
 
 
 
