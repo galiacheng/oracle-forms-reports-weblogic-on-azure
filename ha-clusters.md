@@ -312,7 +312,7 @@ Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   bash pack.sh -domain=/u01/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
   ```
-- Copy the cluster.jar to formsVM* and reportsVM*.
+- Copy the cluster.jar to formsVM*, reportsVM* and ohsVM*.
   ```
   sudo scp /tmp/cluster.jar weblogic@mspVM*:/tmp/cluster.jar
   ```
