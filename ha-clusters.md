@@ -466,7 +466,7 @@ Validate the Forms testing application.
     - `http://<reportsvm2-ip>:9003/reports/rwservlet`
     - `http://<reportsvm3-ip>:9004/reports/rwservlet`
     - `http://<reportsvm4-ip>:9005/reports/rwservlet`
-- Make sure the OHS server are available
+- Make sure the OHS server are available, find logs in access.log of each server to check the loadbalancing.
   - `http://ohs1-ip:7777/forms/frmservlet`
   - `http://ohs2-ip:7777/forms/frmservlet`
   - `http://ohs3-ip:7777/forms/frmservlet`
