@@ -332,10 +332,16 @@ Apply the configuration to managed server.
   sudo systemctl stop wls_nodemanager
 
   kill -9 processid
+
+  rm /u01/domains/wlsd -f -r
   ```
 - Stop firewall. 
   ```
   sudo systemctl stop firewalld
+  ```
+- Disable the wls_admin service
+  ```
+  systemctl disable wls_admin
   ```
 - Use `oracle` user, `sudo su - oracle`
 - Unpack the domain
