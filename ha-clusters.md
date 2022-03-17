@@ -4,8 +4,8 @@
 
 * [Prepare machines](#prepare-machines)
 * [Set up configuration](#set-up-configuration)
-* [Configure HTTP Servers]()
-* [Validate]()
+* [Configure HTTP Servers](#configure-http-servers)
+* [Validate](#validate)
 
 This document will create high available Oracle Forms and Reports clusters shown in the diagram.
 
