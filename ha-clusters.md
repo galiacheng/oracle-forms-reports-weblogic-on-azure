@@ -479,3 +479,17 @@ Validate the Forms testing application.
   - `http://ohs1-ip:7777/forms/frmservlet`
   - `http://ohs2-ip:7777/forms/frmservlet`
   - `http://ohs3-ip:7777/forms/frmservlet`
+
+## Troubleshooting
+1. EM is slow
+  Enable caching of FMw Discovery data.
+  - Login EM
+  - Select WebLogic domain -> System MBean Browser -> Application Defined MBeans -> emoms.props -> Server.admin -> Application.em -> Properties -> emoms-prop
+  - Click Operations
+  - Select setProperty
+  - Set the following properties
+    1. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_USE_CACHED_RESULTS=true
+    2. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_CACHE_AGE=7200000
+    3. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_WAIT_TIME=10000
+  - Select WebLogic domain -> Refresh WebLogic domain.
+
