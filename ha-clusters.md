@@ -410,7 +410,9 @@ Now you have the Forms and Reports servers running, let's configure the HTTP Ser
 Before we start the OHS servers, we have to configure the entries.
 - SSH to ohsVM1
 - Use `oracle` user
-- Edit mod_wl_ohs.conf, please input the IP placehoder with real private IP. Make sure the ports are correct.
+- Edit mod_wl_ohs.conf    
+  Input the IP placehoder with real private IP, make sure the ports are correct.  
+  Replace `ohs1` with the expected ohs component name.
   ```
   cat <<EOF >/u01/domains/wlsd/config/fmwconfig/components/OHS/instances/ohs1/mod_wl_ohs.conf
   # NOTE : This is a template to configure mod_weblogic.
@@ -443,6 +445,12 @@ Before we start the OHS servers, we have to configure the entries.
   </Location>
   EOF  
   ```
+  Replace `ohs1` with the expected ohs component name.
+  ```
+  mkdir /u01/domains/wlsd/config/fmwconfig/components/OHS/ohs1
+  cp /u01/domains/wlsd/config/fmwconfig/components/OHS/instances/ohs1/mod_wl_ohs.conf /u01/domains/wlsd/config/fmwconfig/components/OHS/ohs1/mod_wl_ohs.conf
+  ```
+
 - Apply above steps to ohsVM2 and ohsVM3.
 
 Start OHS servers.
