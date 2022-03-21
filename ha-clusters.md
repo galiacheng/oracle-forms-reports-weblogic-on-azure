@@ -447,8 +447,9 @@ Before we start the OHS servers, we have to configure the entries.
   ```
   Replace `ohs1` with the expected ohs component name.
   ```
-  mkdir /u01/domains/wlsd/config/fmwconfig/components/OHS/ohs1
-  cp /u01/domains/wlsd/config/fmwconfig/components/OHS/instances/ohs1/mod_wl_ohs.conf /u01/domains/wlsd/config/fmwconfig/components/OHS/ohs1/mod_wl_ohs.conf
+  COMPONENT_NAME="ohs1"
+  mkdir /u01/domains/wlsd/config/fmwconfig/components/OHS/${COMPONENT_NAME}
+  cp /u01/domains/wlsd/config/fmwconfig/components/OHS/instances/${COMPONENT_NAME}/mod_wl_ohs.conf /u01/domains/wlsd/config/fmwconfig/components/OHS/${COMPONENT_NAME}/mod_wl_ohs.conf
   ```
 
 - Apply above steps to ohsVM2 and ohsVM3.
