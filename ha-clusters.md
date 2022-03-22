@@ -517,6 +517,11 @@ Then you should be able to access Forms and Reports using private IP of applicat
 - http://app-gateway-ip/forms/frmservlet
 - http://app-gateway-ip/reports/rwservlet
 
+Application Gateway has enabled monitoring the backend health:
+  - Go to Application Gateway from Azure Portal
+  - Select Monitoring -> Backend health
+  - The status of Servers should be Healthy.
+
 ## Validate
 
 Validate the Forms testing application.
