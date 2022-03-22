@@ -462,7 +462,7 @@ Start OHS servers.
 - Click `ohs2` and start.
 - Click `ohs3` and start.
 
-## Configure private Application Gateway
+## Configure Private Application Gateway
 
 ### Create Application Gateway
 - Expand the portal menu and select Create a resource.
@@ -518,7 +518,7 @@ Then you should be able to access Forms and Reports using private IP of applicat
 - http://app-gateway-ip/reports/rwservlet
 
 Application Gateway has enabled monitoring the backend health:
-  - Go to Application Gateway from Azure Portal
+  - Go to the application gateway from Azure Portal
   - Select Monitoring -> Backend health
   - The status of Servers should be Healthy.
 
@@ -544,7 +544,7 @@ Validate the Forms testing application.
   - `http://ohs2-ip:7777/reports/rwservlet`
   - `http://ohs3-ip:7777/reports/rwservlet`
 
-- Make sure the Application Gateway is able to access OHS servers.
+- Make sure the application gateway is able to access OHS servers.
   - http://app-gateway-ip/forms/frmservlet
   - http://app-gateway-ip/reports/rwservlet
 
