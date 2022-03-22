@@ -5,7 +5,7 @@
 * [Prepare machines](#prepare-machines)
 * [Set up configuration](#set-up-configuration)
 * [Configure HTTP Servers](#configure-http-servers)
-* [Configure Application Gateway]()
+* [Configure Application Gateway](#configure-private-application-gateway)
 * [Validate](#validate)
 
 This document will create high available Oracle Forms and Reports clusters shown in the diagram.
