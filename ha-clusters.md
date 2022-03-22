@@ -5,6 +5,7 @@
 * [Prepare machines](#prepare-machines)
 * [Set up configuration](#set-up-configuration)
 * [Configure HTTP Servers](#configure-http-servers)
+* [Configure Application Gateway]()
 * [Validate](#validate)
 
 This document will create high available Oracle Forms and Reports clusters shown in the diagram.
@@ -461,6 +462,61 @@ Start OHS servers.
 - Click `ohs2` and start.
 - Click `ohs3` and start.
 
+## Configure private Application Gateway
+
+### Create Application Gateway
+- Expand the portal menu and select Create a resource.
+- Select Networking and then select Application Gateway in the Featured list.
+- Enter myAppGateway for the name of the application gateway and myResourceGroupAG for the new resource group.
+- Select Region
+- For Tier, select Standard.
+- Under Configure virtual network
+  - Select your vnet
+  - Select your subnet
+- Select Next : Frontends.
+- For Frontend IP address type, select Private.
+- Select Next:Backends.
+- Select Add a backend pool.
+- For Name, type appGatewayBackendPool.
+- For Add backend pool without targets, select Yes. You'll add the targets later.
+- Select Add.
+- Select Next:Configuration.
+- Under Routing rules, select Add a routing rule.
+- For Rule name, type Rule-01.
+- For Listener name, type Listener-01.
+- For Frontend IP, select Private.
+- Accept the remaining defaults and select the Backend targets tab.
+- For Target type, select Backend pool, and then select appGatewayBackendPool.
+- For HTTP setting, select Add new.
+- For HTTP setting name, type http-setting-01.
+- For Backend protocol, select HTTP.
+- For Backend port, type 7777
+- Accept the remaining defaults, and select Add.
+- On the Add a routing rule page, select Add.
+- Select Next: Tags.
+- Select Next: Review + create.
+
+Wait for the resources completed.
+
+### Configure Backend Pool
+
+- Go to Azure Portal, open the Applciation Gateway instance.
+- Select Settings -> Backend pools - appGatewayBackendPool
+  Add IP address of OHS servers.
+  - Item1
+    - Type: IP address or FQDN
+    - Target: private IP of ohsVM1
+  - Item2
+    - Type: IP address or FQDN
+    - Target: private IP of ohsVM2
+  - Item3
+    - Type: IP address or FQDN
+    - Target: private IP of ohsVM3
+
+Then you should be able to access Forms and Reports using private IP of application gateway.
+- http://app-gateway-ip/forms/frmservlet
+- http://app-gateway-ip/reports/rwservlet
+
 ## Validate
 
 Validate the Forms testing application.
@@ -479,6 +535,13 @@ Validate the Forms testing application.
   - `http://ohs1-ip:7777/forms/frmservlet`
   - `http://ohs2-ip:7777/forms/frmservlet`
   - `http://ohs3-ip:7777/forms/frmservlet`
+  - `http://ohs1-ip:7777/reports/rwservlet`
+  - `http://ohs2-ip:7777/reports/rwservlet`
+  - `http://ohs3-ip:7777/reports/rwservlet`
+
+- Make sure the Application Gateway is able to access OHS servers.
+  - http://app-gateway-ip/forms/frmservlet
+  - http://app-gateway-ip/reports/rwservlet
 
 ## Troubleshooting
 1. EM is slow
