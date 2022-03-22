@@ -549,7 +549,7 @@ Validate the Forms testing application.
   - http://app-gateway-ip/reports/rwservlet
 
 ## Troubleshooting
-1. EM is slow
+1. EM is slow    
   Enable caching of FMw Discovery data.
   - Login EM
   - Select WebLogic domain -> System MBean Browser -> Application Defined MBeans -> emoms.props -> Server.admin -> Application.em -> Properties -> emoms-prop
