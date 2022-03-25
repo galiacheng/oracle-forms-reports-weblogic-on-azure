@@ -645,14 +645,14 @@ Validate the Forms testing application.
         ```
       - Then edit all the rwservlet.properties files listed in the output, uncomment the server property:
 
-        Replace `repserver1` with expected values: `repserver2` for reportsVM2, `repserver3` for reportsVM3, and `repserver3` for reportsVM3.
+        Replace `repserver1` with expected values: `repserver2` for reportsVM2, `repserver3` for reportsVM3, and `repserver4` for reportsVM4.
         ```xml
         <server>repserver1</server>
         ```
     - Apply above steps to reportsVM2, reportsVM3, reportsVM4.
 
     - ssh to adminVM, use oracle user
-    - Use WLST to create Reports server instance.
+    - Use WLST to create Reports tools and server instance.
       ```
       cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
       ./wlst.sh
