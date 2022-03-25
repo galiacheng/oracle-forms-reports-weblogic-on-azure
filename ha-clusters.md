@@ -619,6 +619,18 @@ Validate the Forms testing application.
     </application-mbeans>
     EOF
     ```
+  - Set the default in process Reports Server name
+    - Find all rwservlet.properties using command:
+      ```
+      cd /u01/domains/wlsd
+      find . -name rwservlet.properties
+      ```
+    - Then edit all the rwservlet.properties files listed in the output, uncomment the server property:
+
+      Replace `repserver1` with expected values: `repserver2` for reportsVM2, `repserver3` for reportsVM3, and `repserver3` for reportsVM3.
+      ```xml
+      <server>repserver1</server>
+      ```
   - Apply above steps to reportsVM2, reportsVM3, reportsVM4.
 
   - ssh to adminVM, use oracle user
