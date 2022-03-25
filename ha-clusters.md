@@ -7,6 +7,7 @@
 * [Configure HTTP Servers](#configure-http-servers)
 * [Configure Application Gateway](#configure-private-application-gateway)
 * [Validate](#validate)
+* [Troubleshoot](#troubleshoot)
 
 This document will create high available Oracle Forms and Reports clusters shown in the diagram.
 
@@ -548,7 +549,7 @@ Validate the Forms testing application.
   - http://app-gateway-ip/forms/frmservlet
   - http://app-gateway-ip/reports/rwservlet
 
-## Troubleshooting
+## Troubleshoot
 1. EM is slow    
   Enable caching of FMw Discovery data.
   - Login EM
