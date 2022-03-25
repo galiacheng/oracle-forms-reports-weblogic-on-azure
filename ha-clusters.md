@@ -561,3 +561,99 @@ Validate the Forms testing application.
     3. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_WAIT_TIME=10000
   - Select WebLogic domain -> Refresh WebLogic domain.
 
+2. Fail to start Reports Server
+
+  The issue was caused by no mbean created for in process Reports server.
+  Follow the step to fix the issue:
+  - ssh to reportsVM1, use `oracle` user
+  - Run the commands to create mbean.xml
+    ```
+    cd /u01/domains/wlsd/config/fmwconfig/components
+    mkdir ReportsServerComponent
+    mkdir ReportsBridgeComponent
+    mkdir ReportsServerComponent/mbeans
+    mkdir ReportsBridgeComponent/mbeans
+    ```
+
+    ```
+    cat <<EOF >ReportsServerComponent/mbeans/mbeans.xml
+    <?xml version = '1.0' encoding = 'UTF-8' standalone='yes'?>
+    <application-mbeans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                        xsi:noNamespaceSchemaLocation="http://xmlns.oracle.com/oracleas/schema/11/application-mbeans-11_1.xsd"
+                        schema-major-version="11" schema-minor-version="1">
+      <!-- TODO is there a way we can refer OracleHome directly here -->
+      <config-mbeans absolute-location="true" location="/u01/app/wls/install/oracle/middleware/oracle_home/reports/jlib/confmbean.jar">
+        <!-- Component Manager Mbean -->
+        <jmx-config-mbean management-interface="oracle.reports.admin.cam.server.ReportsServerComponentManagerMXBean"
+                          class="oracle.reports.admin.cam.server.ReportsServerComponentManager"
+                          objectname="oracle.reports:Type=ReportsServerComponent,Name=ReportsServerComponentManager">
+          <description>MBean used to create/remove Reports Server Component instances</description>
+        </jmx-config-mbean>
+        <!-- Oid association Mbean -->
+        <jmx-config-mbean management-interface="oracle.reports.admin.cam.server.OidAssociationMXBean"
+                          class="oracle.reports.admin.cam.server.OidAssocMbeanImpl"
+                          objectname="oracle.reports:Type=ReportsServerComponent,Name=OidAssociationMbean">
+          <description>MBean used to associate/dissociate Reports Server/Inprocess server to OID</description>
+        </jmx-config-mbean>
+      </config-mbeans>
+    </application-mbeans>
+    EOF
+    ```
+
+    ```
+    cat <<EOF >ReportsBridgeComponent/mbeans/mbeans.xml
+    <?xml version = '1.0' encoding = 'UTF-8' standalone='yes'?>
+    <application-mbeans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                        xsi:noNamespaceSchemaLocation="http://xmlns.oracle.com/oracleas/schema/11/application-mbeans-11_1.xsd"
+                        schema-major-version="11" schema-minor-version="1">
+      <!-- TODO is there a way we can refer OracleHome directly here -->
+      <config-mbeans absolute-location="true"
+                    location="/u01/app/wls/install/oracle/middleware/oracle_home/reports/jlib/confmbean.jar">
+        <!-- Component Manager Mbean -->
+        <jmx-config-mbean management-interface="oracle.reports.admin.cam.bridge.ReportsBridgeComponentManagerMXBean"
+                          class="oracle.reports.admin.cam.bridge.ReportsBridgeComponentManager"
+                          objectname="oracle.reports:Type=ReportsBridgeComponent,Name=ReportsBridgeComponentManager">
+          <description>MBean used to create/remove Reports Bridge Component instances</description>
+        </jmx-config-mbean>
+      </config-mbeans>
+    </application-mbeans>
+    EOF
+    ```
+  - Apply above steps to reportsVM2, reportsVM3, reportsVM4.
+
+  - ssh to adminVM, use oracle user
+  - Use WLST to create Reports server instance.
+    ```
+    cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+    ./wlst.sh
+
+    # connet admin server
+    connect("weblogic","Secret123456", "adminvn-ip:7001")
+    createReportsToolsInstance(instanceName='reptools1', machine='machine-reportsVM1')
+    createReportsServerInstance(instanceName='repserver1',machine='machine-reportsVM1')
+    createReportsToolsInstance(instanceName='reptools2', machine='machine-reportsVM2')
+    createReportsServerInstance(instanceName='repserver2',machine='machine-reportsVM2')
+    createReportsToolsInstance(instanceName='reptools3', machine='machine-reportsVM3')
+    createReportsServerInstance(instanceName='repserver3',machine='machine-reportsVM3')
+    createReportsToolsInstance(instanceName='reptools4', machine='machine-reportsVM4')
+    createReportsServerInstance(instanceName='repserver4',machine='machine-reportsVM4')
+    ```
+  - Start Reports server instances.
+    ```
+    cd /u01/domains/wlsd/bin
+    ./startComponent.sh reptools1
+    ./startComponent.sh repserver1
+    ./startComponent.sh reptools2
+    ./startComponent.sh repserver2
+    ./startComponent.sh reptools3
+    ./startComponent.sh repserver3
+    ./startComponent.sh reptools4
+    ./startComponent.sh repserver4
+    ```
+
+  Now you should be able to access the Reports servers, if not, restart the namaged server from admin console:
+  - http://repotsvm1-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
+  - http://repotsvm-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
+  - http://repotsvm1-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
+  - http://repotsvm1-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
+
