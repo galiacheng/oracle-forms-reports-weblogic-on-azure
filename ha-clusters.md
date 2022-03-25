@@ -562,7 +562,24 @@ Validate the Forms testing application.
       3. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_WAIT_TIME=10000
     - Select WebLogic domain -> Refresh WebLogic domain.
 
-2. Fail to start Reports Server
+2. Fail to start In-process Reports Server
+
+    Issue description:
+    ```
+    Succesffully access help page with http://hostname:port/reports/rwservlet.
+    Trying to access the Reports Server gives following error:
+    REP-51002: Bind to Reports Server reports failed
+
+    This error is given when you try to access Reports Server using getserverinfo or showjobs.  For example:
+    http://hostname:port/reports/rwservlet/getserverinfo?server=reports
+    or
+    http://hostname:port/reports/rwservlet/showjobs?server=reports
+
+    Also, running the command "rwdiag.sh -findAll" gives error:
+    REP-50503 No server found in the network
+
+    However, in the Reports Server trace files, it shows that the Reports Server is actually up and running.  There are no errors in the trace files.
+    ```
 
     The issue was caused by no mbean created for in process Reports server.
     Follow the step to fix the issue:
