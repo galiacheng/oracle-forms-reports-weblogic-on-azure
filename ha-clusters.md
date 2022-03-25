@@ -685,7 +685,7 @@ Validate the Forms testing application.
 
     Now you should be able to access the Reports servers, if not, restart the mamaged server from admin console:
     - http://repotsvm1-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
-    - http://repotsvm-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
-    - http://repotsvm1-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
-    - http://repotsvm1-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
+    - http://repotsvm2-ip:9003/reports/rwservlet/getserverinfo?server=repserver2
+    - http://repotsvm3-ip:9004/reports/rwservlet/getserverinfo?server=repserver3
+    - http://repotsvm4-ip:9005/reports/rwservlet/getserverinfo?server=repserver4
 
