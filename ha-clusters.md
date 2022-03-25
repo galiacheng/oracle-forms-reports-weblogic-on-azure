@@ -645,10 +645,12 @@ Validate the Forms testing application.
         ```
       - Then edit all the rwservlet.properties files listed in the output, uncomment the server property:
 
-        Replace `repserver1` with expected values: `repserver2` for reportsVM2, `repserver3` for reportsVM3, and `repserver4` for reportsVM4.
         ```xml
         <server>repserver1</server>
         ```
+
+        For other reportsVM* machines, replace `repserver1` with expected values: `repserver2` for reportsVM2, `repserver3` for reportsVM3, and `repserver4` for reportsVM4.
+       
     - Apply above steps to reportsVM2, reportsVM3, reportsVM4.
 
     - ssh to adminVM, use oracle user
