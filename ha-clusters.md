@@ -664,7 +664,7 @@ Validate the Forms testing application.
       ./startComponent.sh repserver4
       ```
 
-    Now you should be able to access the Reports servers, if not, restart the namaged server from admin console:
+    Now you should be able to access the Reports servers, if not, restart the mamaged server from admin console:
     - http://repotsvm1-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
     - http://repotsvm-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
     - http://repotsvm1-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
