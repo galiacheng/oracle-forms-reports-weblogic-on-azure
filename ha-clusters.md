@@ -3,7 +3,7 @@
 ## Contents
 
 * [Prepare machines](#prepare-machines)
-* [Set up configuration](#set-up-configuration)
+* [Set up configuration](#set-up-the-domain-configuration)
 * [Configure HTTP Servers](#configure-http-servers)
 * [Configure Application Gateway](#configure-private-application-gateway)
 * [Validate](#validate)
@@ -69,7 +69,7 @@ Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
 - Create VM `ohsVM2` if you don't have one
 - Create VM `ohsVM3`
 
-# Set up configuration
+# Set up the domain configuration
 
 - Use the windowsXServer.
 - SSH to adminVM
