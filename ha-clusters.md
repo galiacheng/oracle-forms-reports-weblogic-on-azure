@@ -640,7 +640,7 @@ Validate the Forms testing application.
       cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
       ./wlst.sh
 
-      # connet admin server
+      # connect admin server
       connect("weblogic","Secret123456", "adminvn-ip:7001")
       createReportsToolsInstance(instanceName='reptools1', machine='machine-reportsVM1')
       createReportsServerInstance(instanceName='repserver1',machine='machine-reportsVM1')
