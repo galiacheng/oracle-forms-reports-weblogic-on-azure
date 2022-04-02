@@ -15,7 +15,7 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
 * [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
 * [Install Oracle Fusion Middleware Infrastructure](#install-oracle-fusion-middleware-infrastructure)
 * [Install Oracle Froms and Reports](#install-oracle-froms-and-reports)
-* [Clone machines for managed servers]()
+* [Clone machine for managed servers]()
 * [Create schemas using RCU](#create-schemas-using-rcu)
 * [Configure Forms and Reports with a new domain](#configure-forms-and-reports-in-the-existing-domain)
 * [Create Load Balancing with Azure Application Gateway](#create-ohs-machine-and-join-the-domain)
@@ -92,15 +92,6 @@ After the Windows server is completed, RDP to the server.
 - Disable the firewall to allow communication from WebLogic VMs.
   - Turn off Windows Defender Firewall
 
-Configure WebLogic VM:
-
-- SSH to **adminVM** open ports for XServer by running the following commands:
-
-  ```
-  sudo firewall-cmd --zone=public --add-port=6000/tcp
-  sudo firewall-cmd --runtime-to-permanent
-  sudo systemctl restart firewalld
-  ```
 ## Install Oracle Fusion Middleware Infrastructure
 
 Download Oracle Fusion Middleware Infrastructure installer from https://download.oracle.com/otn/nt/middleware/12c/122140/fmw_12.2.1.4.0_infrastructure_Disk1_1of1.zip
@@ -121,25 +112,27 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 
 - Open CMD
 - SSH to adminVM with command `ssh weblogic@adminVM`
+- Use `root` user `sudo su`
 - Install depedency: if you are using RHEL, you must install the following packages
   ```
   sudo yum install -y libXtst
   sudu yum install -y libSM
   sudo yum install -y libXrender
   ```
-- Stop WebLogic process
-    ```
-    sudo systemctl stop wls_admin
-    sudo systemctl stop wls_nodemanager
-    ```
+- Open ports for XServer by running the following commands:
+  ```
+  sudo firewall-cmd --zone=public --add-port=6000/tcp
+  sudo firewall-cmd --runtime-to-permanent
+  sudo systemctl restart firewalld
+  ```
 - Use `oracle` user: `sudo su - oracle`
 - Get the private IP address of widnowsXServer, e.g. `10.0.0.8`
 - Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
 - Set Java env: 
-    ```
-    oracleHome=/u01/app/wls/install/oracle/middleware/oracle_home
-    . $oracleHome/oracle_common/common/bin/setWlstEnv.sh
-    ```
+  ```
+  oracleHome=/u01/app/wls/install/oracle/middleware/oracle_home
+  . $oracleHome/oracle_common/common/bin/setWlstEnv.sh
+  ```
 - Install fmw_12.2.1.4.0_infrastructure.jar
   - Launch the installer
     ```
@@ -160,6 +153,7 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 
 ## Install Oracle Froms and Reports
 
+Following the steps to install Oracle Forms and Reports:
 - Download wget.sh from https://www.oracle.com/middleware/technologies/forms/downloads.html#
   - Oracle Fusion Middleware 12c (12.2.1.4.0) Forms and Reports for Linux x86-64 for (Linux x86-64)
   - Oracle Fusion Middleware 12c (12.2.1.4.0) Forms and Reports for Linux x86-64 for (Linux x86-64)
