@@ -200,8 +200,8 @@ Following the steps to install Oracle Forms and Reports:
   - Step 4:
     - Forms and Reports Deployment
   - Step 5:
-    - JDK Home: /u01/app/jdk/jdk1.8.0_291
-  - Step 6: if there is error of operation system packages, install the conrresponding package and run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
+    - JDK Home: `/u01/app/jdk/jdk1.8.0_291`
+  - Step 6: you may get dependencies error, you must install the conrresponding package and run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
     - Error like "Checking for compat-libcap1-1.10;Not found", then run `sudo yum install compat-libcap1` to install the `compat-libcap1` package.
   - The installation should be completed without errors.
 
@@ -225,8 +225,12 @@ Create VMs for Forms and Reports replicas based on the snapshot:
     - Set hostname: `hostnamectl set-hostname mspVM1`
 4. Repeat step1-3 for `mspVM2`, make sure setting hostname with `mspVM2`.
 
+Now, you have three machine ready to configure Forms and Reports: **adminVM**, **mspVM1**, **mspVM2**.
 
 ## Create schemas using RCU
+
+You are required to create the schemas for the WebLogic domain.  
+The following steps leverage XServer and RCU to create schemas on the Oracle database created previously.
 
 - Use the windowsXServer.
 - SSH to adminVM
@@ -235,7 +239,7 @@ Create VMs for Forms and Reports replicas based on the snapshot:
 - `bash /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/bin/rcu`
 - Step2: Create Repository -> System Load and Product Load
 - Step3: Input the connection information of Oracle database.
-- Step4: please note down the prefix, whith will be used in the following configuration.
+- Step4: please note down the prefix, whith will be used in the following configuration, this document uses `DEV0402`.
   - STB
   - OPSS
   - IAU
@@ -247,7 +251,11 @@ Create VMs for Forms and Reports replicas based on the snapshot:
   - Note: you must use the same password of WebLogic admin account.
 - The schema should be completed without error.
 
-## Configure Forms and Reports in the existing domain
+## Configure Forms and Reports with a new domain
+
+### Create domain on adminVM
+
+Now, the machine and database are ready, let's move on to create a new domain for Forms and Reports.
 
 - Use the windowsXServer.
 - SSH to adminVM
@@ -255,7 +263,7 @@ Create VMs for Forms and Reports replicas based on the snapshot:
 - Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
 - `bash  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/config.sh`
 - Page1:
-  - Update an existing domain
+  - Create a new domain
   - location: /01/domains/wlsd
 - Page2: 
   - FADS
@@ -263,6 +271,8 @@ Create VMs for Forms and Reports replicas based on the snapshot:
   - Oracle Reports Application
   - Oracle Enterprise Manager
   - Oracle Reports Tools
+  - Oracle Reports Server
+  - Oracle Reports Bridge
   - Oracle WSM Policy Manager
   - Oracle JRF
   - ORacle WebLogic Coherence Cluster Extension
@@ -272,9 +282,11 @@ Create VMs for Forms and Reports replicas based on the snapshot:
   - RCU Data
   - Host Name: the host name of database
   - DBMS/Service: your dbms
-  - Schema Owner: `<the-rcu-schema-prefix>_STB`
+  - Schema Owner is `<the-rcu-schema-prefix>_STB`, this sample uses `DEV0402_STB`
   - Schema Password: `Secret123456`
 - Page7:
+  - Administration Server
+  - Node Manager
   - Topology
   - System Components
   - Deployment and Services
@@ -300,194 +312,97 @@ Create VMs for Forms and Reports replicas based on the snapshot:
       - state-management-provider-menory...
       - wlsm-pm
 - The process should be completed withour error.
-- Exit `oracle` user
-- Start node manager: `sudo systemctl start wls_nodemanager`
-- Start weblogic: `sudo systemctl start wls_admin`
-- Open ports for Forms and Reports
-  ```
-  sudo firewall-cmd --zone=public --add-port=9001/tcp
-  sudo firewall-cmd --zone=public --add-port=9002/tcp
-  sudo firewall-cmd --runtime-to-permanent
-  sudo systemctl restart firewalld
-  ```
-
-Start Forms and Reports server from admin console.
-- Open WebLogic Admin Console from browser, and login
-- Select Environment -> Servers -> Control
-- Start WLS_FORMS and WLS_REPORTS
-- The two servers should be running.
-
-Edit the security to allow access to Forms and Reports:
-- Open the resource group that your are working on.
-- Select resource wls-nsg
-- Select Settings -> Inbound security rules
-- Click add
-- Source: Any
-- Destination：IP Address
-- Destination IP addresses/CIDR ranges: IP address of adminVM
-- Destination port ranges: 9001,9002
-- Priority: 340
-- Name: Allow_FORMS_REPORTS
-- Click Save
-
-## Apply JRF to managed server
-
-We have to apply JRF to WebLogic dynamic cluster, otherwise, we can not use admin console or em to managed the dynamic cluster.
-
-Stop WebLogic managed servers from admin console.
-- Login admin console.
-- Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Start/Stop**
-- Force stop all the servers that has name starting with "msp".
-
-
-Pack domain configuration from adminVM.
-- ssh to adminVM
-- Use oracle user
-- Pack domain
-  ```
+- Pack the domain and copy the domain configuration to managed machine.
+  ```shell
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   bash pack.sh -domain=/u01/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
   ```
-- Exit oracle user
-- Copy the cluster.jar to mspVM*.
   ```
-  sudo scp /tmp/cluster.jar weblogic@mspVM*:/tmp/cluster.jar
-  ```
+  scp /tmp/cluster.jar weblogic@mspVM1:/tmp/cluster.jar
 
-Install libs and unpack domain to managed servers.
-- RDP to windowsXServer.
-- Setup XLaunch
-- SSH to mspVM* with command `ssh weblogic@mspVM*`
-- Install depedency: if you are using RHEL, you must install the packages.
+  scp /tmp/cluster.jar weblogic@mspVM2:/tmp/cluster.jar
   ```
-  sudo yum install -y libXtst
-  sudo yum install -y libSM
-  sudo yum install -y libXrender
+- Exit `oracle` user: `exit`
+- Use root user: `sudo su`
+- Create service for node manager and admin server
+  - Create service for admin server
+    ```shell
+    cat <<EOF >/etc/systemd/system/wls_admin.service
+    [Unit]
+    Description=WebLogic Adminserver service
+    After=network-online.target
+    Wants=network-online.target
+    
+    [Service]
+    Type=simple
+    WorkingDirectory="/u01/domains/wlsd"
+    ExecStart="/u01/domains/wlsd/startWebLogic.sh"
+    ExecStop="/u01/domains/wlsd/bin/customStopWebLogic.sh"
+    User=oracle
+    Group=oracle
+    KillMode=process
+    LimitNOFILE=65535
+    Restart=always
+    RestartSec=3
+    
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+    ```
+  - Create service for node manager
+    ```bash
+    cat <<EOF >/etc/systemd/system/wls_nodemanager.service
+    [Unit]
+    Description=WebLogic nodemanager service
+    After=network-online.target
+    Wants=network-online.target
+    [Service]
+    Type=simple
+    # Note that the following three parameters should be changed to the correct paths
+    # on your own system
+    WorkingDirectory="/u01/domains/wlsd"
+    ExecStart="/u01/domains/wlsd/bin/startNodeManager.sh"
+    ExecStop="/u01/domains/wlsd/bin/stopNodeManager.sh"
+    User=oracle
+    Group=oracle
+    KillMode=process
+    LimitNOFILE=65535
+    Restart=always
+    RestartSec=3
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+    ```
+- Start node manager and admin server, it takes about 10 min for admin server up.
   ```
-- Add Xport
-  ```
-  sudo firewall-cmd --zone=public --add-port=6000/tcp
-  sudo firewall-cmd --runtime-to-permanent
-  sudo systemctl restart firewalld
-  ```
-- Stop node manager
-  ```
-  sudo systemctl stop wls_nodemanager
-  ```
-- Allow the oracle user to access cluster.jar
-  ```
-  sudo chown oracle:oracle /tmp/cluster.jar
-  ```
-- Install Oracle Fusion Middleware Infrastructure on mspVM* following stpes in **Install Oracle Fusion Middleware Infrastructure** .
-- Install Forms and Reports on mspVM* following steps in **Install Oracle Froms and Reports**
-- Unpack the domain
-  ```
-  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-  unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
-  ```
-- Append class path for JRF.
-  - Edit /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/commExtEnv.sh with
-  - Append the content after `WEBLOGIC_CLASSPATH="${WL_HOME}/server/lib/postgresql-42.2.8.jar:${WL_HOME}/server/lib/mssql-jdbc-7.4.1.jre8.jar:${WEBLOGIC_CLASSPATH}"`.
-  ```
-  export JRF_JAR_PATH="${MW_HOME}/oracle_common/modules/oracle.jps/jps-manifest.jar:${MW_HOME}/oracle_common/modules/internal/features/jrf_wlsFmw_oracle.jrf.wls.classpath.jar"
-  WEBLOGIC_CLASSPATH="${JRF_JAR_PATH}:${WEBLOGIC_CLASSPATH}"
-  ```
-- Exit oracle user
-- Start node manager
-  ```
+  sudo systemctl enable wls_nodemanager
+  sudo systemctl enable wls_admin
+  sudo systemctl daemon-reload
   sudo systemctl start wls_nodemanager
+  sudo systemctl start wls_admin
   ```
 
-Start the managed servers from admin console.
-- Login admin console.
-- Select **Environment** -> **Clusters** -> **cluster1** -> **Control** -> **Start/Stop**
-- Force start all the servers that has name starting with "msp".
+### Create domain on managed machine
 
-## Create OHS machine and join the domain
-
-Create machine from Azure Portal, use image: WebLogic Server 12.2.1.4 and JDK8 on OL7.6 - Gen1.
-- Name: ohsVM2.
-
-After the machine is created, ssh to weblogic@ohsVM2, and use `root` user.
-- Install denpendencies.
+Now, you have Forms and Reports configured in adminVM, let's apply the domain on mspVM1 and mspVM2.   
+Configure domain on managed machine:
+1. SSH to mspVM1 with command `ssh weblogic@mspVM1`
+2. Use `root` user to set the ownership of domain package
   ```
-  # for XServer
-  sudo yum install -y libXtst
-  sudu yum install -y libSM
-  sudo yum install -y libXrender
-
-  # for FORMS and REPORTS
-  sudo yum install -y compat-libcap1
-  sudo yum install -y compat-libstdc++-33
-  sudo yum install -y libstdc++-devel
-  sudo yum install -y gcc
-  sudo yum install -y gcc-c++
-  sudo yum install -y ksh
-  sudo yum install -y glibc-devel
-  sudo yum install -y libaio-devel
-  sudo yum install -y motif
+  sudo su
+  chown oracle:oracle /tmp/cluster.jar
   ```
-- Open port
-
-  ```
-  # for XServer
-  sudo firewall-cmd --zone=public --add-port=6000/tcp
-  
-  # for WLS cluster
-  sudo firewall-cmd --zone=public --add-port=7574/tcp
-  sudo firewall-cmd --zone=public --add-port=7574/tcp
-  sudo firewall-cmd --zone=public --add-port=7/tcp
-  sudo firewall-cmd --zone=public --add-port=5556/tcp
-
-  # for Coherence
-  sudo firewall-cmd --zone=public --add-port=42000-42200/tcp
-  sudo firewall-cmd --zone=public --add-port=42000-42200/udp  
-
-  # for OHS
-  sudo firewall-cmd --zone=public --add-port=7779/tcp
-  sudo firewall-cmd --zone=public --add-port=7777/tcp
-  sudo firewall-cmd --zone=public --add-port=4444/tcp
-  sudo firewall-cmd --runtime-to-permanent
-  sudo systemctl restart firewalld
-  ```
-
-- Install Oracle Fusion Middleware Infrastructure, see [steps](#install-oracle-fusion-middleware-infrastructure)
-- Install Oracle Froms and Reports, see [steps](#install-oracle-froms-and-reports)
-
-
-Configure domain
-- SSH to adminVM
-- Use `oracle` user
-- Pack domain:
-  ```
-  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-  bash pack.sh -domain=/u01/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
-  ```
-- Exit oracle user.
-- Copy the domain package to ohsVM2
-  ```
-  sudo scp /tmp/cluster.jar weblogic@ohsVM2:/tmp/cluster.jar
-  ```
-- ssh to ohsVM2.
-- Allow the oracle user to access cluster.jar
-  ```
-  sudo chown oracle:oracle /tmp/cluster.jar
-  ```
-- Unpack domain
+2. Use `oracle` user, `sudo su - oracle`
+3. Unpack the domain
   ```
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   bash unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
   ```
-- Append class path for JRF.
-  - Edit /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/commExtEnv.sh with
-  - Append the content after WEBLOGIC_CLASSPATH="${WL_HOME}/server/lib/postgresql-42.2.8.jar:${WL_HOME}/server/lib/mssql-jdbc-7.4.1.jre8.jar:${WEBLOGIC_CLASSPATH}".
-    ```
-    export JRF_JAR_PATH="${MW_HOME}/oracle_common/modules/oracle.jps/jps-manifest.jar:${MW_HOME}/oracle_common/modules/internal/features/jrf_wlsFmw_oracle.jrf.wls.classpath.jar"
-    WEBLOGIC_CLASSPATH="${JRF_JAR_PATH}:${WEBLOGIC_CLASSPATH}"
-    ```
-- Exit oracle user
-- Create service for node manager, use `root` user
-  ```
+4. Make sure the node manager listen address is correct in `/u01/domains/wlsd/nodemanager/nodemanager.properties`
+5. Exit oracle user with command `exit`
+6. Use root user: `sudo su`
+7. Create service for node manager
+  ```shell
   cat <<EOF >/etc/systemd/system/wls_nodemanager.service
   [Unit]
   Description=WebLogic nodemanager service
@@ -510,91 +425,23 @@ Configure domain
   WantedBy=multi-user.target
   EOF
   ```
-- Start node manager
+8. Start node manager
   ```
   sudo systemctl enable wls_nodemanager
   sudo systemctl daemon-reload
   sudo systemctl start wls_nodemanager
   ```
+- Apply step 1-8 to msspVM2.
 
-Add the machine to existing domain.
-- Login to EM portal.
-- WebLogic Domain -> Environment -> Machines -> Create
-  - Name: ohsVM2
-  - Machine OS: Other
-  - Listen Address: ohsVM2
-  - Listen Port: 5556
-
-Create OHS Server instance.
-- Login to EM portal.
-- WebLogic Domain -> Administration -> OHS Instances - Create
-  - Instance name: ohs
-  - Machine name: ohsVM2
-  - Click OK
-
-EM will create the OHS instance in ohsVM2.
-Once the instance is completed, config Forms, Reports, WLs location.
-
-Config Forms, Reports, WLS location, make sure the WebLogicCluster addresses are correct, may be string like: `mspVM1:8002,mspVM2:8003`
-- SSH to ohsVM2
-- Use oracle user.
-  ```
-  cat <<EOF >/u01/domains/wlsd/config/fmwconfig/components/OHS/instances/ohs/mod_wl_ohs.conf
-  # NOTE : This is a template to configure mod_weblogic.
-
-  LoadModule weblogic_module   "${PRODUCT_HOME}/modules/mod_wl_ohs.so"
-
-  # This empty block is needed to save mod_wl related configuration from EM to this file when changes are made at the Base Virtual Host Level
-  <IfModule weblogic_module>
-        WLIOTimeoutSecs 900
-        KeepAliveSecs 290
-        FileCaching ON
-        WLSocketTimeoutSecs 15
-        DynamicServerList ON
-        WLProxySSL ON
-        WebLogicCluster mspVM1:8002,mspVM2:8003
-  </IfModule>
-
-  <Location /weblogic>
-        SetHandler weblogic-handler
-        DynamicServerList ON
-        WLProxySSL ON
-        WebLogicCluster mspVM1:8002,mspVM2:8003
-  </Location>
-  <Location /forms/>
-        SetHandler weblogic-handler
-        WebLogicHost adminVM
-        WebLogicPort 9001
-  </Location>
-  <Location /reports>
-      SetHandler weblogic-handler
-      WebLogicHost adminVM
-      WebLogicPort 9002
-  </Location>
-  EOF
-  ```
-- Please double check the content.
-
-Note: if you deploy new applications to your WebLogic cluster, please add an entry to mod_wl_ohs.conf and restart ohs instance.
-
-For an example, sample entry for application with context root `/myapplication`
-
-```
-<Location /myapplication>
-        SetHandler weblogic-handler
-        DynamicServerList ON
-        WLProxySSL ON
-        WebLogicCluster mspVM1:8002,mspVM2:8003
-</Location>
-```
+## Create Reports components
+Now, you have node manager running on adminVM, mspVM1, mspVM2, and admin server running in adminVM.   
+To successfully start Reports server, you must create and start the Reports components.
 
 
-Start OHS instance.
 
-Open EM from browser, and start the ohs server.
-- Login to EM portal.
-- WebLogic Domain -> Administration -> OHS Instances - ohs
-  - Start up.
+
+
+
 
 ## Validation
 
