@@ -97,11 +97,11 @@ After the Windows server is completed, RDP to the server.
 Download Oracle Fusion Middleware Infrastructure installer from https://download.oracle.com/otn/nt/middleware/12c/122140/fmw_12.2.1.4.0_infrastructure_Disk1_1of1.zip
 
 Unzip the file and copy `fmw_12.2.1.4.0_infrastructure.jar` to **adminVM**.
-Make sure `fmw_12.2.1.4.0_infrastructure.jar` is copied to /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar, owner of the file is `oracle`.
+Make sure `fmw_12.2.1.4.0_infrastructure.jar` is copied to /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar, owner of the file is `oracle`, you can set the ownership with command `chown oracle:oracle /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar`.
 
-Now let's use the XServer to install Oracle Fusion Middleware Infrastructure in the *adminVM**.
+Now let's use the XServer to install Oracle Fusion Middleware Infrastructure on **adminVM**.
 
-Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
+Steps to install Oracle Fusion Middleware Infrastructure on adminVM:
 
 - RDP to windowsXServer.
 - Click XLaunch from the desktop.
@@ -112,16 +112,36 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
 
 - Open CMD
 - SSH to adminVM with command `ssh weblogic@adminVM`
-- Use `root` user `sudo su`
-- Install depedency: if you are using RHEL, you must install the following packages
+- Use root user: `sudo su`
+- Install dependencies
   ```
+  # dependencies for XServer access
   sudo yum install -y libXtst
   sudu yum install -y libSM
   sudo yum install -y libXrender
+  # dependencies for Forms and Reports
+  sudo yum install -y compat-libcap1
+  sudo yum install -y compat-libstdc++-33
+  sudo yum install -y libstdc++-devel
+  sudo yum install -y gcc
+  sudo yum install -y gcc-c++
+  sudo yum install -y ksh
+  sudo yum install -y glibc-devel
+  sudo yum install -y libaio-devel
+  sudo yum install -y motif
   ```
-- Open ports for XServer by running the following commands:
+- Open Port
   ```
+  # for XServer
   sudo firewall-cmd --zone=public --add-port=6000/tcp
+  # for admin server
+  sudo firewall-cmd --zone=public --add-port=7001/tcp
+  sudo firewall-cmd --zone=public --add-port=7002/tcp
+  # for node manager
+  sudo firewall-cmd --zone=public --add-port=5556/tcp
+  # for forms and reports
+  sudo firewall-cmd --zone=public --add-port=9001/tcp
+  sudo firewall-cmd --zone=public --add-port=9002/tcp
   sudo firewall-cmd --runtime-to-permanent
   sudo systemctl restart firewalld
   ```
@@ -159,19 +179,6 @@ Following the steps to install Oracle Forms and Reports:
   - Oracle Fusion Middleware 12c (12.2.1.4.0) Forms and Reports for Linux x86-64 for (Linux x86-64)
 - Copy the wget.sh to `/u01/oracle/wget.sh`
 - Use the windowsXServer ssh to adminVM: `ssh weblogic@adminVM`.
-- Switch to root user: `sudo su`
-- Install denpendencies:
-  ```
-  sudo yum install -y compat-libcap1
-  sudo yum install -y compat-libstdc++-33
-  sudo yum install -y libstdc++-devel
-  sudo yum install -y gcc
-  sudo yum install -y gcc-c++
-  sudo yum install -y ksh
-  sudo yum install -y glibc-devel
-  sudo yum install -y libaio-devel
-  sudo yum install -y motif
-  ```
 - Use `oracle` user
 - Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
 - Edit wget.sh, replace `--ask-password` with `--password <your-sso-password>`
@@ -216,25 +223,7 @@ Create VMs for Forms and Reports replicas based on the snapshot:
 2. Create a VM with name `mspVM1` on the disk.
 3. ssh to the machine, use `root` user.
     - Set hostname: `hostnamectl set-hostname mspVM1`
-    - Stop the services
-      ```bash
-      sudo systemctl stop wls_nodemanager
-      sudo systemctl stop wls_admin
-      sudo systemctl disable wls_admin
-      ```
-    - Clean up the running process
-      ```
-      kill $(ps aux | grep "Dweblogic.Name=admin" | awk '{print $2}')
-      ```
-      There should have only one process of `oracle` user like:
-
-      ```text
-      [root@mspvm1 ~]# ps -aux | grep "oracle"
-      root     18756  0.0  0.0 114292  2360 pts/0    S+   09:12   0:00 grep --color=auto oracle
-      ```
-    - Remove wlsd application folder: `rm /u01/app/wls/install/oracle/middleware/oracle_home/user_projects/applications/wlsd -f -r`
-    - Remove wlsd domain folder: `rm /u01/domains/wlsd -f -r`
-4. Repeat step for `formsVM*` and `reportsVM*`.
+4. Repeat step1-3 for `mspVM2`, make sure setting hostname with `mspVM2`.
 
 
 ## Create schemas using RCU
