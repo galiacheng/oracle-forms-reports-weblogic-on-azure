@@ -29,8 +29,8 @@ An Azure account with an active subscription. [Create an account for free](https
 
 ## Provision Azure WebLogic Virtual Machine
 
-Azure provides s series of Oracle WebLogic base image, it'll save your effor for Oracle tools installation.
-This document will setup Oracle Forms and Reports based on the Azure WebLogic admin offer, follow the steps to provison a WebLogic instance:
+Azure provides a serie of Oracle WebLogic base image, it'll save your effor for Oracle tools installation.
+This document will setup Oracle Forms and Reports based on the Azure WebLogic base image, follow the steps to provison a machine with WebLogic installed:
 
 - Open [Azure portal](https://portal.azure.com/) from your browser.
 - Search `WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6`, you will find the WebLogic offers, select **WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6**, and click **Create** button.
