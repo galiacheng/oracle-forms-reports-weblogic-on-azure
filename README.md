@@ -1,68 +1,69 @@
-# Install Oracle Forms and Reports on the top of WebLogic dynamic cluster
+# Create Oracle Forms and Reports clusters
+
+This document guides you to create high vailable Oracle Forms and Reports clusters on Azure VMs, including:
+- Create Oracle Forms and Reports clusters with 2 replicas.
+- Create load balancing with Azure Application Gateway
+- Scale up with new Forms and Reports replicas
+- Create High Available Adminitration Server
+- Troubleshooting
 
 ## Contents
 
 * [Prerequisites](#prerequisites)
-* [Provision Azure WebLogic dynamic cluster offer](#provision-azure-weblogic-dynamic-cluster-offer)
+* [Provision Azure WebLogic admin offer](#provision-azure-weblogic-admin-offer)
 * [Create Oracle Database](#create-oracle-database)
 * [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
 * [Install Oracle Fusion Middleware Infrastructure](#install-oracle-fusion-middleware-infrastructure)
 * [Install Oracle Froms and Reports](#install-oracle-froms-and-reports)
+* [Clone machines for managed servers]()
 * [Create schemas using RCU](#create-schemas-using-rcu)
-* [Configure Forms and Reports in the existing domain](#configure-forms-and-reports-in-the-existing-domain)
-* [Apply JRF to WebLogic managed servers](#apply-jrf-to-managed-server)
-* [Set up HTTP Server](#create-ohs-machine-and-join-the-domain)
-* [Verify](#validation)
+* [Configure Forms and Reports with a new domain](#configure-forms-and-reports-in-the-existing-domain)
+* [Create Load Balancing with Azure Application Gateway](#create-ohs-machine-and-join-the-domain)
+* [Scale up with new Forms and Reports replicas](#apply-jrf-to-managed-server)
+* [Create High Available Adminitration Server]()
+* [Troubleshooting]()
 
 ## Prerequisites
 
 An Azure account with an active subscription. [Create an account for free](https://azure.microsoft.com/free/dotnet).
 
-## Provision Azure WebLogic dynamic cluster offer
+## Provision Azure WebLogic Virtual Machine
+
+Azure provides s series of Oracle WebLogic base image, it'll save your effor for Oracle tools installation.
+This document will setup Oracle Forms and Reports based on the Azure WebLogic admin offer, follow the steps to provison a WebLogic instance:
 
 - Open [Azure portal](https://portal.azure.com/) from your browser.
-- Search `weblogic`, you will find the WebLogic offers, select **Oracle WebLogic Server Dynamic Cluster**, and click **Create** button.
+- Search `WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6`, you will find the WebLogic offers, select **WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6**, and click **Create** button.
 - Input values in the **Basics** blade:
   - Subscription: select your subscription.
   - Resource group: click **Create new**, input a name.
+  - Virtual machine name: `adminVM`
   - Region: East US.
-  - Oracle WebLogic Image: WebLogic Server 12.2.1.4.0 and JDK8 on Oracle Linux 7.6.
-  - Virtual machine size: select a size with more than 8GiB RAM, e.g. Standard B4ms.
-  - Username for admin account of VMs: `weblogic`
+  - Image: WebLogic Server 12.2.1.4.0 and JDK8 on Oracle Linux 7.6 - Gen1.
+  - Size: select a size with more than 8GiB RAM, e.g. Standard B4ms.
+  - Authentication type: Password
+  - Username: `weblogic`
   - Password: `Secret123456`
-  - Username for WebLogic Administrator: `weblogic`
-  - Password for WebLogic Administrator： `Secret123456`
-  - Initial Dynamic Cluster Size: 2
-- Input values in the **Oracle HTTP Server Load Balancer** blade:
-  - Connect to Oracle HTTP Server? Yes
-  - Oracle HTTP Server image: OHS 12.2.1.4.0 and JDK8 on Oracle Linux 7.6
-  - Oracle HTTP Server Domain name: `ohsStandaloneDomain`
-  - Oracle HTTP Server Component name: `ohs_component`
-  - Oracle HTTP Server NodeManager username: `weblogic`
-  - Oracle HTTP Server NodeManager Password: `Secret123456`
-  - Oracle HTTP Server HTTP port: `7777`
-  - Oracle HTTP Server HTTPS port: `4444`
-  - Oracle Vault Password： `Secret123456`
-  - How would you like to provide required configuration： Upload exiting KeyStores
-  - Upload your certificate for the OHS server
-  - Password: int put the certifcate password
-  - Type of the certifcate: `JKS`
-
+- Networking: you are able to bring your own VNET. If not, keep default settings.
 - Keep other blads as default. Click **Review + create**.
 
-It will take half an hour for the offer completed.
-
+It will take 10min for the offer completed. After the deployment finishes, you will have a machine with JDK and WLS installed. Then you are able to install and configure Forms and Reports on the top of the machine.
 
 ## Create Oracle Database
 
+You are required to have to database to confiugre the JRF domain for Forms and Reports.This document will use Oracle Database.
 Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create) to create an Oracle database
 
-If you follow the document to create Oracle database, write down the credentials to create Forms schema, username and password should be: `sys/OraPasswd1`
+If you are following the document to create Oracle database, write down the credentials to create Forms schema, username and password should be: `sys/OraPasswd1`
 
 ## Create Windows VM and set up XServer
 
-After the offer is completed, open the resource group.
+Though you have Oracle WebLogic instance running now, to create Oracle Forms and Reports, you still need to install Oracle Forms and Reports.
+To simplify the interface, let's provison a Windows machine and leverage XServer to install required tools with graphical user interface.
 
+Follow the steps to provision Windows VM and set up XServer.
+
+- open the resource group.
 - Click **Create** button to create a Windows machine.
 - Select **Compute**, Select **Virtual machine**.
 - Virtual machine name: windowsXServer
@@ -164,6 +165,7 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
   - Oracle Fusion Middleware 12c (12.2.1.4.0) Forms and Reports for Linux x86-64 for (Linux x86-64)
 - Copy the wget.sh to `/u01/oracle/wget.sh`
 - Use the windowsXServer ssh to adminVM: `ssh weblogic@adminVM`.
+- Switch to root user: `sudo su`
 - Install denpendencies:
   ```
   sudo yum install -y compat-libcap1
@@ -178,8 +180,8 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
   ```
 - Use `oracle` user
 - Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
-- Edit the script, replace `--ask-password` with `--password <your-sso-password>`
-- Run the script
+- Edit wget.sh, replace `--ask-password` with `--password <your-sso-password>`
+- Run the script, it will download the installer.
   - `bash wget.sh`
   - input your SSO account name.
 - Unzip the zip files: ` unzip "*.zip"`, you will get `fmw_12.2.1.4.0_fr_linux64.bin` and `fmw_12.2.1.4.0_fr_linux64-2.zip`
@@ -201,6 +203,45 @@ Steps to install Oracle Fusion Middleware Infrastructure in adminVM:
   - Step 6: if there is error of operation system packages, install the conrresponding package and run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
     - Error like "Checking for compat-libcap1-1.10;Not found", then run `sudo yum install compat-libcap1` to install the `compat-libcap1` package.
   - The installation should be completed without errors.
+
+Now you have Forms and Reports installed in the adminVM. Let's clone the machine for managed servers.
+
+## Clone machine for managed servers
+
+You have Oracle Forms and Reports installed in the adminVM, we can clone adminVM for managed servers.
+
+Follow the steps to clone adminVM and create two VMs for Forms and Reports replicas.
+
+Create the a snapshot from adminVM OS disk:
+- Open Azure portal, stop adminVM.
+- Create a snapshot from OS disk.
+
+
+Create VMs for Forms and Reports replicas based on the snapshot:
+1. Create a disk from the snapshot.
+2. Create a VM with name `mspVM1` on the disk.
+3. ssh to the machine, use `root` user.
+    - Set hostname: `hostnamectl set-hostname mspVM1`
+    - Stop the services
+      ```bash
+      sudo systemctl stop wls_nodemanager
+      sudo systemctl stop wls_admin
+      sudo systemctl disable wls_admin
+      ```
+    - Clean up the running process
+      ```
+      kill $(ps aux | grep "Dweblogic.Name=admin" | awk '{print $2}')
+      ```
+      There should have only one process of `oracle` user like:
+
+      ```text
+      [root@mspvm1 ~]# ps -aux | grep "oracle"
+      root     18756  0.0  0.0 114292  2360 pts/0    S+   09:12   0:00 grep --color=auto oracle
+      ```
+    - Remove wlsd application folder: `rm /u01/app/wls/install/oracle/middleware/oracle_home/user_projects/applications/wlsd -f -r`
+    - Remove wlsd domain folder: `rm /u01/domains/wlsd -f -r`
+4. Repeat step for `formsVM*` and `reportsVM*`.
+
 
 ## Create schemas using RCU
 
