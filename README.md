@@ -1,4 +1,4 @@
-# Create Oracle Forms and Reports clusters
+# Create High Vailable Oracle Forms and Reports clusters on Azure
 
 This document guides you to create high vailable Oracle Forms and Reports clusters on Azure VMs, including:
 - Create Oracle Forms and Reports clusters with 2 replicas.
