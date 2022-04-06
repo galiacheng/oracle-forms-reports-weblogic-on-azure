@@ -142,8 +142,17 @@ Steps to install Oracle Fusion Middleware Infrastructure on adminVM:
   # for forms and reports
   sudo firewall-cmd --zone=public --add-port=9001/tcp
   sudo firewall-cmd --zone=public --add-port=9002/tcp
+  # for clusters
+  sudo firewall-cmd --zone=public --add-port=7100/tcp
+  sudo firewall-cmd --zone=public --add-port=8100/tcp
+  sudo firewall-cmd --zone=public --add-port=7574/tcp
   sudo firewall-cmd --runtime-to-permanent
   sudo systemctl restart firewalld
+  ```
+- Create directory for user data
+  ```
+  mkdir /u02
+  chown oracle:oracle /u02
   ```
 - Use `oracle` user: `sudo su - oracle`
 - Get the private IP address of widnowsXServer, e.g. `10.0.0.8`
@@ -264,7 +273,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
 - `bash  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/config.sh`
 - Page1:
   - Create a new domain
-  - location: /01/domains/wlsd
+  - Location: `/02/domains/wlsd`
 - Page2: 
   - FADS
   - Oracle Forms
@@ -276,46 +285,254 @@ Now, the machine and database are ready, let's move on to create a new domain fo
   - Oracle WSM Policy Manager
   - Oracle JRF
   - ORacle WebLogic Coherence Cluster Extension
-- Page3:
-  - Application location: /u01/domains/applications
-- Page4: 
+- Page3: Applciation Location
+  - Location: `/u02/applications/wlsd`
+- Page4: Administrator account
+  - Name: `weblogic`
+  - Password: `Secret123456`, **make sure the value is the same with schema password**.
+- Page5: Domain mode and JDK
+  - Domain mode: production
+  - JDK: keep default
+- Page6: 
   - RCU Data
   - Host Name: the host name of database
   - DBMS/Service: your dbms
   - Schema Owner is `<the-rcu-schema-prefix>_STB`, this sample uses `DEV0402_STB`
   - Schema Password: `Secret123456`
-- Page7:
+- Page9: Advanced Configuration
   - Administration Server
   - Node Manager
   - Topology
   - System Components
   - Deployment and Services
-- Page14: Machines
-  - Remove AdminServerMachine
-- Page15: Assign Servers to Machine
+- Page10: Administration Server
+  - Server Name: `admin`
+  - Listen Address: private ip of adminVM
+  - Listen Port: 7001
+  - Server Groups: WSMPM-MAN-SVR
+- Page11: Node Manager
+  - Node Manager credentials
+    - Username: `weblogic`
+    - Password: `Secret123456`
+- Page12: Managed Servers, add the following servers
+  - WLS_FORMS1
+    - Listen address: private IP of mspVM1
+    - Port: 9001
+    - Server Groups: FORMS_MAN_SVR
+  - WLS_REPORTS1
+    - Listen address: private IP of mspVM1
+    - Port: 9002
+    - Server Groups: REPORTS_APP_SVR
+  - WLS_FORMS2
+    - Listen address: private IP of mspVM2
+    - Port: 9001
+    - Server Groups: FORMS_MAN_SVR
+  - WLS_REPORTS2
+    - Listen address: private IP of mspVM2
+    - Port: 9002
+    - Server Groups: REPORTS_APP_SVR
+- Page13: CLusters
+  - Keep default
+- Page14: Server Templates
+  - Keep default
+- Page15: Dynamic Clusters
+  - Keep default
+- Page16: Assign Servers to Clusters
+  - cluster_forms
+    - WLS_FORMS1
+    - WLS_FORMS2
+  - cluster_reports
+    - WLS_REPORTS1
+    - WLS_REPORTS2
+- Page17: Coherence Cluster
+  - Keep default
+- Page18: Machines
+  - adminVM, `<private-ip-of-adminVM>`, 5556
+  - mspVM1, `<private-ip-of-mspVM1>`, 5556
+  - mspVM2, `<private-ip-of-mspVM2>`, 5556
+- Page19: Assign Servers to Machine
   - adminVM
-    - WLS_FORMS
-    - WLS_REPORTS
-- Page19: Assign System Component
-  - adminVM
+    - admin
+  - mspVM1
+    - WLS_FORMS1
+    - WLS_REPORTS1
+  - mspVM2
+    - WLS_FORMS2
+    - WLS_REPORTS2
+- Page20: virtual targets
+  - Keep default
+- Page21: Partitions
+  - Keep default
+- Page22: System Components
+  - forms1, FORMS, 3600, 0
+  - forms2, FORMS, 3600, 0
+- Page22: Assign System Component
+  - mspVM1
     - SystemComonent
-      - forms
+      - forms1
+  - mspVM2
+    - SystemComonent
+      - forms2
 - Page20: Deployments Targeting
   - AdminServer
     - admin
-      - DMS Application#12.2.1.1.0
-      - coherence-transaction-rar
-      - em
-      - fads#1.0
-      - fads-ui#1.0
-      - opss-rest
-      - state-management-provider-menory...
-      - wlsm-pm
+      - Keep Default
+  - Cluster
+    - cluster_forms
+      - AppDeployment
+        - DMS Application#12.2.1.1.0
+        - coherence-transaction-rar
+        - reportsapp#12.2.1
+        - state-management-provider-menory...
+        - wsm-pm
+      - Liraries
+        - UIX (11,12.2.1.3.0)
+        - adf.oracle.businesseditor (1.0,12.2.1.3.0)
+        - adf.oracle.domain (1.0,12.2.1.3.0)
+        - adf.oracle.domain.groovy (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0)
+        - jsf (2.0,1.0.0.0_2-2-8)
+        - jstl (1.2,1.2.0.1)
+        - odl.clickhistory (1.0,12.2.1)
+        - odl.clickhistory.webapp (1.0,12.2.1)
+        - ohw-rcf (5,12.2.1.3.0)
+        - ohw-uix (5,12.2.1.3.0)
+        - oracle.adf.dconfigbeans (1.0,12.2.1.3.0)
+        - oracle.adf.desktopintegration (1.0,12.2.1.3.0)
+        - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0)
+        - oracle.adf.management (1.0,12.2.1.3.0)
+        - oracle.bi.adf.model.slib (1.0,12.2.1.3.0)
+        - oracle.bi.adf.view.slib (1.0,12.2.1.3.0)
+        - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0)
+        - oracle.bi.composer (11.1.1,0.1)
+        - oracle.bi.jbips (11.1.1,0.1)
+        - oracle.dconfig-infra (2.0,12.2.1)
+        - oracle.formsapp.dependencieslib (12.2.1,12.2.1)
+        - oracle.jrf.system.filter
+        - oracle.jsp.next (12.2.1,12.2.1)
+        - oracle.pwdgen (2.0,12.2.1)
+        - oracle.sdp.client (2.0,12.2.1.3.0)
+        - oracle.sdp.messaging (2.0,12.2.1.3.0)
+        - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3)
+        - oracle.wsm.seedpolicies (2.0,12.2.1.3)
+        - orai18n-adf (11,11.1.1.1.0)
+        - owasp.esapi (2.0,12.2.1)
+      - clusters_reports
+        - AppDeployment
+          - DMS Application#12.2.1.1.0
+          - coherence-transaction-rar
+          - reports#12.2.1
+          - state-management-provider-menory...
+          - wsm-pm
+        - Liraries
+          - UIX (11,12.2.1.3.0)
+          - adf.oracle.businesseditor (1.0,12.2.1.3.0)
+          - adf.oracle.domain (1.0,12.2.1.3.0)
+          - adf.oracle.domain.groovy (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0)
+          - jsf (2.0,1.0.0.0_2-2-8)
+          - jstl (1.2,1.2.0.1)
+          - odl.clickhistory (1.0,12.2.1)
+          - odl.clickhistory.webapp (1.0,12.2.1)
+          - ohw-rcf (5,12.2.1.3.0)
+          - ohw-uix (5,12.2.1.3.0)
+          - oracle.adf.dconfigbeans (1.0,12.2.1.3.0)
+          - oracle.adf.desktopintegration (1.0,12.2.1.3.0)
+          - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0)
+          - oracle.adf.management (1.0,12.2.1.3.0)
+          - oracle.bi.adf.model.slib (1.0,12.2.1.3.0)
+          - oracle.bi.adf.view.slib (1.0,12.2.1.3.0)
+          - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0)
+          - oracle.bi.composer (11.1.1,0.1)
+          - oracle.bi.jbips (11.1.1,0.1)
+          - oracle.dconfig-infra (2.0,12.2.1)
+          - oracle.jrf.system.filter
+          - oracle.jsp.next (12.2.1,12.2.1)
+          - oracle.pwdgen (2.0,12.2.1)
+          - oracle.reports.applib (12.2.1,12.2.1)
+          - oracle.sdp.client (2.0,12.2.1.3.0)
+          - oracle.sdp.messaging (2.0,12.2.1.3.0)
+          - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3)
+          - oracle.wsm.seedpolicies (2.0,12.2.1.3)
+          - orai18n-adf (11,11.1.1.1.0)
+          - owasp.esapi (2.0,12.2.1)
+- Page21: Services Targeting
+  - AdminServer
+    - admin
+      - JDBCSystemResource
+        - LocalSvcTblDataSource
+        - WLSSchemaDataSource
+        - mds-owsm
+        - opss-audit-DBDS
+        - opss-audit-viewDS
+        - opss-data-source
+      - ShutdownClass
+        - DMSShutDown
+      - StartupClass
+        - AWT Applciation Context Startup Class
+        - DMS-Startup
+        - JRF Startup Class
+        - ODL-Startup
+        - WSM Startup Class
+        - Web Services Startup Class
+      - WLDFSystemResource
+        - Module-FMDFW
+  - Cluster
+    - cluster_forms
+      - JDBCSystemResource
+        - opss-audit-DBDS
+        - opss-audit-viewDS
+        - opss-data-source
+      - ShutdownClass
+        - DMSShutDown
+      - StartupClass
+        - AWT Applciation Context Startup Class
+        - DMS-Startup
+        - JRF Startup Class
+        - ODL-Startup
+        - WSM Startup Class
+        - Web Services Startup Class
+      - WLDFSystemResource
+        - Module-FMDFW
+    - cluster_reports
+      - JDBCSystemResource
+        - opss-audit-DBDS
+        - opss-audit-viewDS
+        - opss-data-source
+      - ShutdownClass
+        - DMSShutDown
+      - StartupClass
+        - AWT Applciation Context Startup Class
+        - DMS-Startup
+        - JRF Startup Class
+        - ODL-Startup
+        - WSM Startup Class
+        - Web Services Startup Class
+      - WLDFSystemResource
+        - Module-FMDFW
 - The process should be completed withour error.
-- Pack the domain and copy the domain configuration to managed machine.
+- Pack the domain and copy the domain configuration to managed machines.
   ```shell
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-  bash pack.sh -domain=/u01/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
+  bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
   ```
   ```
   scp /tmp/cluster.jar weblogic@mspVM1:/tmp/cluster.jar
@@ -335,9 +552,9 @@ Now, the machine and database are ready, let's move on to create a new domain fo
     
     [Service]
     Type=simple
-    WorkingDirectory="/u01/domains/wlsd"
-    ExecStart="/u01/domains/wlsd/startWebLogic.sh"
-    ExecStop="/u01/domains/wlsd/bin/customStopWebLogic.sh"
+    WorkingDirectory="/u02/domains/wlsd"
+    ExecStart="/u02/domains/wlsd/startWebLogic.sh"
+    ExecStop="/u02/domains/wlsd/bin/customStopWebLogic.sh"
     User=oracle
     Group=oracle
     KillMode=process
@@ -360,9 +577,9 @@ Now, the machine and database are ready, let's move on to create a new domain fo
     Type=simple
     # Note that the following three parameters should be changed to the correct paths
     # on your own system
-    WorkingDirectory="/u01/domains/wlsd"
-    ExecStart="/u01/domains/wlsd/bin/startNodeManager.sh"
-    ExecStop="/u01/domains/wlsd/bin/stopNodeManager.sh"
+    WorkingDirectory="/u02/domains/wlsd"
+    ExecStart="/u02/domains/wlsd/bin/startNodeManager.sh"
+    ExecStop="/u02/domains/wlsd/bin/stopNodeManager.sh"
     User=oracle
     Group=oracle
     KillMode=process
@@ -396,7 +613,7 @@ Configure domain on managed machine:
 3. Unpack the domain
   ```
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-  bash unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
+  bash unpack.sh -domain=/u02/domains/wlsd -template=/tmp/cluster.jar 
   ```
 4. Make sure the node manager listen address is correct in `/u01/domains/wlsd/nodemanager/nodemanager.properties`
 5. Exit oracle user with command `exit`
