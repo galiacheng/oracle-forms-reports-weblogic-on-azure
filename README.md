@@ -542,7 +542,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
 - Exit `oracle` user: `exit`
 - Use root user: `sudo su`
 - Create service for node manager and admin server
-  - Create service for admin server
+  - Create service for admin server   
     Let's create the credentials for weblogic account.
     ```shell
     mkdir -p /u02/domains/wlsd/servers/admin/security
@@ -625,7 +625,7 @@ Configure domain on managed machine:
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   bash unpack.sh -domain=/u02/domains/wlsd -template=/tmp/cluster.jar 
   ```
-4. Make sure the node manager listen address is correct in `/u01/domains/wlsd/nodemanager/nodemanager.properties`
+4. Make sure the node manager listen address is correct in `/u02/domains/wlsd/nodemanager/nodemanager.properties`
 5. Exit oracle user with command `exit`
 6. Use root user: `sudo su`
 7. Create service for node manager
@@ -639,9 +639,9 @@ Configure domain on managed machine:
   Type=simple
   # Note that the following three parameters should be changed to the correct paths
   # on your own system
-  WorkingDirectory="/u01/domains/wlsd"
-  ExecStart="/u01/domains/wlsd/bin/startNodeManager.sh"
-  ExecStop="/u01/domains/wlsd/bin/stopNodeManager.sh"
+  WorkingDirectory="/u02/domains/wlsd"
+  ExecStart="/u02/domains/wlsd/bin/startNodeManager.sh"
+  ExecStop="/u02/domains/wlsd/bin/stopNodeManager.sh"
   User=oracle
   Group=oracle
   KillMode=process
