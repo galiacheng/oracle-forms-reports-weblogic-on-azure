@@ -673,8 +673,8 @@ Let's create the ReportsToolsComponent using WLST.
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   ./wlst.sh
 
-  # connect admin server
-  connect("weblogic","Secret123456", "adminvn-ip:7001")
+  # connect admin server, replace adminvm-ip with the real value.
+  connect("weblogic","Secret123456", "adminvm-ip:7001")
 
   createReportsToolsInstance(instanceName='reptools1', machine='mspVM1')
   createReportsToolsInstance(instanceName='reptools2', machine='mspVM2')
@@ -686,17 +686,20 @@ Let's create the ReportsToolsComponent using WLST.
 - Start Reports tools.
   ```
   cd /u02/domains/wlsd/bin
+  # the commands require you to input password of node manager.
   ./startComponent.sh reptools1
   ./startComponent.sh reptools2
   ```
-  The Reports tools shoud start successfully.
+  The Reports tools should start successfully.
 
 ## Start Forms and Reports managed servers
 
 Now, you have Reports tools components created and running, you are able to start the managed server and start the Reprots In-process server.
 
 - Login admin console: http://adminvm-ip:7001/console
-- 
+- Select Environment -> Servers -> Control
+- Start WLS_FORMS1, WLS_FORMS2, WLS_REPORTS1 and WLS_REPORTS2.
+- The servers should be running.
 
 
 
