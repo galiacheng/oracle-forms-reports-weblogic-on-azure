@@ -10,14 +10,18 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
 ## Contents
 
 * [Prerequisites](#prerequisites)
-* [Provision Azure WebLogic admin offer](#provision-azure-weblogic-admin-offer)
+* [Provision Azure WebLogic Virtual Machine](#provision-azure-weblogic-virtual-machine)
 * [Create Oracle Database](#create-oracle-database)
 * [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
 * [Install Oracle Fusion Middleware Infrastructure](#install-oracle-fusion-middleware-infrastructure)
 * [Install Oracle Froms and Reports](#install-oracle-froms-and-reports)
-* [Clone machine for managed servers]()
+* [Clone machine for managed servers](#clone-machine-for-managed-servers)
 * [Create schemas using RCU](#create-schemas-using-rcu)
 * [Configure Forms and Reports with a new domain](#configure-forms-and-reports-in-the-existing-domain)
+  * [Create domain for admin server](#create-domain-on-adminvm)
+  * [Create domain for managed servers](#create-domain-on-managed-machine)
+  * [Create and start Reports components](#create-and-start-reports-components)
+  * [Start Forms and Reports](#start-forms-and-reports-managed-servers)
 * [Create Load Balancing with Azure Application Gateway](#create-ohs-machine-and-join-the-domain)
 * [Scale up with new Forms and Reports replicas](#apply-jrf-to-managed-server)
 * [Create High Available Adminitration Server]()
@@ -660,7 +664,7 @@ Configure domain on managed machine:
   ```
 - Apply step 1-8 to msspVM2.
 
-## Create and start Reports components
+### Create and start Reports components
 Now, you have node manager running on adminVM, mspVM1, mspVM2, and admin server up in adminVM.   
 To successfully start Reports server, you must create and start the Reports components.
 
@@ -692,7 +696,7 @@ Let's create the ReportsToolsComponent using WLST.
   ```
   The Reports tools should start successfully.
 
-## Start Forms and Reports managed servers
+### Start Forms and Reports managed servers
 
 Now, you have Reports tools components created and running, you are able to start the managed server and start the Reprots In-process server.
 
