@@ -543,6 +543,14 @@ Now, the machine and database are ready, let's move on to create a new domain fo
 - Use root user: `sudo su`
 - Create service for node manager and admin server
   - Create service for admin server
+    Let's create the credentials for weblogic account.
+    ```shell
+    mkdir -p /u02/domains/wlsd/servers/admin/security
+    cat <<EOF >/u02/domains/wlsd/servers/admin/security/boot.properties
+    username=weblogic
+    password=Secret123456
+    EOF
+    ```
     ```shell
     cat <<EOF >/etc/systemd/system/wls_admin.service
     [Unit]
@@ -598,6 +606,8 @@ Now, the machine and database are ready, let's move on to create a new domain fo
   sudo systemctl start wls_nodemanager
   sudo systemctl start wls_admin
   ```
+
+Now you are able to access admin console with `http://adminvm-ip:7001/console`, and Enterprise Manager with `http://adminvm-ip:7001/em`.
 
 ### Create domain on managed machine
 
