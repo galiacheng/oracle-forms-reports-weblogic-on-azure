@@ -701,14 +701,13 @@ Now, you have Reports tools components created and running, you are able to star
 - Start WLS_FORMS1, WLS_FORMS2, WLS_REPORTS1 and WLS_REPORTS2.
 - The servers should be running.
 
-
-
-
-
-
-
-
-
+Now you are able to start Reports in process server from browser.
+- Start reports server on mspVM1 with the URL
+  - `http://<mspVM1-ip>:9002/reports/rwservlet/startserver`
+  - You will get  output from the browser `1|0` if the server is up.
+- Start reports server on mspVM2 with the URL
+  - `http://<mspVM2-ip>:9002/reports/rwservlet/startserver`
+  - You will get  output from the browser `1|0` if the server is up.
 
 ## Validation
 
