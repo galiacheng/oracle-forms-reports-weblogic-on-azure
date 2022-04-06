@@ -660,9 +660,46 @@ Configure domain on managed machine:
   ```
 - Apply step 1-8 to msspVM2.
 
-## Create Reports components
-Now, you have node manager running on adminVM, mspVM1, mspVM2, and admin server running in adminVM.   
+## Create and start Reports components
+Now, you have node manager running on adminVM, mspVM1, mspVM2, and admin server up in adminVM.   
 To successfully start Reports server, you must create and start the Reports components.
+
+Let's create the ReportsToolsComponent using WLST.
+
+- SSH to adminVM: `ssh weblogic@adminvm`
+- Use `oracle` user: `sudo su - oracle`
+- Use WLST to create Reports tools instance.
+  ```
+  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+  ./wlst.sh
+
+  # connect admin server
+  connect("weblogic","Secret123456", "adminvn-ip:7001")
+
+  createReportsToolsInstance(instanceName='reptools1', machine='mspVM1')
+  createReportsToolsInstance(instanceName='reptools2', machine='mspVM2')
+
+  # exit WLST
+  exit()
+  ```
+  Those commands should be finished without error. You have to resolve error before moving on.
+- Start Reports tools.
+  ```
+  cd /u02/domains/wlsd/bin
+  ./startComponent.sh reptools1
+  ./startComponent.sh reptools2
+  ```
+  The Reports tools shoud start successfully.
+
+## Start Forms and Reports managed servers
+
+Now, you have Reports tools components created and running, you are able to start the managed server and start the Reprots In-process server.
+
+- Login admin console: http://adminvm-ip:7001/console
+- 
+
+
+
 
 
 
