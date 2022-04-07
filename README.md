@@ -146,6 +146,7 @@ Steps to install Oracle Fusion Middleware Infrastructure on adminVM:
   # for forms and reports
   sudo firewall-cmd --zone=public --add-port=9001/tcp
   sudo firewall-cmd --zone=public --add-port=9002/tcp
+  sudo firewall-cmd --zone=public --add-port=14021/tcp
   # for clusters
   sudo firewall-cmd --zone=public --add-port=7100/tcp
   sudo firewall-cmd --zone=public --add-port=8100/tcp
@@ -743,7 +744,33 @@ You are able to use WLST for Forms and Reports configuration.
 - Prepare Python script to create Forms component.
   ```shell
   cat <<EOF >create-forms3.py
+  import sys, traceback
+  formsSvrGrp=["FORMS-MAN-SVR"]
+  reportsSvrGrp=["REPORTS-APP-SERVERS"]
   readDomain('/u02/domains/wlsd')
+  print('\nCreate WLS_FORMS3 ')
+  cd('/')
+  create('WLS_FORMS3', 'Server')
+  cd('/Servers/WLS_FORMS3')
+  set('ListenAddress','10.0.0.8')
+  set('ListenPort',int('9001'))
+  set('Machine','mspVM3')
+  cd('/')
+  assign('Server','WLS_FORMS3','Cluster','cluster_forms')
+  cd('/')
+  setServerGroups('WLS_FORMS3', formsSvrGrp)
+  print('\nCreate WLS_REPORTS3 ')
+  cd('/')
+  create('WLS_REPORTS3', 'Server')
+  cd('/Servers/WLS_REPORTS3')
+  set('ListenAddress','10.0.0.8')
+  set('ListenPort',int('9001'))
+  set('Machine','mspVM3')
+  cd('/')
+  assign('Server','WLS_REPORTS3','Cluster','cluster_reports')
+  cd('/')
+  setServerGroups('WLS_FORMS3', reportsSvrGrp)
+    print('\nCreate FORMS SystemComponent ')
   cd('/')
   create('forms3', 'SystemComponent')
   cd('/SystemComponent/forms3')
