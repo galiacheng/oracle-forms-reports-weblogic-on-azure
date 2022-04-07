@@ -732,8 +732,55 @@ Follow the steps to add replica.
 - Copy the domain package to mspVM3: `scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar`
 - Create domain on mspVM3 and start node manager following [Create domain for managed servers](#create-domain-on-managed-machine)
 
-### Configure managed servers
+### Create Forms and Reports components
+
+This is an example to start Forms and Reports on mspVM3, replace the machine name and component name with yours.
+
+Firstly, you are required to create and start replated components.
+
+You are able to use WLST for Forms and Reports configuration.
+- SSH to adminVM and switch to `oracle` user.
+- Prepare Python script to create Forms component.
+  ```shell
+  cat <<EOF >create-forms3.py
+  readDomain('/u02/domains/wlsd')
+  cd('/')
+  create('forms3', 'SystemComponent')
+  cd('/SystemComponent/forms3')
+  cmo.setComponentType('FORMS')
+  set('Machine', 'mspVM3')
+  updateDomain()
+  EOF
+  ```
+- Run the script to create Forms component on mspVM3 with WLST, the script should be completed without errors.
+  ```
+  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-forms3.py
+  ```
+- Prepare Python script to create Reports component.
+  ```shell
+  # please replace the IP address, weblogic account with yours
+  adminVMIP=10.0.0.4
+  cat <<EOF >create-reportstools.py
+  connect("weblogic","Secret123456", "${adminVMIP}:7001")
+  createReportsToolsInstance(instanceName='reptools3', machine='mspVM3')
+  EOF
+  ```
+- Run the script using WLST, the script should be completed without errors.
+  ```
+  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-reportstools.py
+  ```
+- Start Forms and Reports system components on mspVM3, the commands should be completed without errors.
+  ```shell
+  cd /u01/domains/wlsd/bin
+  # the command will ask for node manager password
+  ./startComponent.sh form3
+  ./startComponent.sh reptools2
+  ```
+
+### Create managed servers
 Now you have the node manager running on mspVM3, let's add the machine to the WLS domain.
+
+This is an example to create managed servers on mspVM3, replace the machine name and server name with yours.
 - Login admin console: http://adminvm-ip:7001/console
 - Lock & Edit
 - Add machine: select Environment -> Machines -> New
@@ -766,47 +813,16 @@ Now you have the node manager running on mspVM3, let's add the machine to the WL
 
 Above steps should be completed without errors. The machine joins to the domain successfully.
 
-### Create Forms and Reports components
+### Start servers
 
-To start Forms and Reports on mspVM3, you are required to create and start replated components.
+Now, Forms and Reports system components on mspVM3 are ready, let's start the managed server from console portal.
 
-You are able to use WLST for Forms and Reports configuration.
-- SSH to adminVM and switch to `oracle` user.
-- Prepare Python script to create Forms component.
-  ```shell
-  # please replace the IP address, weblogic account with yours
-  adminVMIP=10.0.0.4
-  cat <<EOF >create-forms3.py
-  readDomain('/u02/domains/wlsd')
-  cd('/')
-  create('forms3', 'SystemComponent')
-  cd('/SystemComponent/forms3')
-  cmo.setComponentType('FORMS')
-  set('Machine', 'mspVM3')
-  updateDomain()
-  EOF
-  ```
-- Run the script to create Forms component on mspVM3 with WLST, the script should be completed without errors.
-  ```
-  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-forms3.py
-  ```
-- Prepare Python script to create Reports component.
-  ```shell
-  adminVMIP=10.0.0.4
-  cat <<EOF >create-reportstools.py
-  connect("weblogic","Secret123456", "${adminVMIP}:7001")
-  createReportsToolsInstance(instanceName='reptools3', machine='mspVM3')
-  EOF
-  ```
-- Run the script using WLST, the script should be completed without errors.
-  ```
-  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-reportstools.py
-  ```
-- Start Forms and Reports system components on mspVM3.
-  ```shell
-  cd /u01/domains/wlsd/bin
-  # the command will ask for node manager password
-  ./startComponent.sh form3
-  ./startComponent.sh reptools2
-  ```
+- Login admin console: http://adminvm-ip:7001/console
+- Select Environment -> Servers -> Control
+- Start WLS_FORMS3, WLS_REPORTS3.
+- The servers should be running.
 
+Let's start Reports in process server from browser.
+- Start reports server on mspVM3 with the URL
+  - `http://<mspVM3-ip>:9002/reports/rwservlet/startserver`
+  - You will get output `1|0` from the browser if the server is up.
