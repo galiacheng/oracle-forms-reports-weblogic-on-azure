@@ -750,6 +750,7 @@ You are able to use WLST for Forms and Reports configuration.
   cmo.setComponentType('FORMS')
   set('Machine', 'mspVM3')
   updateDomain()
+  closeDomain()
   EOF
   ```
 - Run the script to create Forms component on mspVM3 with WLST, the script should be completed without errors.
