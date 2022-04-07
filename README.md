@@ -33,8 +33,8 @@ An Azure account with an active subscription. [Create an account for free](https
 
 ## Provision Azure WebLogic Virtual Machine
 
-Azure provides a serie of Oracle WebLogic base image, it'll save your effor for Oracle tools installation.
-This document will setup Oracle Forms and Reports based on the Azure WebLogic base image, follow the steps to provison a machine with WebLogic installed:
+Azure provides a serie of Oracle WebLogic base images, it'll save your effor for Oracle tools installation.
+This document will setup Oracle Forms and Reports based on the Azure WebLogic base image, follow the steps to provison a machine with JDK and WebLogic installed:
 
 - Open [Azure portal](https://portal.azure.com/) from your browser.
 - Search `WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6`, you will find the WebLogic offers, select **WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6**, and click **Create** button.
@@ -58,7 +58,7 @@ It will take 10min for the offer completed. After the deployment finishes, you w
 You are required to have to database to confiugre the JRF domain for Forms and Reports.This document will use Oracle Database.
 Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create) to create an Oracle database
 
-If you are following the document to create Oracle database, write down the credentials to create Forms schema, username and password should be: `sys/OraPasswd1`
+If you are following the document to create Oracle database, write down the credentials to create domain schema, username and password should be: `sys/OraPasswd1`
 
 ## Create Windows VM and set up XServer
 
@@ -708,10 +708,10 @@ Now, you have Reports tools components created and running, you are able to star
 Now you are able to start Reports in process server from browser.
 - Start reports server on mspVM1 with the URL
   - `http://<mspVM1-ip>:9002/reports/rwservlet/startserver`
-  - You will get  output from the browser `1|0` if the server is up.
+  - You will get output `1|0` from the browser if the server is up.
 - Start reports server on mspVM2 with the URL
   - `http://<mspVM2-ip>:9002/reports/rwservlet/startserver`
-  - You will get  output from the browser `1|0` if the server is up.
+  - You will get output `1|0` from the browser if the server is up.
 
 ## Validation
 
