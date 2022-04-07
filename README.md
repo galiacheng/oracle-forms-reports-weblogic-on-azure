@@ -772,19 +772,41 @@ To start Forms and Reports on mspVM3, you are required to create and start repla
 
 You are able to use WLST for Forms and Reports configuration.
 - SSH to adminVM and switch to `oracle` user.
-- Prepare Python script to create components.
+- Prepare Python script to create Forms component.
   ```shell
   # please replace the IP address, weblogic account with yours
   adminVMIP=10.0.0.4
-  cat <<EOF >create-components.py
-  # connect admin server, replace adminvm-ip with the real value.
+  cat <<EOF >create-forms3.py
+  readDomain('/u02/domains/wlsd')
+  cd('/')
+  create('forms3', 'SystemComponent')
+  cd('/SystemComponent/forms3')
+  cmo.setComponentType('FORMS')
+  set('Machine', 'mspVM3')
+  updateDomain()
+  EOF
+  ```
+- Run the script to create Forms component on mspVM3 with WLST, the script should be completed without errors.
+  ```
+  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-forms3.py
+  ```
+- Prepare Python script to create Reports component.
+  ```shell
+  adminVMIP=10.0.0.4
+  cat <<EOF >create-reportstools.py
   connect("weblogic","Secret123456", "${adminVMIP}:7001")
-  createFormsComponent(instanceName='forms3', machine='mspVM3')
   createReportsToolsInstance(instanceName='reptools3', machine='mspVM3')
   EOF
   ```
-- Run the script with WLST, the script should be completed without errors.
+- Run the script using WLST, the script should be completed without errors.
   ```
-  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-components.py
+  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-reportstools.py
+  ```
+- Start Forms and Reports system components on mspVM3.
+  ```shell
+  cd /u01/domains/wlsd/bin
+  # the command will ask for node manager password
+  ./startComponent.sh form3
+  ./startComponent.sh reptools2
   ```
 
