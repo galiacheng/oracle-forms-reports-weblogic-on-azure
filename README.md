@@ -740,7 +740,9 @@ This is an example to start Forms and Reports on mspVM3, replace the machine nam
 Firstly, you are required to create and start replated components.
 
 You are able to use WLST for Forms and Reports configuration.
-- SSH to adminVM and switch to `oracle` user.
+- SSH to adminVM and switch to root user
+- Stop admin server: `sudo systemctl stop wls_admin`
+- and switch to `oracle` user.
 - Prepare Python script to create Forms component.
   ```shell
   cat <<EOF >create-forms3.py
@@ -764,7 +766,7 @@ You are able to use WLST for Forms and Reports configuration.
   create('WLS_REPORTS3', 'Server')
   cd('/Servers/WLS_REPORTS3')
   set('ListenAddress','10.0.0.8')
-  set('ListenPort',int('9001'))
+  set('ListenPort',int('9002'))
   set('Machine','mspVM3')
   cd('/')
   assign('Server','WLS_REPORTS3','Cluster','cluster_reports')
@@ -804,42 +806,6 @@ You are able to use WLST for Forms and Reports configuration.
   ./startComponent.sh form3
   ./startComponent.sh reptools2
   ```
-
-### Create managed servers
-Now you have the node manager running on mspVM3, let's add the machine to the WLS domain.
-
-This is an example to create managed servers on mspVM3, replace the machine name and server name with yours.
-- Login admin console: http://adminvm-ip:7001/console
-- Lock & Edit
-- Add machine: select Environment -> Machines -> New
-  - Name: mspVM3
-  - Machine OS: other
-  - Listen Address: private ip of mspVM3
-  - Listen port: 5556
-- Activate changes
-- Add Forms managed server: select Environment -> Servers -> Configuration -> New
-  - Server Name: WLS_FORMS3
-  - Listen Address: private ip of mspVM3
-  - Listen Port: 9001
-  - Select a cluster: cluster_forms
-  - Finish
-- Select Environment -> Servers -> Configuration -> WLS_FORMS3
-  - Machine: mspVM3
-  - Cluster: cluster_forms
-  - Save
-- Add Reports managed server: select Environment -> Servers -> Configuration -> New
-  - Server Name: WLS_REPORTS3
-  - Listen Address: private ip of mspVM3
-  - Listen Port: 9002
-  - Select a cluster: cluster_reports
-  - Finish
-- Select Environment -> Servers -> Configuration -> WLS_REPORTS3
-  - Machine: mspVM3
-  - Cluster: cluster_reports
-  - Save
-- Activate changes
-
-Above steps should be completed without errors. The machine joins to the domain successfully.
 
 ### Start servers
 
