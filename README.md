@@ -717,6 +717,7 @@ Now you are able to start Reports in process server from browser.
 
 You are able to add Forms and Reports replica by cloning machine and starting the corresponding components.
 
+### Create a new machine for new replica
 Follow the steps to add replica.
 
 - Clone adminVM following [Clone machine for managed servers](#clone-machine-for-managed-servers), let's name the new machine with `mspVM3`.
@@ -731,6 +732,7 @@ Follow the steps to add replica.
 - Copy the domain package to mspVM3: `scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar`
 - Create domain on mspVM3 and start node manager following [Create domain for managed servers](#create-domain-on-managed-machine)
 
+### Configure managed servers
 Now you have the node manager running on mspVM3, let's add the machine to the WLS domain.
 - Login admin console: http://adminvm-ip:7001/console
 - Lock & Edit
@@ -745,7 +747,7 @@ Now you have the node manager running on mspVM3, let's add the machine to the WL
   - Listen Address: private ip of mspVM3
   - Listen Port: 9001
   - Select a cluster: cluster_forms
-  - Save.
+  - Finish
 - Select Environment -> Servers -> Configuration -> WLS_FORMS3
   - Machine: mspVM3
   - Cluster: cluster_forms
@@ -755,50 +757,34 @@ Now you have the node manager running on mspVM3, let's add the machine to the WL
   - Listen Address: private ip of mspVM3
   - Listen Port: 9002
   - Select a cluster: cluster_reports
-  - Save.
+  - Finish
 - Select Environment -> Servers -> Configuration -> WLS_REPORTS3
   - Machine: mspVM3
   - Cluster: cluster_reports
   - Save
+- Activate changes
 
 Above steps should be completed without errors. The machine joins to the domain successfully.
 
+### Create Forms and Reports components
 
+To start Forms and Reports on mspVM3, you are required to create and start replated components.
 
 You are able to use WLST for Forms and Reports configuration.
 - SSH to adminVM and switch to `oracle` user.
-- Prepare Python script to create managed server and components.
-  ```
-  # please replace the IP address with yours
+- Prepare Python script to create components.
+  ```shell
+  # please replace the IP address, weblogic account with yours
   adminVMIP=10.0.0.4
-
+  cat <<EOF >create-components.py
   # connect admin server, replace adminvm-ip with the real value.
   connect("weblogic","Secret123456", "${adminVMIP}:7001")
-  edit("mspvm3")
-  startEdit()
-  cd('/')
-  cmo.createServer('WLS_FORMS3')
-  cd('/Servers/WLS_FORMS3')
-  cmo.setMachine(getMBean('/Machines/mspVM3'))
-  cmo.setCluster(getMBean('/Clusters/cluster_forms'))
-  cmo.setListenAddress('mspVM3')
-  cmo.setListenPort(int(9001))
-  cmo.setListenPortEnabled(true)
-  cd('/')
-  cmo.createServer('WLS_REPORTS3')
-  cd('/Servers/WLS_REPORTS3')
-  cmo.setMachine(getMBean('/Machines/mspVM3'))
-  cmo.setCluster(getMBean('/Clusters/cluster_reports'))
-  cmo.setListenAddress('mspVM3')
-  cmo.setListenPort(int(9002))
-  cmo.setListenPortEnabled(true)
-  save()
-  resolve()
-  activate()
-  destroyEditSession("mspvm3")
-  nmEnroll('/u02/domains/wlsd','/u02/domains/wlsd/nodemanager')
-  nmGenBootStartupProps('$wlsServerName')
+  createFormsComponent(instanceName='forms3', machine='mspVM3')
+  createReportsToolsInstance(instanceName='reptools3', machine='mspVM3')
+  EOF
+  ```
+- Run the script with WLST, the script should be completed without errors.
+  ```
+  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-components.py
   ```
 
-
-    
