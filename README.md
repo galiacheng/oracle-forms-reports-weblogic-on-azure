@@ -22,8 +22,8 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
   * [Create domain for managed servers](#create-domain-on-managed-machine)
   * [Create and start Reports components](#create-and-start-reports-components)
   * [Start Forms and Reports](#start-forms-and-reports-managed-servers)
+* [Add Forms and Reports replica](#apply-jrf-to-managed-server)
 * [Create Load Balancing with Azure Application Gateway](#create-ohs-machine-and-join-the-domain)
-* [Scale up with new Forms and Reports replicas](#apply-jrf-to-managed-server)
 * [Create High Available Adminitration Server]()
 * [Troubleshooting]()
 
@@ -354,7 +354,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
   - adminVM, `<private-ip-of-adminVM>`, 5556
   - mspVM1, `<private-ip-of-mspVM1>`, 5556
   - mspVM2, `<private-ip-of-mspVM2>`, 5556
-- Page19: Assign Servers to Machine
+- Page19: Assign Servers to machine
   - adminVM
     - admin
   - mspVM1
@@ -713,15 +713,92 @@ Now you are able to start Reports in process server from browser.
   - `http://<mspVM2-ip>:9002/reports/rwservlet/startserver`
   - You will get output `1|0` from the browser if the server is up.
 
-## Validation
+## Add Forms and Reports replica
 
-- Admin console: `http://<adminvm-ip>:7001/console`
-- em: `http://<adminvm-ip>:7001/em`
-- forms: `http://<adminvm-ip>:9001/forms/frmservlet` and `http://<ohs-ip>:7777/forms/frmservlet`
-  - Please use JRE 32 bit + IE to access Forms.
-- reports: `http://<adminvm-ip>:9002/reports/rwservlet` and `http://<ohs-ip>:7777/reports/rwservlet`
-- Validate WLS cluster, if you have an application deployed to WLS cluster, you will be able to access the app via `http://<ohs-ip>:7777/<app-path>`
+You are able to add Forms and Reports replica by cloning machine and starting the corresponding components.
+
+Follow the steps to add replica.
+
+- Clone adminVM following [Clone machine for managed servers](#clone-machine-for-managed-servers), let's name the new machine with `mspVM3`.
+- Pack the domain on adminVM, you have the domain package in previous section, if no, following the steps to pack the domain:
+  - SSH to adminVM: `ssh weblogic@adminVM`
+  - Use oracle user: `sudo su - oracle`
+  - Pack the domain
+    ```
+    cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+    bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
+    ```
+- Copy the domain package to mspVM3: `scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar`
+- Create domain on mspVM3 and start node manager following [Create domain for managed servers](#create-domain-on-managed-machine)
+
+Now you have the node manager running on mspVM3, let's add the machine to the WLS domain.
+- Login admin console: http://adminvm-ip:7001/console
+- Lock & Edit
+- Add machine: select Environment -> Machines -> New
+  - Name: mspVM3
+  - Machine OS: other
+  - Listen Address: private ip of mspVM3
+  - Listen port: 5556
+- Activate changes
+- Add Forms managed server: select Environment -> Servers -> Configuration -> New
+  - Server Name: WLS_FORMS3
+  - Listen Address: private ip of mspVM3
+  - Listen Port: 9001
+  - Select a cluster: cluster_forms
+  - Save.
+- Select Environment -> Servers -> Configuration -> WLS_FORMS3
+  - Machine: mspVM3
+  - Cluster: cluster_forms
+  - Save
+- Add Reports managed server: select Environment -> Servers -> Configuration -> New
+  - Server Name: WLS_REPORTS3
+  - Listen Address: private ip of mspVM3
+  - Listen Port: 9002
+  - Select a cluster: cluster_reports
+  - Save.
+- Select Environment -> Servers -> Configuration -> WLS_REPORTS3
+  - Machine: mspVM3
+  - Cluster: cluster_reports
+  - Save
+
+Above steps should be completed without errors. The machine joins to the domain successfully.
+
+
+
+You are able to use WLST for Forms and Reports configuration.
+- SSH to adminVM and switch to `oracle` user.
+- Prepare Python script to create managed server and components.
   ```
-  curl http://<ohs-ip>:7777/weblogic/ready
+  # please replace the IP address with yours
+  adminVMIP=10.0.0.4
+
+  # connect admin server, replace adminvm-ip with the real value.
+  connect("weblogic","Secret123456", "${adminVMIP}:7001")
+  edit("mspvm3")
+  startEdit()
+  cd('/')
+  cmo.createServer('WLS_FORMS3')
+  cd('/Servers/WLS_FORMS3')
+  cmo.setMachine(getMBean('/Machines/mspVM3'))
+  cmo.setCluster(getMBean('/Clusters/cluster_forms'))
+  cmo.setListenAddress('mspVM3')
+  cmo.setListenPort(int(9001))
+  cmo.setListenPortEnabled(true)
+  cd('/')
+  cmo.createServer('WLS_REPORTS3')
+  cd('/Servers/WLS_REPORTS3')
+  cmo.setMachine(getMBean('/Machines/mspVM3'))
+  cmo.setCluster(getMBean('/Clusters/cluster_reports'))
+  cmo.setListenAddress('mspVM3')
+  cmo.setListenPort(int(9002))
+  cmo.setListenPortEnabled(true)
+  save()
+  resolve()
+  activate()
+  destroyEditSession("mspvm3")
+  nmEnroll('/u02/domains/wlsd','/u02/domains/wlsd/nodemanager')
+  nmGenBootStartupProps('$wlsServerName')
   ```
 
+
+    
