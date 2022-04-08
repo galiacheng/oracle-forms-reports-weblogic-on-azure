@@ -31,6 +31,8 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
   * [Create Application Gateway](#create-application-gateway)
   * [Configure Backend Pool](#configure-backend-pool)
 * [Create High Available Adminitration Server]()
+* [Validate]()
+* [Clean up]()
 * [Troubleshoot](#troubleshoot)
 
 ## Prerequisites
@@ -881,62 +883,25 @@ If you have setup Applcation Gateway for load balancing, add the private IP of y
 
 ## Configure Private Application Gateway
 
-### Create Application Gateway
-- Expand the portal menu and select Create a resource.
-- Select Networking and then select Application Gateway in the Featured list.
-- Enter myAppGateway for the name of the application gateway and select your resource group.
-- Select Region
-- For Tier, select Standard.
-- Under Configure virtual network
-  - Select your vnet
-  - Select your subnet
-- Select Next : Frontends.
-- For Frontend IP address type, select Private.
-- Select Next:Backends.
-- Select Add a backend pool.
-- For Name, type appGatewayBackendPool.
-- For Add backend pool without targets, select Yes. You'll add the targets later.
-- Select Add.
-- Select Next:Configuration.
-- Under Routing rules, select Add a routing rule.
-- For Rule name, type Rule-01.
-- For Listener name, type Listener-01.
-- For Frontend IP, select Private.
-- Accept the remaining defaults and select the Backend targets tab.
-- For Target type, select Backend pool, and then select appGatewayBackendPool.
-- For HTTP setting, select Add new.
-- For HTTP setting name, type http-setting-01.
-- For Backend protocol, select HTTP.
-- For Backend port, type 9001
-- Accept the remaining defaults, and select Add.
-- On the Add a routing rule page, select Add.
-- Select Next: Tags.
-- Select Next: Review + create.
+## Validate
 
-Wait for the resources completed.
+Validate the Forms testing application.
+- Make sure the application is running in each managed server.
+  - Forms
+    - `http://<mspvm1-ip>:9001/forms/frmservlet`
+    - `http://<mspvm2-ip>:9001/forms/frmservlet`
+    - `http://<mspvm3-ip>:9001/forms/frmservlet`
+  - Reports
+    - `http://<mspvm1-ip>:9002/reports/rwservlet`
+    - `http://<mspvm2-ip>:9002/reports/rwservlet`
+    - `http://<mspvm3-ip>:9002/reports/rwservlet`
 
-### Configure Backend Pool
+- Make sure the application gateway is able to access Forms application.
+  - http://app-gateway-ip/forms/frmservlet
 
-- Go to Azure Portal, open the Applciation Gateway instance.
-- Select Settings -> Backend pools - appGatewayBackendPool
-  Add IP address of managed servers.
-  - Item1
-    - Type: IP address or FQDN
-    - Target: private IP of mspVM1
-  - Item2
-    - Type: IP address or FQDN
-    - Target: private IP of mspVM2
-  - Item3
-    - Type: IP address or FQDN
-    - Target: private IP of mspVM3
+## Clean up
 
-Then you should be able to access Forms application using private IP of application gateway.
-- http://app-gateway-ip/forms/frmservlet
-
-Application Gateway has enabled monitoring the backend health:
-  - Go to the application gateway from Azure Portal
-  - Select Monitoring -> Backend health
-  - The status of Servers should be Healthy.
+Delete the resource group from Azure portal.
 
 ## Troubleshoot
 1. EM is slow    
@@ -950,3 +915,32 @@ Application Gateway has enabled monitoring the backend health:
       2. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_CACHE_AGE=7200000
       3. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_WAIT_TIME=10000
     - Select WebLogic domain -> Refresh WebLogic domain.
+  
+2. SSH WARNING: POSSIBLE DNS SPOOFING DETECTED!
+    You may run into this error when connect a machine using SSH, see the details:
+    ```text
+    [oracle@adminVM1 bin]$ scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @       WARNING: POSSIBLE DNS SPOOFING DETECTED!          @
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    The ECDSA host key for mspvm3 has changed,
+    and the key for the corresponding IP address 10.0.0.10
+    is unknown. This could either mean that
+    DNS SPOOFING is happening or the IP address for the host
+    and its host key have changed at the same time.
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+    Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+    It is also possible that a host key has just been changed.
+    The fingerprint for the ECDSA key sent by the remote host is
+    SHA256:VEn4PQNWtIJhA337odSkzhPS1rIZ6oz0Bco6+ZNuvsk.
+    Please contact your system administrator.
+    Add correct host key in /u01/oracle/.ssh/known_hosts to get rid of this message.
+    Offending ECDSA key in /u01/oracle/.ssh/known_hosts:2
+    ECDSA host key for mspvm3 has changed and you have requested strict checking.
+    Host key verification failed.
+    lost connection
+    ```
+    Solution: remove `~/.ssh/knownhosts`
