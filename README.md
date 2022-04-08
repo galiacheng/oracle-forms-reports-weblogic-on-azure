@@ -914,7 +914,7 @@ Delete the resource group from Azure portal.
       3. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_WAIT_TIME=10000
     - Select WebLogic domain -> Refresh WebLogic domain.
   
-2. SSH WARNING: POSSIBLE DNS SPOOFING DETECTED!
+2. SSH WARNING: POSSIBLE DNS SPOOFING DETECTED!   
     You may run into this error when connect a machine using SSH, see the details:
     ```text
     [oracle@adminVM1 bin]$ scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar
