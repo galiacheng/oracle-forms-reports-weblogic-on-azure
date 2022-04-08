@@ -855,6 +855,8 @@ To enable Reports in process server, you are required to create and start Report
   /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-reportstools.py
   ```
 - Start Reports system components on mspVM3, the commands should be completed without errors.
+
+  Replace `reptools3` with your component name, should be `reptools${index}` created in last step.
   ```shell
   cd /u02/domains/wlsd/bin
   # the command will ask for node manager password
@@ -863,7 +865,7 @@ To enable Reports in process server, you are required to create and start Report
 
 ### Start servers
 
-Forms and Reports system components on mspVM3 are ready, node manager is up on mspVM3. Let's start the managed server from console portal.
+Forms and Reports system components on mspVM3 are ready, and node manager is up on mspVM3. Let's start the managed server from console portal.
 
 - Login admin console: http://adminvm-ip:7001/console
 - Select Environment -> Servers -> Control
@@ -875,7 +877,7 @@ Let's start Reports in process server from browser.
   - `http://<mspVM3-ip>:9002/reports/rwservlet/startserver`
   - You will get output `1|0` from the browser if the server is up.
 
-If you have setup Applcation Gateway for load balancing, add the private IP of your new machine to backend pool. then the Applicatin Gateway is able to managed the traffic to the new replicas.
+If you have setup Applcation Gateway for load balancing, add the private IP of your new machine to backend pool, to enable the applicatin gateway to managed the traffic to the new replicas.
 
 ## Configure Private Application Gateway
 
