@@ -857,3 +857,64 @@ Let's start Reports in process server from browser.
 - Start reports server on mspVM3 with the URL
   - `http://<mspVM3-ip>:9002/reports/rwservlet/startserver`
   - You will get output `1|0` from the browser if the server is up.
+
+If you have setup Applcation Gateway for load balancing, add the private IP of your new machine to backend pool. then the Applicatin Gateway is able to managed the traffic to the new replicas.
+
+## Configure Private Application Gateway
+
+### Create Application Gateway
+- Expand the portal menu and select Create a resource.
+- Select Networking and then select Application Gateway in the Featured list.
+- Enter myAppGateway for the name of the application gateway and select your resource group.
+- Select Region
+- For Tier, select Standard.
+- Under Configure virtual network
+  - Select your vnet
+  - Select your subnet
+- Select Next : Frontends.
+- For Frontend IP address type, select Private.
+- Select Next:Backends.
+- Select Add a backend pool.
+- For Name, type appGatewayBackendPool.
+- For Add backend pool without targets, select Yes. You'll add the targets later.
+- Select Add.
+- Select Next:Configuration.
+- Under Routing rules, select Add a routing rule.
+- For Rule name, type Rule-01.
+- For Listener name, type Listener-01.
+- For Frontend IP, select Private.
+- Accept the remaining defaults and select the Backend targets tab.
+- For Target type, select Backend pool, and then select appGatewayBackendPool.
+- For HTTP setting, select Add new.
+- For HTTP setting name, type http-setting-01.
+- For Backend protocol, select HTTP.
+- For Backend port, type 9001
+- Accept the remaining defaults, and select Add.
+- On the Add a routing rule page, select Add.
+- Select Next: Tags.
+- Select Next: Review + create.
+
+Wait for the resources completed.
+
+### Configure Backend Pool
+
+- Go to Azure Portal, open the Applciation Gateway instance.
+- Select Settings -> Backend pools - appGatewayBackendPool
+  Add IP address of managed servers.
+  - Item1
+    - Type: IP address or FQDN
+    - Target: private IP of mspVM1
+  - Item2
+    - Type: IP address or FQDN
+    - Target: private IP of mspVM2
+  - Item3
+    - Type: IP address or FQDN
+    - Target: private IP of mspVM3
+
+Then you should be able to access Forms application using private IP of application gateway.
+- http://app-gateway-ip/forms/frmservlet
+
+Application Gateway has enabled monitoring the backend health:
+  - Go to the application gateway from Azure Portal
+  - Select Monitoring -> Backend health
+  - The status of Servers should be Healthy.
