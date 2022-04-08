@@ -529,6 +529,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
 - The process should be completed withour error.
 - Pack the domain and copy the domain configuration to managed machines.
   ```shell
+  rm /tmp/cluster.jar -f
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
   ```
@@ -817,7 +818,8 @@ Now, you have finished updating the domain. Let's pack the domain and apply the 
   - SSH to adminVM: `ssh weblogic@adminVM`
   - Use oracle user: `sudo su - oracle`
   - Pack the domain
-    ```
+    ```shell
+    rm /tmp/cluster.jar -f
     cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
     bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
     ```
