@@ -1,10 +1,10 @@
-# Create Highly Available Oracle Forms and Reports clusters on Azure(WIP)
+# Create Highly Available Oracle Forms and Reports clusters on Azure (WIP)
 
-This document guides you to create high vailable Oracle Forms and Reports clusters on Azure VMs step by step, including:
+This document guides you to create highly available Oracle Forms and Reports clusters on Azure VMs step by step, including:
 - Create Oracle Forms and Reports clusters with 2 replicas.
 - Create load balancing with Azure Application Gateway
 - Scale up with new Forms and Reports replicas
-- Create Highly Available Adminitration Server
+- Create Highly Available Administration Server
 - Troubleshooting
 
 ## Contents
@@ -14,7 +14,7 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
 * [Create Oracle Database](#create-oracle-database)
 * [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
 * [Install Oracle Fusion Middleware Infrastructure](#install-oracle-fusion-middleware-infrastructure)
-* [Install Oracle Froms and Reports](#install-oracle-froms-and-reports)
+* [Install Oracle Forms and Reports](#install-oracle-forms-and-reports)
 * [Clone machine for managed servers](#clone-machine-for-managed-servers)
 * [Create schemas using RCU](#create-schemas-using-rcu)
 * [Configure Forms and Reports with a new domain](#configure-forms-and-reports-in-the-existing-domain)
@@ -30,7 +30,7 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
 * [Create Load Balancing with Azure Application Gateway](#configure-private-application-gateway)
   * [Create Application Gateway](#create-application-gateway)
   * [Configure Backend Pool](#configure-backend-pool)
-* [Create High Available Adminitration Server]()
+* [Create High Available Administration Server]()
 * [Validate]()
 * [Clean up]()
 * [Troubleshoot](#troubleshoot)
@@ -41,8 +41,8 @@ An Azure account with an active subscription. [Create an account for free](https
 
 ## Provision Azure WebLogic Virtual Machine
 
-Azure provides a serie of Oracle WebLogic base images, it'll save your effor for Oracle tools installation.
-This document will setup Oracle Forms and Reports based on the Azure WebLogic base image, follow the steps to provison a machine with JDK and WebLogic installed:
+Azure provides a series of Oracle WebLogic base images, it'll save your effort for Oracle tools installation.
+This document will setup Oracle Forms and Reports based on the Azure WebLogic base image, follow the steps to provision a machine with JDK and WebLogic installed:
 
 - Open [Azure portal](https://portal.azure.com/) from your browser.
 - Search `WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6`, you will find the WebLogic offers, select **WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6**, and click **Create** button.
@@ -57,13 +57,13 @@ This document will setup Oracle Forms and Reports based on the Azure WebLogic ba
   - Username: `weblogic`
   - Password: `Secret123456`
 - Networking: you are able to bring your own VNET. If not, keep default settings.
-- Keep other blads as default. Click **Review + create**.
+- Keep other blades as default. Click **Review + create**.
 
 It will take 10min for the offer completed. After the deployment finishes, you will have a machine with JDK and WLS installed. Then you are able to install and configure Forms and Reports on the top of the machine.
 
 ## Create Oracle Database
 
-You are required to have to database to confiugre the JRF domain for Forms and Reports.This document will use Oracle Database.
+You are required to have to database to configure the JRF domain for Forms and Reports. This document will use Oracle Database.
 Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create) to create an Oracle database
 
 If you are following the document to create Oracle database, write down the credentials to create domain schema, username and password should be: `sys/OraPasswd1`
@@ -71,7 +71,7 @@ If you are following the document to create Oracle database, write down the cred
 ## Create Windows VM and set up XServer
 
 Though you have Oracle WebLogic instance running now, to create Oracle Forms and Reports, you still need to install Oracle Forms and Reports.
-To simplify the interface, let's provison a Windows machine and leverage XServer to install required tools with graphical user interface.
+To simplify the interface, let's provision a Windows machine and leverage XServer to install required tools with graphical user interface.
 
 Follow the steps to provision Windows VM and set up XServer.
 
@@ -178,7 +178,7 @@ Steps to install Oracle Fusion Middleware Infrastructure on adminVM:
   - The process should be completed without errors.
   - Remove the installation file to save space: `rm fmw_12.2.1.4.0_infrastructure.jar`
 
-## Install Oracle Froms and Reports
+## Install Oracle Forms and Reports
 
 Following the steps to install Oracle Forms and Reports:
 - Download wget.sh from https://www.oracle.com/middleware/technologies/forms/downloads.html#
@@ -208,7 +208,7 @@ Following the steps to install Oracle Forms and Reports:
     - Forms and Reports Deployment
   - Step 5:
     - JDK Home: `/u01/app/jdk/jdk1.8.0_291`
-  - Step 6: you may get dependencies error, you must install the conrresponding package and run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
+  - Step 6: you may get dependencies error, you must install the corresponding package and run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
     - Error like "Checking for compat-libcap1-1.10;Not found", then run `sudo yum install compat-libcap1` to install the `compat-libcap1` package.
   - The installation should be completed without errors.
 
@@ -220,7 +220,7 @@ You have Oracle Forms and Reports installed in the adminVM, we can clone adminVM
 
 Follow the steps to clone adminVM and create two VMs for Forms and Reports replicas.
 
-Create the a snapshot from adminVM OS disk. If you have snapshot of adminVM, skip the following two steps:
+Create a snapshot from adminVM OS disk. If you have snapshot of adminVM, skip the following two steps:
 - Open Azure portal, stop adminVM.
 - Create a snapshot from OS disk.
 
@@ -228,9 +228,9 @@ Create the a snapshot from adminVM OS disk. If you have snapshot of adminVM, ski
 Create VMs for Forms and Reports replicas based on the snapshot:
 1. Create a disk from the snapshot.
 2. Create a VM with your expected name, e.g. `mspVM1` on the disk.
-3. ssh to the machine, use `root` user and change the hostname.
+3. SSH to the machine, use `root` user and change the hostname.
     - Set hostname with `hostnamectl set-hostname hostname`. For example, set hostname mspVM1 with command `hostnamectl set-hostname mspVM1`
-4. Repeat step1-3 for `mspVM2` or other new machine, make sure setting correct hostname.
+4. Repeat step1-3 for `mspVM2` or another new machine, make sure setting correct hostname.
 
 For the initial setup, make sure you have three machine ready to configure Forms and Reports: **adminVM**, **mspVM1**, **mspVM2**, and move on with next section.
 
@@ -248,7 +248,7 @@ The following steps leverage XServer and RCU to create schemas on the Oracle dat
 - `bash /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/bin/rcu`
 - Step2: Create Repository -> System Load and Product Load
 - Step3: Input the connection information of Oracle database.
-- Step4: please note down the prefix, whith will be used in the following configuration, this document uses `DEV0402`.
+- Step4: please note down the prefix, which will be used in the following configuration, this document uses `DEV0402`.
   - STB
   - OPSS
   - IAU
@@ -385,7 +385,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
         - reportsapp#12.2.1
         - state-management-provider-menory...
         - wsm-pm
-      - Liraries
+      - Libraries
         - UIX (11,12.2.1.3.0)
         - adf.oracle.businesseditor (1.0,12.2.1.3.0)
         - adf.oracle.domain (1.0,12.2.1.3.0)
@@ -433,7 +433,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
           - reports#12.2.1
           - state-management-provider-menory...
           - wsm-pm
-        - Liraries
+        - Libraries
           - UIX (11,12.2.1.3.0)
           - adf.oracle.businesseditor (1.0,12.2.1.3.0)
           - adf.oracle.domain (1.0,12.2.1.3.0)
@@ -528,7 +528,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
         - Web Services Startup Class
       - WLDFSystemResource
         - Module-FMDFW
-- The process should be completed withour error.
+- The process should be completed without error.
 - Pack the domain and copy the domain configuration to managed machines.
   ```shell
   rm /tmp/cluster.jar -f
@@ -700,7 +700,7 @@ Let's create the ReportsToolsComponent using WLST.
 
 ### Start Forms and Reports managed servers
 
-Now, you have Reports tools components created and running, you are able to start the managed server and start the Reprots In-process server.
+Now, you have Reports tools components created and running, you are able to start the managed server and start the Reports In-process server.
 
 - Login admin console: http://adminvm-ip:7001/console
 - Select Environment -> Servers -> Control
@@ -879,8 +879,6 @@ Let's start Reports in process server from browser.
   - `http://<mspVM3-ip>:9002/reports/rwservlet/startserver`
   - You will get output `1|0` from the browser if the server is up.
 
-If you have setup Applcation Gateway for load balancing, add the private IP of your new machine to backend pool, to enable the applicatin gateway to managed the traffic to the new replicas.
-
 ## Configure Private Application Gateway
 
 ## Validate
@@ -905,7 +903,7 @@ Delete the resource group from Azure portal.
 
 ## Troubleshoot
 1. EM is slow    
-    Enable caching of FMw Discovery data.
+    Enable caching of FMW Discovery data.
     - Login EM
     - Select WebLogic domain -> System MBean Browser -> Application Defined MBeans -> emoms.props -> Server.admin -> Application.em -> Properties -> emoms-prop
     - Click Operations
