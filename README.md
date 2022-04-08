@@ -718,7 +718,7 @@ Follow the steps to add replica.
 
 This is an example to start Forms and Reports on mspVM3, replace the machine name and component name with yours.
 
-Firstly, you are required to create and start replated components. This document will leverage WLST offline mode to update the existing domain with new machine. new managed server and new Forms component, which requires restart on admin server to cause changes working.
+Firstly, you are required to create and start replated components. This document will leverage WLST offline mode to update the existing domain with new machine, new managed servers and new component, which requires restart on admin server to cause changes working.
 
 Use WLST to add new replicas:
 - SSH to adminVM and switch to root user
