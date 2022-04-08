@@ -225,12 +225,12 @@ Create the a snapshot from adminVM OS disk. If you have snapshot of adminVM, ski
 
 Create VMs for Forms and Reports replicas based on the snapshot:
 1. Create a disk from the snapshot.
-2. Create a VM with name `mspVM1` on the disk.
-3. ssh to the machine, use `root` user.
-    - Set hostname: `hostnamectl set-hostname mspVM1`
-4. Repeat step1-3 for `mspVM2`, make sure setting hostname with `mspVM2`.
+2. Create a VM with your expected name, e.g. `mspVM1` on the disk.
+3. ssh to the machine, use `root` user and change the hostname.
+    - Set hostname with `hostnamectl set-hostname hostname`. For example, set hostname mspVM1 with command `hostnamectl set-hostname mspVM1`
+4. Repeat step1-3 for `mspVM2` or other new machine, make sure setting correct hostname.
 
-Now, you have three machine ready to configure Forms and Reports: **adminVM**, **mspVM1**, **mspVM2**.
+For the initial setup, make sure you have three machine ready to configure Forms and Reports: **adminVM**, **mspVM1**, **mspVM2**.
 
 ## Create schemas using RCU
 
