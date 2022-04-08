@@ -717,11 +717,10 @@ Now you are able to start Reports in process server from browser.
 You are able to add Forms and Reports replicas by cloning machine and starting the corresponding components.
 
 ### Create a new machine for new replicas
-Follow the steps to add replica.
 
 Clone adminVM following [Clone machine for managed servers](#clone-machine-for-managed-servers), let's name the new machine with `mspVM3`.
 
-### Create Forms and Reports components
+### Create managed servers and Forms component
 
 This is an example to start Forms and Reports on mspVM3, replace the machine name and component name with yours.
 
@@ -808,7 +807,29 @@ Use WLST to add new replicas:
   ```
   sudo systemctl start wls_admin
   ```
-  Access http://adminvm-ip:7001/console to make sure the admin server is up.
+  Access http://adminvm-ip:7001/console from browser to make sure the admin server is up.
+
+### Apply domain on the new machine
+
+Now, you have finished updating the domain. Let's pack the domain and apply the domain to new machine.
+
+- Pack the domain on adminVM:
+  - SSH to adminVM: `ssh weblogic@adminVM`
+  - Use oracle user: `sudo su - oracle`
+  - Pack the domain
+    ```
+    cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+    bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
+    ```
+- Copy the domain package to mspVM3: `scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar`
+- Create domain on mspVM3 and start node manager following [Create domain for managed servers](#create-domain-on-managed-machine)
+
+### Create and start Reports tools
+
+To enable Reports in process server, you are required to create and start Reports Tools Component. Follow the steps to enable Reports Tools component for new Reports replicas.
+
+- SSH to adminVM: `ssh weblogic@adminVM`
+- Use oracle user: `sudo su - oracle`
 - Prepare Python script to create Reports component, please modify value of `adminVMIP`, `wlsUsername`, `wlsPassword` and `index`.
   ```shell
   # Private IP of adminVM
@@ -838,24 +859,9 @@ Use WLST to add new replicas:
   ./startComponent.sh reptools2
   ```
 
-### Apply domain on the new machine
-
-Now, you have finished updating the domain. Let's pack the domain and apply the domain to new machine.
-
-- Pack the domain on adminVM:
-  - SSH to adminVM: `ssh weblogic@adminVM`
-  - Use oracle user: `sudo su - oracle`
-  - Pack the domain
-    ```
-    cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-    bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
-    ```
-- Copy the domain package to mspVM3: `scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar`
-- Create domain on mspVM3 and start node manager following [Create domain for managed servers](#create-domain-on-managed-machine)
-
 ### Start servers
 
-Now, Forms and Reports system components on mspVM3 are ready, node manager is up on mspVM3. Let's start the managed server from console portal.
+Forms and Reports system components on mspVM3 are ready, node manager is up on mspVM3. Let's start the managed server from console portal.
 
 - Login admin console: http://adminvm-ip:7001/console
 - Select Environment -> Servers -> Control
