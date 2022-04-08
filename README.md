@@ -615,7 +615,7 @@ Now, you have Forms and Reports configured in adminVM, let's apply the domain on
 You can also follow the steps to apply domain on a new machine for new replicas.   
 
 Configure domain on managed machine:
-1. SSH to mspVM1 with command `ssh weblogic@mspVM1`
+1. SSH to your machine, e.g login to mspVM1 with command `ssh weblogic@mspVM1`
 2. Use `root` user to set the ownership of domain package
   ```
   sudo su
@@ -627,7 +627,7 @@ Configure domain on managed machine:
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   bash unpack.sh -domain=/u02/domains/wlsd -template=/tmp/cluster.jar 
   ```
-4. Make sure the node manager listen address is correct in `/u02/domains/wlsd/nodemanager/nodemanager.properties`
+4. Make sure the node manager listen address is correct by `cat /u02/domains/wlsd/nodemanager/nodemanager.properties`. The listen address should be private IP of the machine.
 5. Exit oracle user with command `exit`
 6. Use root user: `sudo su`
 7. Create service for node manager
@@ -662,7 +662,7 @@ Configure domain on managed machine:
   ```
 
 For initial setup, apply step 1-8 to mspVM2, and continue from [Create and start Reports components](#create-and-start-reports-components). 
-For new replicas, apply step 1-8 to your new machines, and continue from [Start new replicas](#start-servers).
+For new replicas, apply step 1-8 to your new machines, and continue from [Create and start Reports tools for new replicas](#create-and-start-reports-tools).
 
 ### Create and start Reports components
 Now, you have node manager running on adminVM, mspVM1, mspVM2, and admin server up in adminVM.   
