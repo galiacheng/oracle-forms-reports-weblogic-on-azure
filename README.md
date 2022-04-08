@@ -747,37 +747,50 @@ You are able to use WLST for Forms and Reports configuration.
   ```shell
   cat <<EOF >create-forms3.py
   import sys, traceback
+  vmIp=10.0.0.8
+  vmName="mspVM2"
+  formsSvrName="WLS_FORMS2"
+  formsSysCompName="forms2"
+  reportsSvrName="WLS_REPORTS2"
   formsSvrGrp=["FORMS-MAN-SVR"]
   reportsSvrGrp=["REPORTS-APP-SERVERS"]
+  
   readDomain('/u02/domains/wlsd')
-  print('\nCreate WLS_FORMS3 ')
+  print('\nCreate Machine ')
   cd('/')
-  create('WLS_FORMS3', 'Server')
-  cd('/Servers/WLS_FORMS3')
-  set('ListenAddress','10.0.0.8')
+  create(vmName,'Machine')
+  cd('Machine/'+vmName)
+  create(vmName,'NodeManager')
+  cd('NodeManager/'+vmName)
+  set('ListenAddress',vmIp)
+  print('\nCreate ' + formsSvrName)
+  cd('/')
+  create(formsSvrName, 'Server')
+  cd('/Servers/'+formsSvrName)
+  set('ListenAddress',vmIp)
   set('ListenPort',int('9001'))
-  set('Machine','mspVM3')
+  set('Machine',vmName)
   cd('/')
-  assign('Server','WLS_FORMS3','Cluster','cluster_forms')
+  assign('Server',formsSvrName,'Cluster','cluster_forms')
   cd('/')
-  setServerGroups('WLS_FORMS3', formsSvrGrp)
-  print('\nCreate WLS_REPORTS3 ')
+  setServerGroups(formsSvrName, formsSvrGrp)
+  print('\nCreate '+ reportsSvrName)
   cd('/')
-  create('WLS_REPORTS3', 'Server')
-  cd('/Servers/WLS_REPORTS3')
-  set('ListenAddress','10.0.0.8')
+  create(reportsSvrName, 'Server')
+  cd('/Servers/'+ reportsSvrName)
+  set('ListenAddress',vmIp)
   set('ListenPort',int('9002'))
-  set('Machine','mspVM3')
+  set('Machine',vmName)
   cd('/')
-  assign('Server','WLS_REPORTS3','Cluster','cluster_reports')
+  assign('Server',reportsSvrName,'Cluster','cluster_reports')
   cd('/')
-  setServerGroups('WLS_FORMS3', reportsSvrGrp)
-    print('\nCreate FORMS SystemComponent ')
+  setServerGroups(reportsSvrName, reportsSvrGrp)
+  print('\nCreate FORMS SystemComponent '+formsSysCompName)
   cd('/')
-  create('forms3', 'SystemComponent')
-  cd('/SystemComponent/forms3')
+  create(formsSysCompName, 'SystemComponent')
+  cd('/SystemComponent/'+formsSysCompName)
   cmo.setComponentType('FORMS')
-  set('Machine', 'mspVM3')
+  set('Machine', vmName)
   updateDomain()
   closeDomain()
   EOF
