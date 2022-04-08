@@ -856,9 +856,9 @@ To enable Reports in process server, you are required to create and start Report
   ```
 - Start Reports system components on mspVM3, the commands should be completed without errors.
   ```shell
-  cd /u01/domains/wlsd/bin
+  cd /u02/domains/wlsd/bin
   # the command will ask for node manager password
-  ./startComponent.sh reptools2
+  ./startComponent.sh reptools3
   ```
 
 ### Start servers
