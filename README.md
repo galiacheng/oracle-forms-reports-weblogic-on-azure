@@ -27,9 +27,11 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
   * [Create and start components](#create-forms-and-reports-components)
   * [Apply domain on the new machine](#apply-domain-on-the-new-machine)
   * [Start managed servers](#start-servers)
-* [Create Load Balancing with Azure Application Gateway](#create-ohs-machine-and-join-the-domain)
+* [Create Load Balancing with Azure Application Gateway](#configure-private-application-gateway)
+  * [Create Application Gateway](#create-application-gateway)
+  * [Configure Backend Pool](#configure-backend-pool)
 * [Create High Available Adminitration Server]()
-* [Troubleshooting]()
+* [Troubleshoot](#troubleshoot)
 
 ## Prerequisites
 
@@ -716,9 +718,9 @@ Follow the steps to add replica.
 
 This is an example to start Forms and Reports on mspVM3, replace the machine name and component name with yours.
 
-Firstly, you are required to create and start replated components.
+Firstly, you are required to create and start replated components. This document will leverage WLST offline mode to update the existing domain with new machine. new managed server and new Forms component, which requires restart on admin server to cause changes working.
 
-You are able to use WLST for Forms and Reports configuration.
+Use WLST to add new replicas:
 - SSH to adminVM and switch to root user
 - Stop admin server: 
   ```
@@ -918,3 +920,16 @@ Application Gateway has enabled monitoring the backend health:
   - Go to the application gateway from Azure Portal
   - Select Monitoring -> Backend health
   - The status of Servers should be Healthy.
+
+## Troubleshoot
+1. EM is slow    
+    Enable caching of FMw Discovery data.
+    - Login EM
+    - Select WebLogic domain -> System MBean Browser -> Application Defined MBeans -> emoms.props -> Server.admin -> Application.em -> Properties -> emoms-prop
+    - Click Operations
+    - Select setProperty
+    - Set the following properties
+      1. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_USE_CACHED_RESULTS=true
+      2. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_CACHE_AGE=7200000
+      3. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_WAIT_TIME=10000
+    - Select WebLogic domain -> Refresh WebLogic domain.
