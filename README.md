@@ -22,7 +22,11 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
   * [Create domain for managed servers](#create-domain-on-managed-machine)
   * [Create and start Reports components](#create-and-start-reports-components)
   * [Start Forms and Reports](#start-forms-and-reports-managed-servers)
-* [Add Forms and Reports replica](#apply-jrf-to-managed-server)
+* [Add Forms and Reports replicas](#apply-jrf-to-managed-server)
+  * [Create a new machine for new replicas]()
+  * [Create and start components]()
+  * [Apply domain on the new machine]()
+  * [Start managed servers]()
 * [Create Load Balancing with Azure Application Gateway](#create-ohs-machine-and-join-the-domain)
 * [Create High Available Adminitration Server]()
 * [Troubleshooting]()
@@ -134,25 +138,10 @@ Steps to install Oracle Fusion Middleware Infrastructure on adminVM:
   sudo yum install -y libaio-devel
   sudo yum install -y motif
   ```
-- Open Port
+- Disable firewall. 
   ```
-  # for XServer
-  sudo firewall-cmd --zone=public --add-port=6000/tcp
-  # for admin server
-  sudo firewall-cmd --zone=public --add-port=7001/tcp
-  sudo firewall-cmd --zone=public --add-port=7002/tcp
-  # for node manager
-  sudo firewall-cmd --zone=public --add-port=5556/tcp
-  # for forms and reports
-  sudo firewall-cmd --zone=public --add-port=9001/tcp
-  sudo firewall-cmd --zone=public --add-port=9002/tcp
-  sudo firewall-cmd --zone=public --add-port=14021/tcp
-  # for clusters
-  sudo firewall-cmd --zone=public --add-port=7100/tcp
-  sudo firewall-cmd --zone=public --add-port=8100/tcp
-  sudo firewall-cmd --zone=public --add-port=7574/tcp
-  sudo firewall-cmd --runtime-to-permanent
-  sudo systemctl restart firewalld
+  sudo systemctl stop firewalld
+  sudo systemctl disable firewalld
   ```
 - Create directory for user data
   ```
@@ -714,24 +703,14 @@ Now you are able to start Reports in process server from browser.
   - `http://<mspVM2-ip>:9002/reports/rwservlet/startserver`
   - You will get output `1|0` from the browser if the server is up.
 
-## Add Forms and Reports replica
+## Add Forms and Reports replicas
 
-You are able to add Forms and Reports replica by cloning machine and starting the corresponding components.
+You are able to add Forms and Reports replicas by cloning machine and starting the corresponding components.
 
-### Create a new machine for new replica
+### Create a new machine for new replicas
 Follow the steps to add replica.
 
 - Clone adminVM following [Clone machine for managed servers](#clone-machine-for-managed-servers), let's name the new machine with `mspVM3`.
-- Pack the domain on adminVM, you have the domain package in previous section, if no, following the steps to pack the domain:
-  - SSH to adminVM: `ssh weblogic@adminVM`
-  - Use oracle user: `sudo su - oracle`
-  - Pack the domain
-    ```
-    cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-    bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
-    ```
-- Copy the domain package to mspVM3: `scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar`
-- Create domain on mspVM3 and start node manager following [Create domain for managed servers](#create-domain-on-managed-machine)
 
 ### Create Forms and Reports components
 
@@ -741,20 +720,37 @@ Firstly, you are required to create and start replated components.
 
 You are able to use WLST for Forms and Reports configuration.
 - SSH to adminVM and switch to root user
-- Stop admin server: `sudo systemctl stop wls_admin`
-- and switch to `oracle` user.
-- Prepare Python script to create Forms component.
+- Stop admin server: 
+  ```
+  sudo systemctl stop wls_admin
+  kill -9 `ps -ef | grep 'Dweblogic.Name=admin' | grep -v grep | awk '{print $2}'`
+  ```
+- Switch to `oracle` user: `sudo su - oracle`
+- Prepare Python script to create machine, managed servers and Forms component, modify the the value of Shell variables.
   ```shell
+  # Modify the values of variables with yours.
+  # Keep the index value the same with Azure Virtual Machine index
+  index=3
+  # Private IP address of the new machine
+  vmIP="10.0.0.8"
+  # Machine name
+  vmName="mspVM${index}"
+  # New Forms managed server name
+  formsSvrName="WLS_FORMS${index}"
+  # New Forms system component name
+  formsSysCompName="forms${index}"
+  # New Reports managed server name
+  reportsSvrName="WLS_REPORTS${index}"
   cat <<EOF >create-forms3.py
   import sys, traceback
-  vmIp=10.0.0.8
-  vmName="mspVM2"
-  formsSvrName="WLS_FORMS2"
-  formsSysCompName="forms2"
-  reportsSvrName="WLS_REPORTS2"
+  vmIp="${vmIP}"
+  vmName="${vmName}"
+  formsSvrName="${formsSvrName}"
+  formsSysCompName="${formsSysCompName}"
+  reportsSvrName="${reportsSvrName}"
   formsSvrGrp=["FORMS-MAN-SVR"]
   reportsSvrGrp=["REPORTS-APP-SERVERS"]
-  
+
   readDomain('/u02/domains/wlsd')
   print('\nCreate Machine ')
   cd('/')
@@ -795,34 +791,62 @@ You are able to use WLST for Forms and Reports configuration.
   closeDomain()
   EOF
   ```
-- Run the script to create Forms component on mspVM3 with WLST, the script should be completed without errors.
+- Run the script with WLST offline mode, the script should be completed without errors.
   ```
   /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-forms3.py
   ```
-- Prepare Python script to create Reports component.
+- Restart the domain and admin server to cause changes happen. It takes about 10 min for the admin server up.
+  ```
+  sudo systemctl start wls_admin
+  ```
+  Access http://adminvm-ip:7001/console to make sure the admin server is up.
+- Prepare Python script to create Reports component, please modify value of `adminVMIP`, `wlsUsername`, `wlsPassword` and `index`.
   ```shell
-  # please replace the IP address, weblogic account with yours
+  # Private IP of adminVM
   adminVMIP=10.0.0.4
+  # Username of WebLogic admin account
+  wlsUsername="weblogic"
+  # Password of WebLogic admin account
+  wlsPassword="Secret123456"
+  # Keep the index value the same with Azure Virtual Machine index
+  index=3
+
+  repToolsName="reptools${index}"
+  repToolsTargetMachine="mspVM${index}"
   cat <<EOF >create-reportstools.py
-  connect("weblogic","Secret123456", "${adminVMIP}:7001")
-  createReportsToolsInstance(instanceName='reptools3', machine='mspVM3')
+  connect("${wlsUsername}","${wlsPassword}", "${adminVMIP}:7001")
+  createReportsToolsInstance(instanceName="${repToolsName}", machine="${repToolsTargetMachine}")
   EOF
   ```
-- Run the script using WLST, the script should be completed without errors.
+- Run the script using WLST online mode, the script should be completed without errors.
   ```
   /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-reportstools.py
   ```
-- Start Forms and Reports system components on mspVM3, the commands should be completed without errors.
+- Start Reports system components on mspVM3, the commands should be completed without errors.
   ```shell
   cd /u01/domains/wlsd/bin
   # the command will ask for node manager password
-  ./startComponent.sh form3
   ./startComponent.sh reptools2
   ```
 
+### Apply domain on the new machine
+
+Now, you have finished updating the domain. Let's pack the domain and apply the domain to new machine.
+
+- Pack the domain on adminVM:
+  - SSH to adminVM: `ssh weblogic@adminVM`
+  - Use oracle user: `sudo su - oracle`
+  - Pack the domain
+    ```
+    cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+    bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
+    ```
+- Copy the domain package to mspVM3: `scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar`
+- Create domain on mspVM3 and start node manager following [Create domain for managed servers](#create-domain-on-managed-machine)
+
 ### Start servers
 
-Now, Forms and Reports system components on mspVM3 are ready, let's start the managed server from console portal.
+Now, Forms and Reports system components on mspVM3 are ready, node manager is up on mspVM3. Let's start the managed server from console portal.
 
 - Login admin console: http://adminvm-ip:7001/console
 - Select Environment -> Servers -> Control
