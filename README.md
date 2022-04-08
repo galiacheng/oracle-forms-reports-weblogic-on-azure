@@ -140,7 +140,7 @@ Steps to install Oracle Fusion Middleware Infrastructure on adminVM:
   sudo yum install -y libaio-devel
   sudo yum install -y motif
   ```
-- Disable firewall. 
+- Disable firewall. If you want to keep the firewall, you must open ports for Reports and Forms.
   ```
   sudo systemctl stop firewalld
   sudo systemctl disable firewalld
@@ -730,7 +730,7 @@ Use WLST to add new replicas:
 - Switch to `oracle` user: `sudo su - oracle`
 - Prepare Python script to create machine, managed servers and Forms component, modify the the value of Shell variables.
   ```shell
-  # Modify the values of variables with yours.
+  # Modify the value of variables with yours.
   # Keep the index value the same with Azure Virtual Machine index
   index=3
   # Private IP address of the new machine
