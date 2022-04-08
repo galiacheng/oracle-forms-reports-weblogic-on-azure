@@ -63,7 +63,7 @@ It will take 10min for the offer completed. After the deployment finishes, you w
 
 ## Create Oracle Database
 
-You are required to have to database to configure the JRF domain for Forms and Reports. This document will use Oracle Database.
+You are required to have a database to configure the JRF domain for Forms and Reports. This document will use Oracle Database.
 Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create) to create an Oracle database
 
 If you are following the document to create Oracle database, write down the credentials to create domain schema, username and password should be: `sys/OraPasswd1`
