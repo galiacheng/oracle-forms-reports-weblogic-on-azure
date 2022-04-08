@@ -26,7 +26,7 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
   * [Create a new machine for new replicas](#create-a-new-machine-for-new-replicas)
   * [Create and start components](#create-forms-and-reports-components)
   * [Apply domain on the new machine](#apply-domain-on-the-new-machine)
-  * [Start managed servers](#start-servers)
+  * [Start new replicas](#start-servers)
 * [Create Load Balancing with Azure Application Gateway](#configure-private-application-gateway)
   * [Create Application Gateway](#create-application-gateway)
   * [Configure Backend Pool](#configure-backend-pool)
@@ -230,7 +230,9 @@ Create VMs for Forms and Reports replicas based on the snapshot:
     - Set hostname with `hostnamectl set-hostname hostname`. For example, set hostname mspVM1 with command `hostnamectl set-hostname mspVM1`
 4. Repeat step1-3 for `mspVM2` or other new machine, make sure setting correct hostname.
 
-For the initial setup, make sure you have three machine ready to configure Forms and Reports: **adminVM**, **mspVM1**, **mspVM2**.
+For the initial setup, make sure you have three machine ready to configure Forms and Reports: **adminVM**, **mspVM1**, **mspVM2**, and move on with next section.
+
+For new replicas, make sure you have the new machine ready, and continue from [Create Forms and Reports components](#create-forms-and-reports-components).
 
 ## Create schemas using RCU
 
@@ -658,7 +660,8 @@ Configure domain on managed machine:
   sudo systemctl start wls_nodemanager
   ```
 
-For initial setup, apply step 1-8 to mspVM2. For new replicas, apply step 1-8 to your new machines.
+For initial setup, apply step 1-8 to mspVM2, and continue from [Create and start Reports components](#create-and-start-reports-components). 
+For new replicas, apply step 1-8 to your new machines, and continue from [Start new replicas](#start-servers).
 
 ### Create and start Reports components
 Now, you have node manager running on adminVM, mspVM1, mspVM2, and admin server up in adminVM.   
