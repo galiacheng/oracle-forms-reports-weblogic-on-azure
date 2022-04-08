@@ -216,9 +216,9 @@ Now you have Forms and Reports installed in the adminVM. Let's clone the machine
 
 ## Clone machine for managed servers
 
-You have Oracle Forms and Reports installed in the adminVM, we can clone adminVM for managed servers.
+You have Oracle Forms and Reports installed in the adminVM, you are able to reuse the installation by cloning adminVM for managed servers.
 
-Follow the steps to clone adminVM and create two VMs for Forms and Reports replicas.
+Follow the steps to clone adminVM.
 
 Create a snapshot from adminVM OS disk. If you have snapshot of adminVM, skip the following two steps:
 - Open Azure portal, stop adminVM.
@@ -230,7 +230,7 @@ Create VMs for Forms and Reports replicas based on the snapshot:
 2. Create a VM with your expected name, e.g. `mspVM1` on the disk.
 3. SSH to the machine, use `root` user and change the hostname.
     - Set hostname with `hostnamectl set-hostname hostname`. For example, set hostname mspVM1 with command `hostnamectl set-hostname mspVM1`
-4. Repeat step1-3 for `mspVM2` or another new machine, make sure setting correct hostname.
+4. Repeat step1-3 for `mspVM2` or another new machine, make sure you have set correct hostname.
 
 For the initial setup, make sure you have three machine ready to configure Forms and Reports: **adminVM**, **mspVM1**, **mspVM2**, and move on with next section.
 
