@@ -23,10 +23,10 @@ This document guides you to create high vailable Oracle Forms and Reports cluste
   * [Create and start Reports components](#create-and-start-reports-components)
   * [Start Forms and Reports](#start-forms-and-reports-managed-servers)
 * [Add Forms and Reports replicas](#apply-jrf-to-managed-server)
-  * [Create a new machine for new replicas]()
-  * [Create and start components]()
-  * [Apply domain on the new machine]()
-  * [Start managed servers]()
+  * [Create a new machine for new replicas](#create-a-new-machine-for-new-replicas)
+  * [Create and start components](#create-forms-and-reports-components)
+  * [Apply domain on the new machine](#apply-domain-on-the-new-machine)
+  * [Start managed servers](#start-servers)
 * [Create Load Balancing with Azure Application Gateway](#create-ohs-machine-and-join-the-domain)
 * [Create High Available Adminitration Server]()
 * [Troubleshooting]()
@@ -652,7 +652,7 @@ Configure domain on managed machine:
   sudo systemctl daemon-reload
   sudo systemctl start wls_nodemanager
   ```
-- Apply step 1-8 to msspVM2.
+- Apply step 1-8 to mspVM2.
 
 ### Create and start Reports components
 Now, you have node manager running on adminVM, mspVM1, mspVM2, and admin server up in adminVM.   
