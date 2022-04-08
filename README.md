@@ -218,7 +218,7 @@ You have Oracle Forms and Reports installed in the adminVM, we can clone adminVM
 
 Follow the steps to clone adminVM and create two VMs for Forms and Reports replicas.
 
-Create the a snapshot from adminVM OS disk:
+Create the a snapshot from adminVM OS disk. If you have snapshot of adminVM, skip the following two steps:
 - Open Azure portal, stop adminVM.
 - Create a snapshot from OS disk.
 
@@ -712,7 +712,7 @@ You are able to add Forms and Reports replicas by cloning machine and starting t
 ### Create a new machine for new replicas
 Follow the steps to add replica.
 
-- Clone adminVM following [Clone machine for managed servers](#clone-machine-for-managed-servers), let's name the new machine with `mspVM3`.
+Clone adminVM following [Clone machine for managed servers](#clone-machine-for-managed-servers), let's name the new machine with `mspVM3`.
 
 ### Create Forms and Reports components
 
