@@ -607,7 +607,10 @@ Now you are able to access admin console with `http://adminvm-ip:7001/console`, 
 
 ### Create domain on managed machine
 
-Now, you have Forms and Reports configured in adminVM, let's apply the domain on mspVM1 and mspVM2.   
+Now, you have Forms and Reports configured in adminVM, let's apply the domain on mspVM1 and mspVM2. 
+
+You can also follow the steps to apply domain on a new machine for new replicas.   
+
 Configure domain on managed machine:
 1. SSH to mspVM1 with command `ssh weblogic@mspVM1`
 2. Use `root` user to set the ownership of domain package
@@ -654,7 +657,8 @@ Configure domain on managed machine:
   sudo systemctl daemon-reload
   sudo systemctl start wls_nodemanager
   ```
-- Apply step 1-8 to mspVM2.
+
+For initial setup, apply step 1-8 to mspVM2. For new replicas, apply step 1-8 to your new machines.
 
 ### Create and start Reports components
 Now, you have node manager running on adminVM, mspVM1, mspVM2, and admin server up in adminVM.   
