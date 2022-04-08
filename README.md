@@ -383,7 +383,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
         - DMS Application#12.2.1.1.0
         - coherence-transaction-rar
         - reportsapp#12.2.1
-        - state-management-provider-menory...
+        - state-management-provider-memory-rar
         - wsm-pm
       - Libraries
         <details>
@@ -436,7 +436,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
         - DMS Application#12.2.1.1.0
         - coherence-transaction-rar
         - reports#12.2.1
-        - state-management-provider-menory...
+        - state-management-provider-memory-rar
         - wsm-pm
       - Libraries
         <details><summary>Libraries</summary><p>
