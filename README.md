@@ -1,4 +1,4 @@
-# Create Highly Available Oracle Forms and Reports clusters on Azure (WIP)
+# Create Highly Available Oracle Forms and Reports clusters on Azure
 
 This document guides you to create highly available Oracle Forms and Reports clusters on Azure VMs step by step, including:
 - Create Oracle Forms and Reports clusters with 2 replicas.
@@ -30,9 +30,10 @@ This document guides you to create highly available Oracle Forms and Reports clu
 * [Create Load Balancing with Azure Application Gateway](#configure-private-application-gateway)
   * [Create Application Gateway](#create-application-gateway)
   * [Configure Backend Pool](#configure-backend-pool)
-* [Create High Available Administration Server]()
-* [Validate]()
-* [Clean up]()
+  * [Configure Health Probe](#configure-health-probe)
+* [Create High Available Administration Server WIP]()
+* [Validate](#validate)
+* [Clean up](#clean-up)
 * [Troubleshoot](#troubleshoot)
 
 ## Prerequisites
@@ -969,6 +970,8 @@ Then you should be able to access Forms using private IP of application gateway.
 - http://app-gateway-ip/forms/frmservlet
 
 If you want to also manage the traffic to Reports cluster, you can add Path-based routing to `/reports/rwservlet` in the rule.
+
+## Create High Available Administration Server
 
 ## Validate
 
