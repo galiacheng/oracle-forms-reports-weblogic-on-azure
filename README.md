@@ -7,6 +7,10 @@ This document guides you to create highly available Oracle Forms and Reports clu
 - Create Highly Available Administration Server
 - Troubleshooting
 
+You will get Froms and Reports running as the picture shows:
+
+![Oracle Forms and Reports Architecture](overview.png)
+
 ## Contents
 
 * [Prerequisites](#prerequisites)
