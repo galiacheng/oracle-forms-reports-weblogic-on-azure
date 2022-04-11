@@ -737,9 +737,9 @@ Clone adminVM following [Clone machine for managed servers](#clone-machine-for-m
 
 ### Create managed servers and Forms component
 
-This is an example to start Forms and Reports on mspVM3, replace the machine name and component name with yours.
-
 Firstly, you are required to create and start replated components. This document will leverage WLST offline mode to update the existing domain with new machine, new managed servers and new component, which requires restart on admin server to cause changes working.
+
+This is an example to update the existing domain to start Forms and Reports on mspVM3, replace the machine name and component name with yours. 
 
 Use WLST to add new replicas:
 - SSH to adminVM and switch to root user
