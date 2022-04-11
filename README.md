@@ -886,7 +886,89 @@ Let's start Reports in process server from browser.
   - `http://<mspVM3-ip>:9002/reports/rwservlet/startserver`
   - You will get output `1|0` from the browser if the server is up.
 
+**Note**: if you have setup Applcation Gateway for load balancing, add the private IP of your new machine to backend pool. then the Applicatin Gateway is able to managed the traffic to the new replicas.
+
 ## Configure Private Application Gateway
+
+### Create Application Gateway
+
+This sample will use Azure Application Gateway as the top level load balancing of Forms cluster. 
+
+Follow the step to create the Application Gateway, you must enable `Cookie-based affinity` for Forms applciation. Make sure you are using a correct backend port, here is `9001`.
+
+- Expand the portal menu and select Create a resource.
+- Select Networking and then select Application Gateway in the Featured list.
+- Enter myAppGateway for the name of the application gateway and myResourceGroupAG for the new resource group.
+- Select Region
+- For Tier, select Standard.
+- Under Configure virtual network
+  - Select your vnet
+  - Select your subnet
+- Select Next : Frontends.
+- For Frontend IP address type, select Private.
+- Select Next:Backends.
+- Select Add a backend pool.
+- For Name, type appGatewayBackendPool.
+- For Add backend pool without targets, select Yes. You'll add the targets later.
+- Select Add.
+- Select Next:Configuration.
+- Under Routing rules, select Add a routing rule.
+- For Rule name, type Rule-01.
+- For Listener name, type Listener-01.
+- For Frontend IP, select Private.
+- Accept the remaining defaults and select the Backend targets tab.
+- For Target type, select Backend pool, and then select appGatewayBackendPool.
+- For HTTP setting, select Add new.
+- For HTTP setting name, type http-setting-01.
+  - For Additional settings, enable **Cookie-based affinity**.
+- For Backend protocol, select HTTP.
+- For Backend port, type `9001`.
+- Accept the remaining defaults, and select Add.
+- On the Add a routing rule page, select Add.
+- Select Next: Tags.
+- Select Next: Review + create.
+
+Wait for the resources completed.
+
+### Configure Backend Pool
+
+- Go to Azure Portal, open the Applciation Gateway instance.
+- Select Settings -> Backend pools - appGatewayBackendPool
+  Add IP address of managed servers.
+  - Item1
+    - Type: IP address or FQDN
+    - Target: private IP of mspVM1
+  - Item2
+    - Type: IP address or FQDN
+    - Target: private IP of mspVM2
+  - Item3
+    - Type: IP address or FQDN
+    - Target: private IP of mspVM3
+
+### Configure Health Probe
+ 
+- Go to Azure Portal, open the Applciation Gateway instance.
+- Select Settings -> Health probes -> Add
+  - Name: `FORMS-HEALTH-PROBE`
+  - Host: `127.0.0.1`. Do not change the value.
+  - Pick host name from backend HTTP settings: No
+  - Path: `/forms/frmservlet`
+  - Keep other properties with default value.
+
+After the health probe is completed without error, associate the http setting with the probe.
+- Select Settings -> HTTP Settings -> http-setting-01
+  - Use custom probe: yes
+  - Custom probe: `FORMS-HEALTH-PROBE`
+  - Save
+
+Check the backend health:
+  - Select Monitoring -> Backend health
+  - The status of Servers should be Healthy.
+
+Then you should be able to access Forms using private IP of application gateway.
+- http://app-gateway-ip/forms/frmservlet
+
+If you want to also manage the traffic to Reports cluster, you can add Path-based routing to `/reports/rwservlet` in the rule.
 
 ## Validate
 
