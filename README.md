@@ -31,7 +31,7 @@ This document guides you to create highly available Oracle Forms and Reports clu
   * [Create Application Gateway](#create-application-gateway)
   * [Configure Backend Pool](#configure-backend-pool)
   * [Configure Health Probe](#configure-health-probe)
-* [Create High Available Administration Server WIP]()
+* [Create High Available Administration Server WIP](#create-high-available-administration-server)
 * [Validate](#validate)
 * [Clean up](#clean-up)
 * [Troubleshoot](#troubleshoot)
@@ -972,6 +972,8 @@ Then you should be able to access Forms using private IP of application gateway.
 If you want to also manage the traffic to Reports cluster, you can add Path-based routing to `/reports/rwservlet` in the rule.
 
 ## Create High Available Administration Server
+
+WIP
 
 ## Validate
 
