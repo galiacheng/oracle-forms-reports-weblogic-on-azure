@@ -26,7 +26,7 @@ You will get Froms and Reports running as the picture shows:
   * [Create domain for managed servers](#create-domain-on-managed-machine)
   * [Create and start Reports components](#create-and-start-reports-components)
   * [Start Forms and Reports](#start-forms-and-reports-managed-servers)
-* [Add Forms and Reports replicas](#apply-jrf-to-managed-server)
+* [Add Forms and Reports replicas](#add-forms-and-reports-replicas)
   * [Create a new machine for new replicas](#create-a-new-machine-for-new-replicas)
   * [Create and start components](#create-forms-and-reports-components)
   * [Apply domain on the new machine](#apply-domain-on-the-new-machine)
