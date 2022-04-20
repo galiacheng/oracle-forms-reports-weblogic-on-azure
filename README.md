@@ -35,7 +35,7 @@ You will get Froms and Reports running as the picture shows:
   * [Create Application Gateway](#create-application-gateway)
   * [Configure Backend Pool](#configure-backend-pool)
   * [Configure Health Probe](#configure-health-probe)
-* [Create High Available Administration Server WIP](#create-high-available-administration-server)
+* [Create Highly Available Administration Server WIP](#create-highly-available-administration-server)
 * [Validate](#validate)
 * [Clean up](#clean-up)
 * [Troubleshoot](#troubleshoot)
@@ -975,9 +975,58 @@ Then you should be able to access Forms using private IP of application gateway.
 
 If you want to also manage the traffic to Reports cluster, you can add Path-based routing to `/reports/rwservlet` in the rule.
 
-## Create High Available Administration Server
+## Create Highly Available Administration Server
 
-WIP
+https://borysneselovskyi.wordpress.com/2017/07/16/how-to-configure-the-weblogic-adminserver-for-high-availability/
+
+```
+sudo yum update
+sudo yum install -y nfs-utils
+
+sudo vi /etc/fstab
+nfssa04122.file.core.windows.net:/nfssa04122/nfsbak /u02  nfs      defaults    0       0
+
+mount /u02
+```
+
+
+Add IP to VM:
+https://docs.microsoft.com/en-us/azure/virtual-network/ip-services/virtual-network-multiple-ip-addresses-portal?context=/azure/virtual-machines/context/context
+
+```shell
+sudo -i
+cd /etc/sysconfig/network-scripts
+ls ifcfg-*
+touch ifcfg-eth0:1
+vi ifcfg-eth0:1
+
+cat <<EOF >ifcfg-eth0:1
+DEVICE=eth0:1
+BOOTPROTO=static
+ONBOOT=yes
+IPADDR=10.0.0.16
+NETMASK=255.255.255.0
+EOF
+
+/etc/init.d/network restart
+ifconfig
+```
+
+```text
+[root@adminVM1 network-scripts]# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.0.4  netmask 255.255.255.0  broadcast 10.0.0.255
+        inet6 fe80::20d:3aff:fe8f:1fe7  prefixlen 64  scopeid 0x20<link>
+        ether 00:0d:3a:8f:1f:e7  txqueuelen 1000  (Ethernet)
+        RX packets 104754  bytes 69209518 (66.0 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 75892  bytes 19074850 (18.1 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eth0:0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.0.15  netmask 255.255.255.0  broadcast 10.0.0.255
+        ether 00:0d:3a:8f:1f:e7  txqueuelen 1000  (Ethernet)
+```
 
 ## Validate
 
