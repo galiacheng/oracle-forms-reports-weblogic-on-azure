@@ -29,7 +29,7 @@ You will get Froms and Reports running as the picture shows:
 * [Add Forms and Reports replicas](#add-forms-and-reports-replicas)
   * [Create a new machine for new replicas](#create-a-new-machine-for-new-replicas)
   * [Create and start components](#create-forms-and-reports-components)
-  * [Apply domain on the new machine](#apply-domain-on-the-new-machine)
+  * [Apply domain to the new machine](#apply-domain-to-the-new-machine)
   * [Start new replicas](#start-servers)
 * [Create Load Balancing with Azure Application Gateway](#configure-private-application-gateway)
   * [Create Application Gateway](#create-application-gateway)
@@ -225,7 +225,7 @@ Now you have Forms and Reports installed in the adminVM. Let's clone the machine
 
 You have Oracle Forms and Reports installed in the adminVM, you are able to reuse the installation by cloning adminVM for managed servers.
 
-Follow the steps to clone adminVM, for high availability, let's create the disk and machine in different zones shown in the table:
+Follow the steps to clone adminVM, for high availability, let's create the disk and machine in different zones as shown in the table:
 
 | Index | Machine Name | Disk Name | Availability Zone |
 |----------|----------|----------|----------|
@@ -633,7 +633,7 @@ Now you are able to access admin console with `http://adminvm-ip:7001/console`, 
 
 Now, you have Forms and Reports configured in adminVM, let's apply the domain on mspVM1 and mspVM2. 
 
-You can also follow the steps to apply domain on a new machine for new replicas.   
+You can also follow the steps to apply domain to a new machine for new replicas.   
 
 Configure domain on managed machine:
 1. SSH to your machine, e.g login to mspVM1 with command `ssh weblogic@mspVM1`
@@ -831,7 +831,7 @@ Use WLST to add new replicas:
   ```
   Access http://adminvm-ip:7001/console from browser to make sure the admin server is up.
 
-### Apply domain on the new machine
+### Apply domain to the new machine
 
 Now, you have finished updating the domain. Let's pack the domain and apply the domain to new machine.
 
