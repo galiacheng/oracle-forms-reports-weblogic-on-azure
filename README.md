@@ -56,6 +56,8 @@ This document will setup Oracle Forms and Reports based on the Azure WebLogic ba
   - Resource group: click **Create new**, input a name.
   - Virtual machine name: `adminVM`
   - Region: East US.
+  - Availablity options: Availability zone
+  - Availablity: Zone 1
   - Image: WebLogic Server 12.2.1.4.0 and JDK8 on Oracle Linux 7.6 - Gen1.
   - Size: select a size with more than 8GiB RAM, e.g. Standard B4ms.
   - Authentication type: Password
@@ -223,16 +225,21 @@ Now you have Forms and Reports installed in the adminVM. Let's clone the machine
 
 You have Oracle Forms and Reports installed in the adminVM, you are able to reuse the installation by cloning adminVM for managed servers.
 
-Follow the steps to clone adminVM.
+Follow the steps to clone adminVM, for high availability, let's create the disk and machine in different zones shown in the table:
+
+| Index | Machine Name | Disk Name | Availability Zone |
+|----------|----------|----------|----------|
+| 1 | mspVM1 | mspVM1_OS_Disk | Zone 1 |
+| 2 | mspVM2 | mspVM2_OS_Disk | Zone 2 |
+| 3 | mspVM3 | mspVM3_OS_Disk | Zone 3 |
 
 Create a snapshot from adminVM OS disk. If you have snapshot of adminVM, skip the following two steps:
 - Open Azure portal, stop adminVM.
-- Create a snapshot from OS disk.
-
+- Create a snapshot from OS disk, make sure you are selecting the right availability zone, see above table.
 
 Create VMs for Forms and Reports replicas based on the snapshot:
 1. Create a disk from the snapshot.
-2. Create a VM with your expected name, e.g. `mspVM1` on the disk.
+2. Create a VM with your expected name, e.g. `mspVM1` on the disk. Make sure you are selecting the right availability zone, see above table.
 3. SSH to the machine, use `root` user and change the hostname.
     - Set hostname with `hostnamectl set-hostname hostname`. For example, set hostname mspVM1 with command `hostnamectl set-hostname mspVM1`
 4. Repeat step1-3 for `mspVM2` or another new machine, make sure you have set correct hostname.
@@ -976,6 +983,8 @@ Then you should be able to access Forms using private IP of application gateway.
 If you want to also manage the traffic to Reports cluster, you can add Path-based routing to `/reports/rwservlet` in the rule.
 
 ## Create Highly Available Administration Server
+
+
 
 https://borysneselovskyi.wordpress.com/2017/07/16/how-to-configure-the-weblogic-adminserver-for-high-availability/
 
