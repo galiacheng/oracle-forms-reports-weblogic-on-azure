@@ -1063,7 +1063,7 @@ This section enables high availability on Administration based on the virtual IP
 
 The following table lists some difference between the two approaches:
 
-| Approach | [Use a pre-defined backup machine](#use-a-pre-defined-backup-machine) | [Use Azure Site Recovery](#use-azure-site-recovery) |
+| Difference | [Use a pre-defined backup machine](#use-a-pre-defined-backup-machine) | [Use Azure Site Recovery](#use-azure-site-recovery) |
 |------------|------------|------------|
 | Share domain configuration | YES.<br> Use Azure NFS File share. | NO. |
 | Auxiliary Azure Services | Azure Automation Account for automation. | Azure Site Recovery for Azure VM Zone to Zone recovery. <br> Azure Automation Account for automation. |
