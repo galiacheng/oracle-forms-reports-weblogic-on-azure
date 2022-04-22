@@ -1,13 +1,14 @@
 # Create Highly Available Oracle Forms and Reports clusters on Azure
 
 This document guides you to create highly available Oracle Forms and Reports clusters on Azure VMs step by step, including:
+
 - Create Oracle Forms and Reports clusters with 2 replicas.
 - Create load balancing with Azure Application Gateway
 - Scale up with new Forms and Reports replicas
-- Create Highly Available Administration Server
+- Enable Highly Available Administration Server
 - Troubleshooting
 
-You will get Froms and Reports running as the picture shows:
+You will get Forms and Reports running as the picture shows:
 
 ![Oracle Forms and Reports Architecture](overview.png)
 
@@ -21,9 +22,10 @@ You will get Froms and Reports running as the picture shows:
 * [Install Oracle Forms and Reports](#install-oracle-forms-and-reports)
 * [Clone machine for managed servers](#clone-machine-for-managed-servers)
 * [Create schemas using RCU](#create-schemas-using-rcu)
+* [Configure Virtual IP for Admin Server]()
 * [Configure Forms and Reports with a new domain](#configure-forms-and-reports-in-the-existing-domain)
-  * [Create domain for Admin Server](#create-domain-on-adminvm)
-  * [Create domain for managed servers](#create-domain-on-managed-machine)
+  * [Create domain configuration](#create-domain-on-adminvm)
+  * [Apply domain to managed servers](#create-domain-on-managed-machine)
   * [Create and start Reports components](#create-and-start-reports-components)
   * [Start Forms and Reports](#start-forms-and-reports-managed-servers)
 * [Add Forms and Reports replicas](#add-forms-and-reports-replicas)
@@ -35,11 +37,9 @@ You will get Froms and Reports running as the picture shows:
   * [Create Application Gateway](#create-application-gateway)
   * [Configure Backend Pool](#configure-backend-pool)
   * [Configure Health Probe](#configure-health-probe)
-* [Create Highly Available Administration Server WIP](#create-highly-available-administration-server)
-  * [Configure secondary IP]()
-  * [Failover approaches]()
-    * [Use a pre-defined backup machine]()
-    * [Use Azure Site Recovery]()
+* [Enable Highly Available Administration Server](#create-highly-available-administration-server)
+  * [Use a pre-defined backup machine]()
+  * [Use Azure Site Recovery]()
 * [Validate](#validate)
 * [Clean up](#clean-up)
 * [Troubleshoot](#troubleshoot)
@@ -276,6 +276,64 @@ The following steps leverage XServer and RCU to create schemas on the Oracle dat
   - Note: you must use the same password of WebLogic admin account.
 - The schema should be completed without error.
 
+## Configure Virtual IP for Admin Server
+
+We will use a secondary virtual IP address for the Admin Server, rather than using the primary IP address of adminVM, which makes the Admin Server more flexible for backup and failover. To enable the secondary IP address, you are required to make changes to:
+
+1. Infrastructure: add a secondary IP to the Azure Network Interface of adminVM.
+2. Virtual Machine: add a local ethernet connection and restart networking service.
+3. Node manager: configure node manager to listen the new IP address and start the node manager with the IP address.
+4. Admin Server: configure Admin Server to listen the new IP address and restart Admin Server.
+
+Make sure you have at least one available private IP address that hasn't been used by other machine, this sample use `10.0.0.16`. You can find more information from this [document](https://docs.microsoft.com/en-us/azure/virtual-network/ip-services/virtual-network-multiple-ip-addresses-portal?context=/azure/virtual-machines/context/context).
+
+- Go to Azure Portal, Open adminVM
+- Select Settings -> Networking and open the network interface.
+- Select Settings -> IP Configurations -> Add
+  - Name: ipconfig2
+  - Allocation: Static
+  - IP Address: your available private IP address, here uses `10.0.0.16`
+  - Public IP: Disassociate
+
+Now you have added the IP address to the external network interface of adminVM, to connect adminVM with it, you still need to enable local ethernet connection on the machine.
+
+You have to login to adminVM and configure the ethernet connection.
+
+- SSH to adminVM, use `root` user
+- Add ethernet connection. Replace the IP address with yours and run the following command to add `ifcfg-eth0:1`.
+```shell
+secondaryIP="10.0.0.16"
+cd /etc/sysconfig/network-scripts
+ls ifcfg-*
+touch ifcfg-eth0:1
+vi ifcfg-eth0:1
+
+cat <<EOF >ifcfg-eth0:1
+DEVICE=eth0:1
+BOOTPROTO=static
+ONBOOT=yes
+IPADDR=${secondaryIP}
+NETMASK=255.255.255.0
+EOF
+```
+- Restart network service with command `/etc/init.d/network restart`
+- Validate configuration, run `ifconfig`, you should find there is a network interface listening to the IP address like:
+```text
+[root@adminVM1 network-scripts]# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.0.4  netmask 255.255.255.0  broadcast 10.0.0.255
+        inet6 fe80::20d:3aff:fe8f:1fe7  prefixlen 64  scopeid 0x20<link>
+        ether 00:0d:3a:8f:1f:e7  txqueuelen 1000  (Ethernet)
+        RX packets 104754  bytes 69209518 (66.0 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 75892  bytes 19074850 (18.1 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eth0:0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.0.15  netmask 255.255.255.0  broadcast 10.0.0.255
+        ether 00:0d:3a:8f:1f:e7  txqueuelen 1000  (Ethernet)
+```
+
 ## Configure Forms and Reports with a new domain
 
 ### Create domain on adminVM
@@ -323,7 +381,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
   - Deployment and Services
 - Page10: Administration Server
   - Server Name: `admin`
-  - Listen Address: private ip of adminVM
+  - Listen Address: the virtual IP address created in [Configure Virtual IP for Admin Server](configure-virtual-ip-for-admin-server)
   - Listen Port: 7001
   - Server Groups: WSMPM-MAN-SVR
 - Page11: Node Manager
@@ -631,7 +689,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
   sudo systemctl start wls_admin
   ```
 
-Now you are able to access admin console with `http://adminvm-ip:7001/console`, and Enterprise Manager with `http://adminvm-ip:7001/em`.
+Now you are able to access admin console with `http://adminserver-ip:7001/console`, and Enterprise Manager with `http://adminserver-ip:7001/em`.
 
 ### Create domain on managed machine
 
@@ -702,8 +760,8 @@ Let's create the ReportsToolsComponent using WLST.
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   ./wlst.sh
 
-  # connect Admin Server, replace adminvm-ip with the real value.
-  connect("weblogic","Secret123456", "adminvm-ip:7001")
+  # connect Admin Server, replace adminserver-ip with the real value.
+  connect("weblogic","Secret123456", "adminserver-ip:7001")
 
   createReportsToolsInstance(instanceName='reptools1', machine='mspVM1')
   createReportsToolsInstance(instanceName='reptools2', machine='mspVM2')
@@ -725,7 +783,7 @@ Let's create the ReportsToolsComponent using WLST.
 
 Now, you have Reports tools components created and running, you are able to start the managed server and start the Reports In-process server.
 
-- Login admin console: http://adminvm-ip:7001/console
+- Login admin console: http://adminserver-ip:7001/console
 - Select Environment -> Servers -> Control
 - Start WLS_FORMS1, WLS_FORMS2, WLS_REPORTS1 and WLS_REPORTS2.
 - The servers should be running.
@@ -833,7 +891,7 @@ Use WLST to add new replicas:
   ```
   sudo systemctl start wls_admin
   ```
-  Access http://adminvm-ip:7001/console from browser to make sure the Admin Server is up.
+  Access http://adminserver-ip:7001/console from browser to make sure the Admin Server is up.
 
 ### Apply domain to the new machine
 
@@ -857,10 +915,10 @@ To enable Reports in process server, you are required to create and start Report
 
 - SSH to adminVM: `ssh weblogic@adminVM`
 - Use oracle user: `sudo su - oracle`
-- Prepare Python script to create Reports component, please modify value of `adminVMIP`, `wlsUsername`, `wlsPassword` and `index`.
+- Prepare Python script to create Reports component, please modify value of `adminServerIP`, `wlsUsername`, `wlsPassword` and `index`.
   ```shell
-  # Private IP of adminVM
-  adminVMIP=10.0.0.4
+  # the virtual IP address created in [Configure Virtual IP for Admin Server](configure-virtual-ip-for-admin-server)
+  adminServerIP=10.0.0.16
   # Username of WebLogic admin account
   wlsUsername="weblogic"
   # Password of WebLogic admin account
@@ -871,7 +929,7 @@ To enable Reports in process server, you are required to create and start Report
   repToolsName="reptools${index}"
   repToolsTargetMachine="mspVM${index}"
   cat <<EOF >create-reportstools.py
-  connect("${wlsUsername}","${wlsPassword}", "${adminVMIP}:7001")
+  connect("${wlsUsername}","${wlsPassword}", "${adminServerIP}:7001")
   createReportsToolsInstance(instanceName="${repToolsName}", machine="${repToolsTargetMachine}")
   EOF
   ```
@@ -892,7 +950,7 @@ To enable Reports in process server, you are required to create and start Report
 
 Forms and Reports system components on mspVM3 are ready, and node manager is up on mspVM3. Let's start the managed server from console portal.
 
-- Login admin console: http://adminvm-ip:7001/console
+- Login admin console: http://adminserver-ip:7001/console
 - Select Environment -> Servers -> Control
 - Start WLS_FORMS3, WLS_REPORTS3.
 - The servers should be running.
@@ -986,7 +1044,7 @@ Then you should be able to access Forms using private IP of application gateway.
 
 If you want to also manage the traffic to Reports cluster, you can add Path-based routing to `/reports/rwservlet` in the rule.
 
-## Create Highly Available Administration Server
+## Enable Highly Available Administration Server
 
 The high availability of applications in the Forms and Reports environment is realized by clustering. Managed servers in the cluster work together. The information about transactions is distributed cluster-wide. If a cluster member fails, another server takes over the tasks of the failed server and executes them. In this way, the applications are kept running without interruption.
 
@@ -998,103 +1056,21 @@ The Admin Server is a single point of failure: if the server fails, the Domain i
 
 The managed servers are still running and can continue to work, even if the Admin Server is not available, you can find [Oracle Fusion Middleware High Availability Guide](https://docs.oracle.com/en/middleware/fusion-middleware/12.2.1.4/ashia/index.html) for more information.
 
-This section enables you to create Administration Server with high availability, including:
+This section enables high availability on Administration based on the virtual IP address you created previously in [Configure Virtual IP for Admin Server](configure-virtual-ip-for-admin-server), now you can use one of the approaches to achieve that:
 
-* Definition and configuration of a virtual IP address, which is responsible for the listening to the Admin Server.
-* Provide two failover approaches, you can choose one of them based on your requirement:
-   * Moving of the configuration to the shared storage and setting up a backup host. The Administration Server on the active host owns the domain directory in shared storage. If the active host fails, the backup host takes over and restarts the Administration Server from the shared domain directory.
-   * Leveraging Azure Site Recovery Service. The application consistent snapshot feature of Azure Site Recovery ensures that the data is in usable state after the failover. The service enables customers to use Azure as a disaster recovery site on a pay-as-you-go model without having to invest in additional infrastructure.
+1. Moving of the configuration to the shared storage and setting up a backup host. The Administration Server on the active host owns the domain directory in shared storage. If the active host fails, the backup host takes over and restarts the Administration Server from the shared domain directory.
+2. Leveraging Azure Site Recovery Service. The application consistent snapshot feature of Azure Site Recovery ensures that the data is in usable state after the failover. The service enables customers to use Azure as a disaster recovery site on a pay-as-you-go model without having to invest in additional infrastructure.
 
-### Configure Admin Server with secondary IP address
+The following table lists some difference between the two approaches:
 
-We will use a secondary IP address to listen to the Admin Server, rather than using the primary IP address of Virtual Machine, which makes the Admin Server more flexible to move. To enable the secondary IP address, you are required to make changes to:
-1. Infrastructure: add a secondary IP to the Azure Network Interface of VM.
-2. Virutal Machine: add a local ethernet connection and restart networking service.
-3. Node manager: configure node manager to listen the new IP address and start the node manager with the IP address.
-4. WebLogic level: configure Admin Server to listen the new IP address and restart Admin Server.
+| Approach |Share domain configuration | Auxiliary Azure Services | Additional infrastructure | RTO | Pros and Cons |
+|------------|------------|------------|------------|------------|------------|
+| [Use a pre-defined backup machine](#use-a-pre-defined-backup-machine) | YES.<br> Use Azure NFS File share. | Azure Automation Account for automation. | Azure NSF File Share for shared domain configuration. <br> Azure Virtual Machine, Azure Network Interface and Azure Disk for backup host. | 3-9 min. <br> Need not shutdown the primary machine: 3-5 min. <br> Have to shutdown the primary machine: 8-9 min. | Pros:<br> 1. Save time to provision a new machine. <br> Cons: <br> 1. Domain configuration in NSF share may cause longer network latency and effect the performance of Admin Server. 2. Extra cost for the pre-defined machine. |
+| [Use Azure Site Recovery](#use-azure-site-recovery) | NO. | Azure Site Recovery for Azure VM Zone to Zone recovery. <br> Azure Automation Account for automation. | No | 8-20 min.<br> Need not shutdown the primary machine: 8-12 min. Have to shutdown the primary machine: 15-20 min. | Pros:<br> 1. No additional infrastructure. 2. Leverage ASR to backup and protect the running machine. <br> Cons: <br> 1. Takes longer to failover as it has to provison target resources. 2. Extra cost for ASR. |
 
+### Use a pre-defined backup machine
 
-#### Add a secondary IP to adminVM.
-
-Make sure you have at least one available private IP address that hasn't been used by other machine, this sample use `10.0.0.16`. You can find more information from this [document](https://docs.microsoft.com/en-us/azure/virtual-network/ip-services/virtual-network-multiple-ip-addresses-portal?context=/azure/virtual-machines/context/context).
-
-- Go to Azure Portal, Open adminVM
-- Select Settings -> Networking and open the network interface.
-- Select Settings -> IP Configurations -> Add
-  - Name: ipconfig2
-  - Allocation: Static
-  - IP Address: your available private IP, here uses `10.0.0.16`
-  - Public IP: Disassociate
-
-Now you have added the IP address to the external network interface of adminVM, to connect adminVM with it, you still need to enable local ethernet connection on the machine.
-
-You have to login to adminVM and configure the ethernet connection.
-
-- SSH to adminVM, use `root` user
-- Add ethernet connection. Replace the IP address with yours and run the following command to add `ifcfg-eth0:1`.
-```shell
-secondaryIP="10.0.0.16"
-cd /etc/sysconfig/network-scripts
-ls ifcfg-*
-touch ifcfg-eth0:1
-vi ifcfg-eth0:1
-
-cat <<EOF >ifcfg-eth0:1
-DEVICE=eth0:1
-BOOTPROTO=static
-ONBOOT=yes
-IPADDR=${secondaryIP}
-NETMASK=255.255.255.0
-EOF
-```
-- Restart network service with command `/etc/init.d/network restart`
-- Validate configuration, run `ifconfig`, you should find there is a network interface listening to the IP address like:
-```text
-[root@adminVM1 network-scripts]# ifconfig
-eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-        inet 10.0.0.4  netmask 255.255.255.0  broadcast 10.0.0.255
-        inet6 fe80::20d:3aff:fe8f:1fe7  prefixlen 64  scopeid 0x20<link>
-        ether 00:0d:3a:8f:1f:e7  txqueuelen 1000  (Ethernet)
-        RX packets 104754  bytes 69209518 (66.0 MiB)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 75892  bytes 19074850 (18.1 MiB)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-
-eth0:0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-        inet 10.0.0.15  netmask 255.255.255.0  broadcast 10.0.0.255
-        ether 00:0d:3a:8f:1f:e7  txqueuelen 1000  (Ethernet)
-```
-
-#### Configure Admin Server and node manager with the secondary IP
-
-Firstly, let's update the listen address of Admin Server and node manager from Console portal.
-- Login to Admin Console portal `http://<adminvm-ip>:7001/console`
-- Click **Lock & Edit**
-- Select Environment -> Servers -> admin -> Configuration
-  - Listen Address: input your new IP address, here uses `10.0.0.16`
-  - Click Save
-- Select Environment -> Machines -> adminVM -> Node Manager
-  - Listen Address: input your new IP address, here uses `10.0.0.16`
-  - Click Save
-- Activate changes
-
-Now you still need to restart node manager and Admin Server:
-- SSH to adminVM, use `root`
-- Stop Admin Server and node manager
-```shell
-sudo systemctl stop wls_nodemanager
-sudo systemctl stop wls_admin
-kill -9 `ps -ef | grep 'Dweblogic.Name=admin' | grep -v grep | awk '{print $2}'`
-```
-- Update node manager property file to listen to the new IP address. Make sure value of `ListenAddress` is the new IP address (here is `10.0.0.16`) in /u02/domains/wlsd/nodemanager/nodemanager.properties. 
-- Start node manager and Admin Server
-```
-sudo systemctl start wls_nodemanager
-sudo systemctl start wls_admin
-```
-
-After the Admin Server is up, you should be able to access admin console and EM portal with new IP address, addresses in this sample are `http://10.0.0.16:7001/console` and `http://10.0.0.16:7001/em`
-
+### Use Azure Site Recovery
 
 ## Validate
 
