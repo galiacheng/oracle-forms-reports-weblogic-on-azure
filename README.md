@@ -64,8 +64,8 @@ This document will setup Oracle Forms and Reports based on the Azure WebLogic ba
   - Resource group: click **Create new**, input a name.
   - Virtual machine name: `adminVM`
   - Region: East US.
-  - Availablity options: Availability zone
-  - Availablity: Zone 1
+  - Availability options: Availability zone
+  - Availability: Zone 1
   - Image: WebLogic Server 12.2.1.4.0 and JDK8 on Oracle Linux 7.6 - Gen1.
   - Size: select a size with more than 8GiB RAM, e.g. Standard B4ms.
   - Authentication type: Password
@@ -242,10 +242,12 @@ Follow the steps to clone adminVM, for high availability, let's create the disk 
 | 3 | mspVM3 | mspVM3_OS_Disk | Zone 3 |
 
 Create a snapshot from adminVM OS disk. If you have snapshot of adminVM, skip the following two steps:
+
 - Open Azure portal, stop adminVM.
 - Create a snapshot from OS disk, make sure you are selecting the right availability zone, see above table.
 
 Create VMs for Forms and Reports replicas based on the snapshot:
+
 1. Create a disk from the snapshot.
 2. Create a VM with your expected name, e.g. `mspVM1` on the disk. Make sure you are selecting the right availability zone, see above table.
 3. SSH to the machine, use `root` user and change the hostname.
@@ -305,6 +307,7 @@ You have to login to adminVM and configure the ethernet connection.
 
 - SSH to adminVM, use `root` user
 - Add ethernet connection. Replace the IP address with yours and run the following command to add `ifcfg-eth0:1`.
+
 ```shell
 secondaryIP="10.0.0.16"
 cd /etc/sysconfig/network-scripts
@@ -320,8 +323,10 @@ IPADDR=${secondaryIP}
 NETMASK=255.255.255.0
 EOF
 ```
+
 - Restart network service with command `/etc/init.d/network restart`
 - Validate configuration, run `ifconfig`, you should find there is a network interface listening to the IP address like:
+
 ```text
 [root@adminVM1 network-scripts]# ifconfig
 eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
@@ -615,21 +620,25 @@ Now, the machine and database are ready, let's move on to create a new domain fo
         - Module-FMDFW
 - The process should be completed without error.
 - Pack the domain and copy the domain configuration to managed machines.
+
   ```shell
   rm /tmp/cluster.jar -f
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
   ```
-  ```
+
+  ```shell
   scp /tmp/cluster.jar weblogic@mspVM1:/tmp/cluster.jar
 
   scp /tmp/cluster.jar weblogic@mspVM2:/tmp/cluster.jar
   ```
+
 - Exit `oracle` user: `exit`
 - Use root user: `sudo su`
 - Create service for node manager and Admin Server
   - Create service for Admin Server   
     Let's create the credentials for weblogic account.
+
     ```shell
     mkdir -p /u02/domains/wlsd/servers/admin/security
     cat <<EOF >/u02/domains/wlsd/servers/admin/security/boot.properties
@@ -637,6 +646,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
     password=Secret123456
     EOF
     ```
+
     ```shell
     cat <<EOF >/etc/systemd/system/wls_admin.service
     [Unit]
@@ -660,7 +670,9 @@ Now, the machine and database are ready, let's move on to create a new domain fo
     WantedBy=multi-user.target
     EOF
     ```
+
   - Create service for node manager
+
     ```bash
     cat <<EOF >/etc/systemd/system/wls_nodemanager.service
     [Unit]
@@ -684,8 +696,10 @@ Now, the machine and database are ready, let's move on to create a new domain fo
     WantedBy=multi-user.target
     EOF
     ```
+
 - Start node manager and Admin Server, it takes about 10 min for Admin Server up.
-  ```
+
+  ```shell
   sudo systemctl enable wls_nodemanager
   sudo systemctl enable wls_admin
   sudo systemctl daemon-reload
@@ -697,27 +711,33 @@ Now you are able to access admin console with `http://adminserver-ip:7001/consol
 
 ### Create domain on managed machine
 
-Now, you have Forms and Reports configured in adminVM, let's apply the domain on mspVM1 and mspVM2. 
+Now, you have Forms and Reports configured in adminVM, let's apply the domain on mspVM1 and mspVM2.
 
-You can also follow the steps to apply domain to a new machine for new replicas.   
+You can also follow the steps to apply domain to a new machine for new replicas.
 
 Configure domain on managed machine:
+
 1. SSH to your machine, e.g login to mspVM1 with command `ssh weblogic@mspVM1`
-2. Use `root` user to set the ownership of domain package
-  ```
+1. Use `root` user to set the ownership of domain package
+
+  ```shell
   sudo su
   chown oracle:oracle /tmp/cluster.jar
   ```
-2. Use `oracle` user, `sudo su - oracle`
-3. Unpack the domain
-  ```
+
+1. Use `oracle` user, `sudo su - oracle`
+1. Unpack the domain
+
+  ```shell
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   bash unpack.sh -domain=/u02/domains/wlsd -template=/tmp/cluster.jar 
   ```
-4. Make sure the node manager listen address is correct by `cat /u02/domains/wlsd/nodemanager/nodemanager.properties`. The listen address should be private IP of the machine.
-5. Exit oracle user with command `exit`
-6. Use root user: `sudo su`
-7. Create service for node manager
+
+1. Make sure the node manager listen address is correct by `cat /u02/domains/wlsd/nodemanager/nodemanager.properties`. The listen address should be private IP of the machine.
+1. Exit oracle user with command `exit`
+1. Use root user: `sudo su`
+1. Create service for node manager
+
   ```shell
   cat <<EOF >/etc/systemd/system/wls_nodemanager.service
   [Unit]
@@ -741,17 +761,20 @@ Configure domain on managed machine:
   WantedBy=multi-user.target
   EOF
   ```
-8. Start node manager
-  ```
+
+1. Start node manager
+
+  ```shell
   sudo systemctl enable wls_nodemanager
   sudo systemctl daemon-reload
   sudo systemctl start wls_nodemanager
   ```
 
-For initial setup, apply step 1-8 to mspVM2, and continue from [Create and start Reports components](#create-and-start-reports-components). 
+For initial setup, apply step 1-8 to mspVM2, and continue from [Create and start Reports components](#create-and-start-reports-components).
 For new replicas, apply step 1-8 to your new machines, and continue from [Create and start Reports tools for new replicas](#create-and-start-reports-tools).
 
 ### Create and start Reports components
+
 Now, you have node manager running on adminVM, mspVM1, mspVM2, and Admin Server up in adminVM.   
 To successfully start Reports server, you must create and start the Reports components.
 
@@ -760,6 +783,7 @@ Let's create the ReportsToolsComponent using WLST.
 - SSH to adminVM: `ssh weblogic@adminvm`
 - Use `oracle` user: `sudo su - oracle`
 - Use WLST to create Reports tools instance.
+
   ```
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
   ./wlst.sh
@@ -773,14 +797,17 @@ Let's create the ReportsToolsComponent using WLST.
   # exit WLST
   exit()
   ```
+
   Those commands should be finished without error. You have to resolve error before moving on.
 - Start Reports tools.
-  ```
+
+  ```shell
   cd /u02/domains/wlsd/bin
   # the commands require you to input password of node manager.
   ./startComponent.sh reptools1
   ./startComponent.sh reptools2
   ```
+
   The Reports tools should start successfully.
 
 ### Start Forms and Reports managed servers
@@ -793,6 +820,7 @@ Now, you have Reports tools components created and running, you are able to star
 - The servers should be running.
 
 Now you are able to start Reports in process server from browser.
+
 - Start reports server on mspVM1 with the URL
   - `http://<mspVM1-ip>:9002/reports/rwservlet/startserver`
   - You will get output `1|0` from the browser if the server is up.
@@ -812,17 +840,21 @@ Clone adminVM following [Clone machine for managed servers](#clone-machine-for-m
 
 Firstly, you are required to create and start replated components. This document will leverage WLST offline mode to update the existing domain with new machine, new managed servers and new component, which requires restart on Admin Server to cause changes working.
 
-This is an example to update the existing domain to start Forms and Reports on mspVM3, replace the machine name and component name with yours. 
+This is an example to update the existing domain to start Forms and Reports on mspVM3, replace the machine name and component name with yours.
 
 Use WLST to add new replicas:
+
 - SSH to adminVM and switch to root user
-- Stop Admin Server: 
-  ```
+- Stop Admin Server:
+
+  ```shell
   sudo systemctl stop wls_admin
   kill -9 `ps -ef | grep 'Dweblogic.Name=admin' | grep -v grep | awk '{print $2}'`
   ```
+
 - Switch to `oracle` user: `sudo su - oracle`
 - Prepare Python script to create machine, managed servers and Forms component, modify the the value of Shell variables.
+
   ```shell
   # Modify the value of variables with yours.
   # Keep the index value the same with Azure Virtual Machine index
@@ -887,14 +919,19 @@ Use WLST to add new replicas:
   closeDomain()
   EOF
   ```
+
 - Run the script with WLST offline mode, the script should be completed without errors.
-  ```
+
+  ```shell
   /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-forms3.py
   ```
+
 - Restart the domain and Admin Server to cause changes happen. It takes about 10 min for the Admin Server up.
-  ```
+
+  ```shell
   sudo systemctl start wls_admin
   ```
+
   Access http://adminserver-ip:7001/console from browser to make sure the Admin Server is up.
 
 ### Apply domain to the new machine
@@ -905,11 +942,13 @@ Now, you have finished updating the domain. Let's pack the domain and apply the 
   - SSH to adminVM: `ssh weblogic@adminVM`
   - Use oracle user: `sudo su - oracle`
   - Pack the domain
+  
     ```shell
     rm /tmp/cluster.jar -f
     cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
     bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
     ```
+
 - Copy the domain package to mspVM3: `scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar`
 - Create domain on mspVM3 and start node manager following [Create domain for managed servers](#create-domain-on-managed-machine)
 
@@ -920,6 +959,7 @@ To enable Reports in process server, you are required to create and start Report
 - SSH to adminVM: `ssh weblogic@adminVM`
 - Use oracle user: `sudo su - oracle`
 - Prepare Python script to create Reports component, please modify value of `adminServerIP`, `wlsUsername`, `wlsPassword` and `index`.
+
   ```shell
   # the virtual IP address created in [Configure Virtual IP for Admin Server](configure-virtual-ip-for-admin-server)
   adminServerIP=10.0.0.16
@@ -937,13 +977,17 @@ To enable Reports in process server, you are required to create and start Report
   createReportsToolsInstance(instanceName="${repToolsName}", machine="${repToolsTargetMachine}")
   EOF
   ```
+
 - Run the script using WLST online mode, the script should be completed without errors.
-  ```
+
+  ```shell
   /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-reportstools.py
   ```
+
 - Start Reports system components on mspVM3, the commands should be completed without errors.
 
   Replace `reptools3` with your component name, should be `reptools${index}` created in last step.
+
   ```shell
   cd /u02/domains/wlsd/bin
   # the command will ask for node manager password
@@ -960,6 +1004,7 @@ Forms and Reports system components on mspVM3 are ready, and node manager is up 
 - The servers should be running.
 
 Let's start Reports in process server from browser.
+
 - Start reports server on mspVM3 with the URL
   - `http://<mspVM3-ip>:9002/reports/rwservlet/startserver`
   - You will get output `1|0` from the browser if the server is up.
@@ -1025,7 +1070,7 @@ Wait for the resources completed.
     - Target: private IP of mspVM3
 
 ### Configure Health Probe
- 
+
 - Go to Azure Portal, open the Applciation Gateway instance.
 - Select Settings -> Health probes -> Add
   - Name: `FORMS-HEALTH-PROBE`
@@ -1035,16 +1080,19 @@ Wait for the resources completed.
   - Keep other properties with default value.
 
 After the health probe is completed without error, associate the http setting with the probe.
+
 - Select Settings -> HTTP Settings -> http-setting-01
   - Use custom probe: yes
   - Custom probe: `FORMS-HEALTH-PROBE`
   - Save
 
 Check the backend health:
-  - Select Monitoring -> Backend health
-  - The status of Servers should be Healthy.
+
+- Select Monitoring -> Backend health
+- The status of Servers should be Healthy.
 
 Then you should be able to access Forms using private IP of application gateway.
+
 - http://app-gateway-ip/forms/frmservlet
 
 If you want to also manage the traffic to Reports cluster, you can add Path-based routing to `/reports/rwservlet` in the rule.
@@ -1078,13 +1126,12 @@ The following table lists some difference between two approaches:
 
 ### Use a pre-defined backup machine
 
-
-
 ### Use Azure Site Recovery
 
 ## Validate
 
 Validate the Forms testing application.
+
 - Make sure the application is running in each managed server.
   - Forms
     - `http://<mspvm1-ip>:9001/forms/frmservlet`
@@ -1096,14 +1143,17 @@ Validate the Forms testing application.
     - `http://<mspvm3-ip>:9002/reports/rwservlet`
 
 - Make sure the application gateway is able to access Forms application.
-  - http://app-gateway-ip/forms/frmservlet
+
+  - `http://app-gateway-ip/forms/frmservlet`
 
 ## Clean up
 
 Delete the resource group from Azure portal.
 
 ## Troubleshoot
-1. EM is slow    
+
+1. EM is slow
+
     Enable caching of FMW Discovery data.
     - Login EM
     - Select WebLogic domain -> System MBean Browser -> Application Defined MBeans -> emoms.props -> Server.admin -> Application.em -> Properties -> emoms-prop
@@ -1115,8 +1165,10 @@ Delete the resource group from Azure portal.
       3. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_WAIT_TIME=10000
     - Select WebLogic domain -> Refresh WebLogic domain.
   
-2. SSH WARNING: POSSIBLE DNS SPOOFING DETECTED!   
+2. SSH WARNING: POSSIBLE DNS SPOOFING DETECTED!
+
     You may run into this error when connecting a machine using SSH, see the details:
+
     ```text
     [oracle@adminVM1 bin]$ scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1142,4 +1194,5 @@ Delete the resource group from Azure portal.
     Host key verification failed.
     lost connection
     ```
+
     Solution: remove `~/.ssh/knownhosts`
