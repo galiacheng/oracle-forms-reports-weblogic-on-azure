@@ -12,7 +12,7 @@ You will get Forms and Reports running as the picture shows:
 
 ![Oracle Forms and Reports Architecture](overview.png)
 
-Network and Availability Zone topology:
+Network and Availability Zone topology, this sample does not cover high availability for Oracle Database, you can follow [Oracle HA in Azure- Options](https://techcommunity.microsoft.com/t5/data-architecture-blog/oracle-ha-in-azure-options/ba-p/2281896) to create Oracle Data Guard.
 
 ![Network and Availability Zone Topology](network-and-availability-zones-topology.png)
 
