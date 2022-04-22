@@ -1109,7 +1109,7 @@ Delete the resource group from Azure portal.
     - Select WebLogic domain -> Refresh WebLogic domain.
   
 2. SSH WARNING: POSSIBLE DNS SPOOFING DETECTED!   
-    You may run into this error when connect a machine using SSH, see the details:
+    You may run into this error when connecting a machine using SSH, see the details:
     ```text
     [oracle@adminVM1 bin]$ scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
