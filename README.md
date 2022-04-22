@@ -12,6 +12,10 @@ You will get Forms and Reports running as the picture shows:
 
 ![Oracle Forms and Reports Architecture](overview.png)
 
+Network and Availability Zone topology:
+
+![Network and Availability Zone Topology](network-and-availability-zones-topology.png)
+
 ## Contents
 
 * [Prerequisites](#prerequisites)
@@ -975,6 +979,7 @@ Follow the step to create the Application Gateway, you must enable `Cookie-based
 - Enter myAppGateway for the name of the application gateway and myResourceGroupAG for the new resource group.
 - Select Region
 - For Tier, select Standard.
+- Availability Zone: Zone 1
 - Under Configure virtual network
   - Select your vnet
   - Select your subnet
@@ -1072,6 +1077,8 @@ The following table lists some difference between two approaches:
 | Pros and Cons | **Pros**:<br> 1. Save time to provision a new machine. <br> **Cons**: <br> 1. Domain configuration in NFS share may cause longer network latency and effect the performance of Admin Server. <br>2. Extra cost for the pre-defined machine. | **Pros**:<br> 1. No additional infrastructure. 2. Leverage ASR to backup and protect the running machine. <br> **Cons**: <br> 1. Takes longer to failover as it has to provison target resources. 2. Extra cost for ASR. |
 
 ### Use a pre-defined backup machine
+
+
 
 ### Use Azure Site Recovery
 
