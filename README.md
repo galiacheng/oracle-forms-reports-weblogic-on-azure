@@ -18,35 +18,35 @@ Network and Availability Zone topology. This sample does not cover high availabi
 
 ## Contents
 
-* [Prerequisites](#prerequisites)
-* [Provision Azure WebLogic Virtual Machine](#provision-azure-weblogic-virtual-machine)
-* [Create Oracle Database](#create-oracle-database)
-* [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
-* [Install Oracle Fusion Middleware Infrastructure](#install-oracle-fusion-middleware-infrastructure)
-* [Install Oracle Forms and Reports](#install-oracle-forms-and-reports)
-* [Clone machine for managed servers](#clone-machine-for-managed-servers)
-* [Create schemas using RCU](#create-schemas-using-rcu)
-* [Configure Virtual IP for Admin Server]()
-* [Configure Forms and Reports with a new domain](#configure-forms-and-reports-in-the-existing-domain)
-  * [Create domain configuration](#create-domain-on-adminvm)
-  * [Apply domain to managed servers](#create-domain-on-managed-machine)
-  * [Create and start Reports components](#create-and-start-reports-components)
-  * [Start Forms and Reports](#start-forms-and-reports-managed-servers)
-* [Add Forms and Reports replicas](#add-forms-and-reports-replicas)
-  * [Create a new machine for new replicas](#create-a-new-machine-for-new-replicas)
-  * [Create and start components](#create-forms-and-reports-components)
-  * [Apply domain to the new machine](#apply-domain-to-the-new-machine)
-  * [Start new replicas](#start-servers)
-* [Create Load Balancing with Azure Application Gateway](#configure-private-application-gateway)
-  * [Create Application Gateway](#create-application-gateway)
-  * [Configure Backend Pool](#configure-backend-pool)
-  * [Configure Health Probe](#configure-health-probe)
-* [Enable Highly Available Administration Server](#create-highly-available-administration-server)
-  * [Use a pre-defined backup machine]()
-  * [Use Azure Site Recovery]()
-* [Validate](#validate)
-* [Clean up](#clean-up)
-* [Troubleshoot](#troubleshoot)
+- [Prerequisites](#prerequisites)
+- [Provision Azure WebLogic Virtual Machine](#provision-azure-weblogic-virtual-machine)
+- [Create Oracle Database](#create-oracle-database)
+- [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
+- [Install Oracle Fusion Middleware Infrastructure](#install-oracle-fusion-middleware-infrastructure)
+- [Install Oracle Forms and Reports](#install-oracle-forms-and-reports)
+- [Clone machine for managed servers](#clone-machine-for-managed-servers)
+- [Create schemas using RCU](#create-schemas-using-rcu)
+- [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server)
+- [Configure Forms and Reports with a new domain](#configure-forms-and-reports-in-the-existing-domain)
+  - [Create domain configuration](#create-domain-on-adminvm)
+  - [Apply domain to managed servers](#create-domain-on-managed-machine)
+  - [Create and start Reports components](#create-and-start-reports-components)
+  - [Start Forms and Reports](#start-forms-and-reports-managed-servers)
+- [Add Forms and Reports replicas](#add-forms-and-reports-replicas)
+  - [Create a new machine for new replicas](#create-a-new-machine-for-new-replicas)
+  - [Create and start components](#create-forms-and-reports-components)
+  - [Apply domain to the new machine](#apply-domain-to-the-new-machine)
+  - [Start new replicas](#start-servers)
+- [Create Load Balancing with Azure Application Gateway](#configure-private-application-gateway)
+  - [Create Application Gateway](#create-application-gateway)
+  - [Configure Backend Pool](#configure-backend-pool)
+  - [Configure Health Probe](#configure-health-probe)
+- [Enable Highly Available Administration Server](#create-highly-available-administration-server)
+  - [Use a pre-defined backup machine]()
+  - [Use Azure Site Recovery]()
+- [Validate](#validate)
+- [Clean up](#clean-up)
+- [Troubleshoot](#troubleshoot)
 
 ## Prerequisites
 
@@ -390,7 +390,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
   - Deployment and Services
 - Page10: Administration Server
   - Server Name: `admin`
-  - Listen Address: the virtual IP address created in [Configure Virtual IP for Admin Server](configure-virtual-ip-for-admin-server)
+  - Listen Address: the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server)
   - Listen Port: 7001
   - Server Groups: WSMPM-MAN-SVR
 - Page11: Node Manager
@@ -961,7 +961,7 @@ To enable Reports in process server, you are required to create and start Report
 - Prepare Python script to create Reports component, please modify value of `adminServerIP`, `wlsUsername`, `wlsPassword` and `index`.
 
   ```shell
-  # the virtual IP address created in [Configure Virtual IP for Admin Server](configure-virtual-ip-for-admin-server)
+  # the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server)
   adminServerIP=10.0.0.16
   # Username of WebLogic admin account
   wlsUsername="weblogic"
@@ -1109,7 +1109,7 @@ The Admin Server is a single point of failure: if the server fails, the Domain i
 
 The managed servers are still running and can continue to work, even if the Admin Server is not available, you can find [Oracle Fusion Middleware High Availability Guide](https://docs.oracle.com/en/middleware/fusion-middleware/12.2.1.4/ashia/index.html) for more information.
 
-This section enables high availability on Administration Server based on the virtual IP address you created previously in [Configure Virtual IP for Admin Server](configure-virtual-ip-for-admin-server), now you can use one of the approaches to achieve that:
+This section enables high availability on Administration Server based on the virtual IP address you created previously in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), now you can use one of the approaches to achieve that:
 
 1. Moving of the configuration to the shared storage and setting up a backup host. The Administration Server on the active host owns the domain directory in shared storage. If the active host fails, the backup host takes over and restarts the Administration Server from the shared domain directory.
 2. Leveraging Azure Site Recovery Service. The application consistent snapshot feature of Azure Site Recovery ensures that the data is in usable state after the failover. The service enables customers to use Azure as a disaster recovery site on a pay-as-you-go model without having to invest in additional infrastructure.
