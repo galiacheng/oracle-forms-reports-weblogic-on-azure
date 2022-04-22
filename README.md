@@ -67,7 +67,7 @@ This document will setup Oracle Forms and Reports based on the Azure WebLogic ba
   - Authentication type: Password
   - Username: `weblogic`
   - Password: `Secret123456`
-- Networking: you are able to bring your own VNET. If not, keep default settings.
+- Networking: you are able to bring your own VNET. If no, keep default settings.
 - Keep other blades as default. Click **Review + create**.
 
 It will take 10min for the offer completed. After the deployment finishes, you will have a machine with JDK and WLS installed. Then you are able to install and configure Forms and Reports on the top of the machine.
@@ -1056,12 +1056,12 @@ The Admin Server is a single point of failure: if the server fails, the Domain i
 
 The managed servers are still running and can continue to work, even if the Admin Server is not available, you can find [Oracle Fusion Middleware High Availability Guide](https://docs.oracle.com/en/middleware/fusion-middleware/12.2.1.4/ashia/index.html) for more information.
 
-This section enables high availability on Administration based on the virtual IP address you created previously in [Configure Virtual IP for Admin Server](configure-virtual-ip-for-admin-server), now you can use one of the approaches to achieve that:
+This section enables high availability on Administration Server based on the virtual IP address you created previously in [Configure Virtual IP for Admin Server](configure-virtual-ip-for-admin-server), now you can use one of the approaches to achieve that:
 
 1. Moving of the configuration to the shared storage and setting up a backup host. The Administration Server on the active host owns the domain directory in shared storage. If the active host fails, the backup host takes over and restarts the Administration Server from the shared domain directory.
 2. Leveraging Azure Site Recovery Service. The application consistent snapshot feature of Azure Site Recovery ensures that the data is in usable state after the failover. The service enables customers to use Azure as a disaster recovery site on a pay-as-you-go model without having to invest in additional infrastructure.
 
-The following table lists some difference between the two approaches:
+The following table lists some difference between two approaches:
 
 | Difference | [Use a pre-defined backup machine](#use-a-pre-defined-backup-machine) | [Use Azure Site Recovery](#use-azure-site-recovery) |
 |------------|------------|------------|
