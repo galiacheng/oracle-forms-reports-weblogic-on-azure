@@ -244,7 +244,7 @@ Follow the steps to clone adminVM, for high availability, let's create the disk 
 Create a snapshot from adminVM OS disk. If you have snapshot of adminVM, skip the following two steps:
 
 - Open Azure portal, stop adminVM.
-- Create a snapshot from OS disk, make sure you are selecting the right availability zone, see above table.
+- Create a snapshot from OS disk.
 
 Keep the snapshot, you will use it for scaling.
 
@@ -1181,37 +1181,76 @@ This sample saves the domain configuration in `/u02`. You will move all the data
 - SSH to adminVM with command `ssh weblogic@adminVM`, switch to `root` user `sudo su -`
 - Stop Admin server and node manager
 
-```bash
-sudo systemctl stop wls_nodemanager
-sudo systemctl stop wls_admin
-kill -9 `ps -ef | grep 'Dweblogic.Name=admin' | grep -v grep | awk '{print $2}'`
-```
+  ```bash
+  sudo systemctl stop wls_nodemanager
+  sudo systemctl stop wls_admin
+  kill -9 `ps -ef | grep 'Dweblogic.Name=admin' | grep -v grep | awk '{print $2}'`
+  ```
 
 - Bake up domain configuration and remove `/u02`
 
-```bash
-zip -r /u01/oracle/u02.zip /u02
-
-rm /u02 -f -r
-```
+  ```bash
+  zip -r /u01/oracle/u02.zip /u02
+  
+  rm /u02 -f -r
+  ```
 
 - Mount NFS share. Install nfs-utils.
 
-```bash
-sudo yum update
-sudo yum install -y nfs-utils
-```
+  ```bash
+  sudo yum update
+  sudo yum install -y nfs-utils
+  ```
 
-Edit `/etc/fstab` and add a mount point. Replace the variable value with yours.
+  Edit `/etc/fstab` and add a mount point. Replace the variable value with yours.
 
-```bash
-storageAccountName=stgwlsdomain
-nfsShareName=wlsdomain
-mkdir /u02
-echo "${storageAccountName}.file.core.windows.net:/${storageAccountName}/wlsdomain /u02  nfs      defaults    0       0" >> /etc/fstab
+  ```bash
+  storageAccountName=stgwlsdomain
+  nfsShareName=wlsdomain
+  mkdir /u02
+  echo "${storageAccountName}.file.core.windows.net:/${storageAccountName}/wlsdomain /u02  nfs      defaults    0       0" >> /etc/fstab
+  
+  mount /u02
+  ```
 
-mount /u02
-```
+- Move the domain configuration to NFS share
+
+  ```bash
+  unzip -j /u01/oracle/u02.zip -d /u02
+  chown oracle:oracle /u02 -R
+  ```
+
+Now you have successfully moved domain configuration to NFS share. The next steps are created a backup machine from the snapshot of current adminVM.
+
+#### Create and configure backup machine
+
+Take a snapshot from adminVM OS disk. Note that do not use this snapshot to create managed machine for managed servers.
+
+- Open Azure portal, stop adminVM.
+- Take a snapshot from OS disk.
+
+Create backup machine based on the snapshot:
+
+- Create a disk from the snapshot.
+- Create a VM with your expected name(e.g. adminVMBak) on the disk. Make sure you are selecting the Availability Zone 3.
+- SSH to the machine, use root user and change the hostname.
+  - Set hostname with `hostnamectl set-hostname hostname`. For example, command to set hostname `adminvmbak`: `hostnamectl set-hostname adminvmbak`
+- Stop the machine from Azure portal. The machine has mounted with NFS share and is ready to start Admin Server.
+
+#### Test failover
+
+Now you have adminVM as the primary host and adminVMBak as backup host. Domain configuration are stored in NFS share, and share between both machines. Changes from Admin Server that runs on either machine are persisted to NFS share.
+
+Before testing, let's start Admin Server by starting adminVM from Azure Portal. Make sure you are able to access Console portal or EM from browser.
+
+Follow the steps to test failover manually:
+
+1. Stop adminVM.
+1. Remove secondary IP from adminVM: go to Azure Portal -> open **adminVM** -> select **Settings** -> select **Networking** -> open the network interface -> select **Settings** -> select **IP Configurations** -> remove `ipconfig2` which was configured with virtual IP of Admin Server.
+1. Assign secondary IP to adminVMBak: go to Azure Portal -> open **adminVMBak** -> select **Settings** -> select **Networking** -> open the network interface -> select **Settings** -> select **IP Configurations** -> Add `ipconfig2` with static IP address, here is `10.0.0.16`.
+1. Start adminVMBak. Wait for Admin Server ready.
+
+You should be able to access Admin Server and have the same domain configuration as that runs on adminVM.
 
 ### Use Azure Site Recovery
 
