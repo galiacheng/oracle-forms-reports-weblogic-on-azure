@@ -1128,7 +1128,9 @@ The following table lists some difference between two approaches:
 
 To make sure the domain configuration is the same in both machines, this approach move the domain configuration to shared storage, Azure File NFS share.
 
-Let's create an Azure Storage Account and NFS share from Azure Portal.
+Let's create an Azure Storage Account and NFS share from Azure Portal:
+
+- 
 
 
 
@@ -1208,7 +1210,7 @@ Delete the resource group from Azure portal.
 3. Reports failure: REP-50125: org.omg.CORBA.INTERNAL: vmcid: SUN minor code: 208 completed: No
 
     Error details:
-    
+
     ```text
     [2008/7/10 4:15:49:891] Info 56025 (RWServer:startServer): Reports Server is starting up
     [2008/7/10 4:15:50:274] Exception 50125 (org.omg.CORBA.INTERNAL: vmcid: SUN minor code: 208 completed: No
@@ -1227,4 +1229,4 @@ Delete the resource group from Azure portal.
 
     Root cause: incorret hostname and ip address.
 
-    Solution: double check entries in /etc/hosts.
+    Solution: double check entries in /etc/hosts. See [Oracle support doc](https://support.oracle.com/epmos/faces/DocumentDisplay?_afrLoop=32587788759518&parent=EXTERNAL_SEARCH&sourceId=PROBLEM&id=726588.1&_afrWindowMode=0&_adf.ctrl-state=21lszme5t_4).
