@@ -246,6 +246,8 @@ Create a snapshot from adminVM OS disk. If you have snapshot of adminVM, skip th
 - Open Azure portal, stop adminVM.
 - Create a snapshot from OS disk, make sure you are selecting the right availability zone, see above table.
 
+Keep the snapshot, you will use it for scaling.
+
 Create VMs for Forms and Reports replicas based on the snapshot:
 
 1. Create a disk from the snapshot.
@@ -1118,23 +1120,98 @@ The following table lists some difference between two approaches:
 
 | Difference | [Use a pre-defined backup machine](#use-a-pre-defined-backup-machine) | [Use Azure Site Recovery](#use-azure-site-recovery) |
 |------------|------------|------------|
-| Share domain configuration | YES.<br> Use Azure NFS File share. | NO. |
+| Share domain configuration | Yes.<br> Use Azure NFS File share. | No. |
 | Auxiliary Azure Services | Azure Automation Account for automation. | Azure Site Recovery for Azure VM Zone to Zone recovery. <br> Azure Automation Account for automation. |
 | Additional infrastructure | Azure NFS File Share for shared domain configuration. <br> Azure Virtual Machine, Azure Network Interface and Azure Disk for backup host. | No. |
 | RTO | 3-9 min. <br> Need not shutdown the primary machine: 3-5 min. <br> Have to shutdown the primary machine: 8-9 min.  | 8-20 min.<br> Need not shutdown the primary machine: 8-12 min. <br> Have to shutdown the primary machine: 15-20 min. |
-| Pros and Cons | **Pros**:<br> 1. Save time to provision a new machine. <br> **Cons**: <br> 1. Domain configuration in NFS share may cause longer network latency and effect the performance of Admin Server. <br>2. Extra cost for the pre-defined machine. | **Pros**:<br> 1. No additional infrastructure. 2. Leverage ASR to backup and protect the running machine. <br> **Cons**: <br> 1. Takes longer to failover as it has to provison target resources. 2. Extra cost for ASR. |
+| Pros and Cons | **Pros**:<br> 1. Save time to provision a new machine. <br> **Cons**: <br> 1. Domain configuration in NFS share may cause longer network latency and effect the performance of Admin Server. <br>2. Extra cost for the pre-defined machine. | **Pros**:<br> 1. No additional infrastructure. <br>2. Leverage ASR to backup and protect the running machine. <br> **Cons**: <br> 1. Takes longer to failover as it has to provison target resources. 2. Extra cost for ASR. |
+
+To move on, make sure you have enable secondary IP for Admin Server, see [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server).
 
 ### Use a pre-defined backup machine
 
 To make sure the domain configuration is the same in both machines, this approach move the domain configuration to shared storage, Azure File NFS share.
 
-Let's create an Azure Storage Account and NFS share from Azure Portal:
+#### Create NFS share
 
-- 
+Let's create an Azure Storage Account and NFS share from Azure Portal, you must select **Premium** sku to enable NFS share.
 
+- Expand the portal menu and select Create a resource.
+- Select Storage and Storage account.
+  - Basics
+    - Create a new resource group or select your resource group.
+    - Input storage account name, e.g. `stgwlsdomain`.
+    - Region: East US
+    - Performance: Premium
+    - Premium account type: File share
+  - Networking
+    - Connectivity method: Private endpoint
+    - Add Private endpoint
+      - Name: stg-wls-privateendpoint
+      - Storage sub-resource: file
+      - Networking:
+        - Virtual network: select the vnet of Forms and Reports clusters
+        - Subnet: select the subnet of Forms and Reports clusters
+      - Private DNS integration
+        - Integrate with private DNS zone: yes
+        - Private DNS Zone: select New DNS Zone.
+      - Click OK
+  - Data protection
+    - Enable soft delete for file share.
+  - Click **Review + create**
 
+After the deployment finishes, you have enable the private access from your WebLogic machines to the storage account.
 
+Let's create the NFS share.
 
+- Open your storage account created with above steps from Azure Portal.
+- Select Data storage → File shares → Add file share
+  - Name: `wlsdomain`
+  - Provisioned capacity: 100GiB
+  - Protocol: NFS
+  - Root Squash: No Root Squash
+  - Click Create
+
+After the NFS share deployment completes, you are able to mount it to adminVM.
+
+#### Mount NFS share to adminVM
+
+This sample saves the domain configuration in `/u02`. You will move all the data in this directory to NFS share. Before you move the data, you are required to back up the data in the directory and then create a mount point with directory `/u02`. To avoid conflict between the mounted file system and the OS disk, let's delete the directory before mounting the NFS share.
+
+- SSH to adminVM with command `ssh weblogic@adminVM`, switch to `root` user `sudo su -`
+- Stop Admin server and node manager
+
+```bash
+sudo systemctl stop wls_nodemanager
+sudo systemctl stop wls_admin
+kill -9 `ps -ef | grep 'Dweblogic.Name=admin' | grep -v grep | awk '{print $2}'`
+```
+
+- Bake up domain configuration and remove `/u02`
+
+```bash
+zip -r /u01/oracle/u02.zip /u02
+
+rm /u02 -f -r
+```
+
+- Mount NFS share. Install nfs-utils.
+
+```bash
+sudo yum update
+sudo yum install -y nfs-utils
+```
+
+Edit `/etc/fstab` and add a mount point. Replace the variable value with yours.
+
+```bash
+storageAccountName=stgwlsdomain
+nfsShareName=wlsdomain
+mkdir /u02
+echo "${storageAccountName}.file.core.windows.net:/${storageAccountName}/wlsdomain /u02  nfs      defaults    0       0" >> /etc/fstab
+
+mount /u02
+```
 
 ### Use Azure Site Recovery
 
