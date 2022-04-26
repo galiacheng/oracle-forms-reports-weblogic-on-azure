@@ -1126,6 +1126,14 @@ The following table lists some difference between two approaches:
 
 ### Use a pre-defined backup machine
 
+To make sure the domain configuration is the same in both machines, this approach move the domain configuration to shared storage, Azure File NFS share.
+
+Let's create an Azure Storage Account and NFS share from Azure Portal.
+
+
+
+
+
 ### Use Azure Site Recovery
 
 ## Validate
@@ -1188,11 +1196,35 @@ Delete the resource group from Azure portal.
     The fingerprint for the ECDSA key sent by the remote host is
     SHA256:VEn4PQNWtIJhA337odSkzhPS1rIZ6oz0Bco6+ZNuvsk.
     Please contact your system administrator.
-    Add correct host key in /u01/oracle/.ssh/known_hosts to get rid of this message.
-    Offending ECDSA key in /u01/oracle/.ssh/known_hosts:2
+    Add correct host key in /u02/oracle/.ssh/known_hosts to get rid of this message.
+    Offending ECDSA key in /u02/oracle/.ssh/known_hosts:2
     ECDSA host key for mspvm3 has changed and you have requested strict checking.
     Host key verification failed.
     lost connection
     ```
 
     Solution: remove `~/.ssh/knownhosts`
+
+3. Reports failure: REP-50125: org.omg.CORBA.INTERNAL: vmcid: SUN minor code: 208 completed: No
+
+    Error details:
+    
+    ```text
+    [2008/7/10 4:15:49:891] Info 56025 (RWServer:startServer): Reports Server is starting up
+    [2008/7/10 4:15:50:274] Exception 50125 (org.omg.CORBA.INTERNAL: vmcid: SUN minor code: 208 completed: No
+    at com.sun.corba.se.internal.corba.ORB.getLocalHostName(ORB.java:924)
+    at com.sun.corba.se.internal.corba.ORB.checkApplicationPropertyDefaults(ORB.java:880)
+    at com.sun.corba.se.internal.corba.ORB.set_parameters(ORB.java:457)
+    at com.sun.corba.se.internal.POA.POAORB.set_parameters(POAORB.java:153)
+    at com.sun.corba.se.internal.Interceptors.PIORB.set_parameters(PIORB.java:333)
+    at org.omg.CORBA.ORB.init(ORB.java:337)
+    at oracle.reports.utility.Utility.createORB(Utility.java:1902)
+    at oracle.reports.server.RWServer.startServer(RWServer.java:764)
+    at oracle.reports.server.RWServer.jniMain(RWServer.java:243)
+    ): Internal error org.omg.CORBA.INTERNAL: vmcid: SUN minor code: 208 completed: No
+    [2008/7/10 4:15:50:282] Info 50002 (RWServer:shutdown): Server is shutting down
+    ```
+
+    Root cause: incorret hostname and ip address.
+
+    Solution: double check entries in /etc/hosts.
