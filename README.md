@@ -41,9 +41,9 @@ Network and Availability Zone topology. This sample does not cover high availabi
   - [Create Application Gateway](#create-application-gateway)
   - [Configure Backend Pool](#configure-backend-pool)
   - [Configure Health Probe](#configure-health-probe)
-- [Enable Highly Available Administration Server](#create-highly-available-administration-server)
-  - [Use a pre-defined backup machine]()
-  - [Use Azure Site Recovery]()
+- [Enable Highly Available Administration Server](#enable-highly-available-administration-server)
+  - [Use a pre-defined backup machine](#use-a-pre-defined-backup-machine)
+  - [Use Azure Site Recovery](#use-azure-site-recovery)
 - [Validate](#validate)
 - [Clean up](#clean-up)
 - [Troubleshoot](#troubleshoot)
@@ -1131,6 +1131,11 @@ To move on, make sure you have enable secondary IP for Admin Server, see [Config
 ### Use a pre-defined backup machine
 
 To make sure the domain configuration is the same in both machines, this approach move the domain configuration to shared storage, Azure File NFS share.
+
+- [Create NFS share](#create-nfs-share)
+- [Mount NFS share to adminVM](#mount-nfs-share-to-adminvm)
+- [Create and configure backup machine](#create-and-configure-backup-machine)
+- [Test failover](#test-failover)
 
 #### Create NFS share
 
