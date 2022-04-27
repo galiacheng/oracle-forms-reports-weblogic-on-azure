@@ -29,7 +29,7 @@ Azure Application Gateways are always deployed in a highly available fashion. Yo
 - [Clone machine for managed servers](#clone-machine-for-managed-servers)
 - [Create schemas using RCU](#create-schemas-using-rcu)
 - [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server)
-- [Configure Forms and Reports with a new domain](#configure-forms-and-reports-in-the-existing-domain)
+- [Configure Forms and Reports with a new domain](#configure-forms-and-reports-with-a-new-domain)
   - [Create domain configuration](#create-domain-on-adminvm)
   - [Apply domain to managed servers](#create-domain-on-managed-machine)
   - [Create and start Reports components](#create-and-start-reports-components)
