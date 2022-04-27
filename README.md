@@ -3,9 +3,9 @@
 This document guides you to create highly available Oracle Forms and Reports clusters on Azure VMs step by step, including:
 
 - Create Oracle Forms and Reports clusters with 2 replicas.
+- Enable Highly Available Administration Server
 - Create load balancing with Azure Application Gateway
 - Scale up with new Forms and Reports replicas
-- Enable Highly Available Administration Server
 - Troubleshooting
 
 You will get Forms and Reports running as the picture shows:
