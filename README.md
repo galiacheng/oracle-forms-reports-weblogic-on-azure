@@ -1,275 +1,75 @@
-# Create Highly Available Oracle Forms and Reports clusters on Azure
-
-This document guides you to create highly available Oracle Forms and Reports clusters on Azure VMs step by step, including:
-- Create Oracle Forms and Reports clusters with 2 replicas.
-- Create load balancing with Azure Application Gateway
-- Scale up with new Forms and Reports replicas
-- Create Highly Available Administration Server
-- Troubleshooting
-
-You will get Froms and Reports running as the picture shows:
-
-![Oracle Forms and Reports Architecture](overview.png)
+# Migrate to HA clusters
 
 ## Contents
 
-* [Prerequisites](#prerequisites)
-* [Provision Azure WebLogic Virtual Machine](#provision-azure-weblogic-virtual-machine)
-* [Create Oracle Database](#create-oracle-database)
-* [Create Windows VM and set up XServer](#create-windows-vm-and-set-up-xserver)
-* [Install Oracle Fusion Middleware Infrastructure](#install-oracle-fusion-middleware-infrastructure)
-* [Install Oracle Forms and Reports](#install-oracle-forms-and-reports)
-* [Clone machine for managed servers](#clone-machine-for-managed-servers)
-* [Create schemas using RCU](#create-schemas-using-rcu)
-* [Configure Forms and Reports with a new domain](#configure-forms-and-reports-in-the-existing-domain)
-  * [Create domain for admin server](#create-domain-on-adminvm)
-  * [Create domain for managed servers](#create-domain-on-managed-machine)
-  * [Create and start Reports components](#create-and-start-reports-components)
-  * [Start Forms and Reports](#start-forms-and-reports-managed-servers)
-* [Add Forms and Reports replicas](#add-forms-and-reports-replicas)
-  * [Create a new machine for new replicas](#create-a-new-machine-for-new-replicas)
-  * [Create and start components](#create-forms-and-reports-components)
-  * [Apply domain on the new machine](#apply-domain-on-the-new-machine)
-  * [Start new replicas](#start-servers)
-* [Create Load Balancing with Azure Application Gateway](#configure-private-application-gateway)
-  * [Create Application Gateway](#create-application-gateway)
-  * [Configure Backend Pool](#configure-backend-pool)
-  * [Configure Health Probe](#configure-health-probe)
-* [Create High Available Administration Server WIP](#create-high-available-administration-server)
+* [Prepare machines](#prepare-machines)
+* [Set up configuration](#set-up-the-domain-configuration)
+* [Configure HTTP Servers](#configure-http-servers)
+* [Configure Application Gateway](#configure-private-application-gateway)
 * [Validate](#validate)
-* [Clean up](#clean-up)
 * [Troubleshoot](#troubleshoot)
 
-## Prerequisites
+This document will create high available Oracle Forms and Reports clusters shown in the diagram.
 
-An Azure account with an active subscription. [Create an account for free](https://azure.microsoft.com/free/dotnet).
+![Oracle Forms and Reports Architecture](ha-forms-reports-architecture.jpg)
 
-## Provision Azure WebLogic Virtual Machine
+## Prepare machines
 
-Azure provides a series of Oracle WebLogic base images, it'll save your effort for Oracle tools installation.
-This document will setup Oracle Forms and Reports based on the Azure WebLogic base image, follow the steps to provision a machine with JDK and WebLogic installed:
+As we dicussed on 2022-03-16, Swisslog configuration is ready on adminVM, we will create managed servers based on the snapshot of adminVM.
 
-- Open [Azure portal](https://portal.azure.com/) from your browser.
-- Search `WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6`, you will find the WebLogic offers, select **WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6**, and click **Create** button.
-- Input values in the **Basics** blade:
-  - Subscription: select your subscription.
-  - Resource group: click **Create new**, input a name.
-  - Virtual machine name: `adminVM`
-  - Region: East US.
-  - Image: WebLogic Server 12.2.1.4.0 and JDK8 on Oracle Linux 7.6 - Gen1.
-  - Size: select a size with more than 8GiB RAM, e.g. Standard B4ms.
-  - Authentication type: Password
-  - Username: `weblogic`
-  - Password: `Secret123456`
-- Networking: you are able to bring your own VNET. If not, keep default settings.
-- Keep other blades as default. Click **Review + create**.
+The section will create the following machines:
+- Machines for Forms: formsVM1, formsVM2, formsVM3, formsVM4
+- Machine for Reports: reportsVM1, reportsVM2, reportsVM3, reportsVM4.
 
-It will take 10min for the offer completed. After the deployment finishes, you will have a machine with JDK and WLS installed. Then you are able to install and configure Forms and Reports on the top of the machine.
-
-## Create Oracle Database
-
-You are required to have a database to configure the JRF domain for Forms and Reports. This document will use Oracle Database.
-Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create) to create an Oracle database
-
-If you are following the document to create Oracle database, write down the credentials to create domain schema, username and password should be: `sys/OraPasswd1`
-
-## Create Windows VM and set up XServer
-
-Though you have Oracle WebLogic instance running now, to create Oracle Forms and Reports, you still need to install Oracle Forms and Reports.
-To simplify the interface, let's provision a Windows machine and leverage XServer to install required tools with graphical user interface.
-
-Follow the steps to provision Windows VM and set up XServer.
-
-- open the resource group.
-- Click **Create** button to create a Windows machine.
-- Select **Compute**, Select **Virtual machine**.
-- Virtual machine name: windowsXServer
-- Image: Windows 10 Pro
-- Size: Stardard_D2s_v3
-- Username: `weblogic`
-- Password: `Secret123456`
-- Check Licensing.
-- Click **Review + create**.
-
-Edit the security to allow access from your terminal.
-
-- Open the resource group that your are working on.
-- Select resource `wls-nsg`
-- Select **Settings** -> **Inbound security rules**
-- Click add
-  - Source: Any
-  - Destination port ranges: 3389,22
-  - Priority: 330
-  - Name: Allow_RDP_SSH
-  - Click **Save**
-
-After the Windows server is completed, RDP to the server.
-
-- Install the XServer from https://sourceforge.net/projects/vcxsrv/.
-- Disable the firewall to allow communication from WebLogic VMs.
-  - Turn off Windows Defender Firewall
-
-## Install Oracle Fusion Middleware Infrastructure
-
-Download Oracle Fusion Middleware Infrastructure installer from https://download.oracle.com/otn/nt/middleware/12c/122140/fmw_12.2.1.4.0_infrastructure_Disk1_1of1.zip
-
-Unzip the file and copy `fmw_12.2.1.4.0_infrastructure.jar` to **adminVM**.
-Make sure `fmw_12.2.1.4.0_infrastructure.jar` is copied to /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar, owner of the file is `oracle`, you can set the ownership with command `chown oracle:oracle /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar`.
-
-Now let's use the XServer to install Oracle Fusion Middleware Infrastructure on **adminVM**.
-
-Steps to install Oracle Fusion Middleware Infrastructure on adminVM:
-
-- RDP to windowsXServer.
-- Click XLaunch from the desktop.
-  - Multiple windows, Display number: `-1`, click Next.
-  - Select "Start no client"
-  - Check Clipboard and Primary Selection, Native opengl, Disable access control. Click Next.
-  - Click Finish.
-
-- Open CMD
-- SSH to adminVM with command `ssh weblogic@adminVM`
-- Use root user: `sudo su`
-- Install dependencies
+Create the snapshot from adminVM:
+- Login to admin console
+  - Select wlsd -> Environment -> Servers -> Control, stop WLS_FORMS and WLS_REPORTS
+  - Select wlsd -> Environment -> Clusters -> cluster1 -> Control, stop all the servers.
+- ssh to adminVM, run the following command to stop the services:
   ```
-  # dependencies for XServer access
-  sudo yum install -y libXtst
-  sudu yum install -y libSM
-  sudo yum install -y libXrender
-  # dependencies for Forms and Reports
-  sudo yum install -y compat-libcap1
-  sudo yum install -y compat-libstdc++-33
-  sudo yum install -y libstdc++-devel
-  sudo yum install -y gcc
-  sudo yum install -y gcc-c++
-  sudo yum install -y ksh
-  sudo yum install -y glibc-devel
-  sudo yum install -y libaio-devel
-  sudo yum install -y motif
-  ```
-- Disable firewall. If you want to keep the firewall, you must open ports for Reports and Forms.
-  ```
+  # switch to root user
+  sudo su -
+  # stop admin server
+  sudo systemctl stop wls_admin
+  # stop node manager
+  sudo systemctl stop wls_nodemanager
+
+  # stop the firewall
   sudo systemctl stop firewalld
-  sudo systemctl disable firewalld
   ```
-- Create directory for user data
-  ```
-  mkdir /u02
-  chown oracle:oracle /u02
-  ```
-- Use `oracle` user: `sudo su - oracle`
-- Get the private IP address of widnowsXServer, e.g. `10.0.0.8`
-- Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
-- Set Java env: 
-  ```
-  oracleHome=/u01/app/wls/install/oracle/middleware/oracle_home
-  . $oracleHome/oracle_common/common/bin/setWlstEnv.sh
-  ```
-- Install fmw_12.2.1.4.0_infrastructure.jar
-  - Launch the installer
-    ```
-    java -jar fmw_12.2.1.4.0_infrastructure.jar
-    ```
-  - Continue? Y
-  - Page1
-    - Inventory Directory: `/u01/oracle/oraInventory`
-    - Operating System Group: `oracle`
-  - Step 3
-    - Oracle Home: `/u01/app/wls/install/oracle/middleware/oracle_home`
-  - Step 4
-    - Select "Function Middleware infrastructure"
-  - Installation summary
-    - picture resources\images\screenshot-ofm-installation-summary.png
-  - The process should be completed without errors.
-  - Remove the installation file to save space: `rm fmw_12.2.1.4.0_infrastructure.jar`
-
-## Install Oracle Forms and Reports
-
-Following the steps to install Oracle Forms and Reports:
-- Download wget.sh from https://www.oracle.com/middleware/technologies/forms/downloads.html#
-  - Oracle Fusion Middleware 12c (12.2.1.4.0) Forms and Reports for Linux x86-64 for (Linux x86-64)
-  - Oracle Fusion Middleware 12c (12.2.1.4.0) Forms and Reports for Linux x86-64 for (Linux x86-64)
-- Copy the wget.sh to `/u01/oracle/wget.sh`
-- Use the windowsXServer ssh to adminVM: `ssh weblogic@adminVM`.
-- Use `oracle` user
-- Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
-- Edit wget.sh, replace `--ask-password` with `--password <your-sso-password>`
-- Run the script, it will download the installer.
-  - `bash wget.sh`
-  - input your SSO account name.
-- Unzip the zip files: ` unzip "*.zip"`, you will get `fmw_12.2.1.4.0_fr_linux64.bin` and `fmw_12.2.1.4.0_fr_linux64-2.zip`
-- Remove the zip files to save space
-  ```
-   rm V983392-01_1of2.zip
-   rm V983392-01_2of2.zip
-  ```
-- Install Forms: `./fmw_12.2.1.4.0_fr_linux64.bin`
-  - The installation dialog should prompt up, if no, set `export PS1="\$"`, run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
-  - Inventory Directory: `/u01/oracle/oraInventory`
-  - Operating System Group: `oracle`
-  - Step 3:
-    - Oracle Home: `/u01/app/wls/install/oracle/middleware/oracle_home`
-  - Step 4:
-    - Forms and Reports Deployment
-  - Step 5:
-    - JDK Home: `/u01/app/jdk/jdk1.8.0_291`
-  - Step 6: you may get dependencies error, you must install the corresponding package and run `./fmw_12.2.1.4.0_fr_linux64.bin` again.
-    - Error like "Checking for compat-libcap1-1.10;Not found", then run `sudo yum install compat-libcap1` to install the `compat-libcap1` package.
-  - The installation should be completed without errors.
-
-Now you have Forms and Reports installed in the adminVM. Let's clone the machine for managed servers.
-
-## Clone machine for managed servers
-
-You have Oracle Forms and Reports installed in the adminVM, you are able to reuse the installation by cloning adminVM for managed servers.
-
-Follow the steps to clone adminVM.
-
-Create a snapshot from adminVM OS disk. If you have snapshot of adminVM, skip the following two steps:
 - Open Azure portal, stop adminVM.
-- Create a snapshot from OS disk.
+- Create a snapshot of OS disk.
 
 
-Create VMs for Forms and Reports replicas based on the snapshot:
-1. Create a disk from the snapshot.
-2. Create a VM with your expected name, e.g. `mspVM1` on the disk.
-3. SSH to the machine, use `root` user and change the hostname.
-    - Set hostname with `hostnamectl set-hostname hostname`. For example, set hostname mspVM1 with command `hostnamectl set-hostname mspVM1`
-4. Repeat step1-3 for `mspVM2` or another new machine, make sure you have set correct hostname.
+Create VMs for Forms and Reports based on the snapshot:
+- Create a disk on the snapshot of adminVM.
+- Create a VM with name `formsVM1` on the disk.
+- ssh to the machine, use `root` user.
+  - Set hostname: `hostnamectl set-hostname formsvm1`
+  - Remove wlsd application folder: `rm /u01/app/wls/install/oracle/middleware/oracle_home/user_projects/applications/wlsd -f -r`
+  - Remove wlsd domain folder: `rm /u01/domains/wlsd -f -r`
+  - Stop the services
+    ```bash
+    sudo systemctl stop wls_nodemanager
+    sudo systemctl stop wls_admin
 
-For the initial setup, make sure you have three machine ready to configure Forms and Reports: **adminVM**, **mspVM1**, **mspVM2**, and move on with next section.
+    ps -aux | grep "oracle"
+    ```
 
-For new replicas, make sure you have the new machine ready, and continue from [Create Forms and Reports components](#create-forms-and-reports-components).
+    Kill the WLS process. There should have only one process like:
 
-## Create schemas using RCU
+    ```text
+    [root@formsvm3 ~]# ps -aux | grep "oracle"
+    root     18756  0.0  0.0 114292  2360 pts/0    S+   09:12   0:00 grep --color=auto oracle
+    ```
+- Repeat above steps for `formsVM*` and `reportsVM*`.
 
-You are required to create the schemas for the WebLogic domain.  
-The following steps leverage XServer and RCU to create schemas on the Oracle database created previously.
+Create VMs for HTTP Server based on snapshot of **mspVM1**, we got that before.
+- Create VM `ohsVM1` if you don't have one
+- Create VM `ohsVM2` if you don't have one
+- Create VM `ohsVM3`
 
-- Use the windowsXServer.
-- SSH to adminVM
-- Use `oracle` user
-- Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
-- `bash /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/bin/rcu`
-- Step2: Create Repository -> System Load and Product Load
-- Step3: Input the connection information of Oracle database.
-- Step4: please note down the prefix, which will be used in the following configuration, this document uses `DEV0402`.
-  - STB
-  - OPSS
-  - IAU
-  - IAU_APPEND
-  - IAU_VIEWER
-  - MDS
-  - WLS
-- Step5: Use same passwords for all schemas. Value: `Secret123456`
-  - Note: you must use the same password of WebLogic admin account.
-- The schema should be completed without error.
-
-## Configure Forms and Reports with a new domain
-
-### Create domain on adminVM
-
-Now, the machine and database are ready, let's move on to create a new domain for Forms and Reports.
+# Set up the domain configuration
 
 - Use the windowsXServer.
 - SSH to adminVM
@@ -277,630 +77,395 @@ Now, the machine and database are ready, let's move on to create a new domain fo
 - Set env variable: `export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0`, e.g. `export DISPLAY=10.0.0.8:0.0`
 - `bash  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/config.sh`
 - Page1:
-  - Create a new domain
-  - Location: `/02/domains/wlsd`
-- Page2: 
-  - FADS
-  - Oracle Forms
-  - Oracle Reports Application
-  - Oracle Enterprise Manager
-  - Oracle Reports Tools
-  - Oracle Reports Server
-  - Oracle Reports Bridge
-  - Oracle WSM Policy Manager
-  - Oracle JRF
-  - ORacle WebLogic Coherence Cluster Extension
-- Page3: Applciation Location
-  - Location: `/u02/applications/wlsd`
-- Page4: Administrator account
-  - Name: `weblogic`
-  - Password: `Secret123456`, **make sure the value is the same with schema password**.
-- Page5: Domain mode and JDK
-  - Domain mode: production
-  - JDK: keep default
-- Page6: 
-  - RCU Data
-  - Host Name: the host name of database
-  - DBMS/Service: your dbms
-  - Schema Owner is `<the-rcu-schema-prefix>_STB`, this sample uses `DEV0402_STB`
-  - Schema Password: `Secret123456`
-- Page9: Advanced Configuration
-  - Administration Server
-  - Node Manager
+  - Update an existing domain
+  - location: /01/domains/wlsd
+- Page2: no change
+- Page3: no change
+  - Click "Get RCU Configuration", you should see message "Successfully Done".
+- Page4: no change
+- Page6:
   - Topology
   - System Components
   - Deployment and Services
-- Page10: Administration Server
-  - Server Name: `admin`
-  - Listen Address: private ip of adminVM
-  - Listen Port: 7001
-  - Server Groups: WSMPM-MAN-SVR
-- Page11: Node Manager
-  - Node Manager credentials
-    - Username: `weblogic`
-    - Password: `Secret123456`
-- Page12: Managed Servers, add the following servers
-  - WLS_FORMS1
-    - Listen address: private IP of mspVM1
-    - Port: 9001
-    - Server Groups: FORMS_MAN_SVR
-  - WLS_REPORTS1
-    - Listen address: private IP of mspVM1
-    - Port: 9002
-    - Server Groups: REPORTS_APP_SVR
-  - WLS_FORMS2
-    - Listen address: private IP of mspVM2
-    - Port: 9001
-    - Server Groups: FORMS_MAN_SVR
-  - WLS_REPORTS2
-    - Listen address: private IP of mspVM2
-    - Port: 9002
-    - Server Groups: REPORTS_APP_SVR
-- Page13: CLusters
-  - Keep default
-- Page14: Server Templates
-  - Keep default
-- Page15: Dynamic Clusters
-  - Keep default
-- Page16: Assign Servers to Clusters
+- Page7: Managed Servers
+  - Delete WLS_FORMS and WLS_REPORTS
+  - No managed server listed.
+- Page8: Clusters
   - cluster_forms
-    - WLS_FORMS1
-    - WLS_FORMS2
   - cluster_reports
-    - WLS_REPORTS1
-    - WLS_REPORTS2
-- Page17: Coherence Cluster
-  - Keep default
-- Page18: Machines
-  - adminVM, `<private-ip-of-adminVM>`, 5556
-  - mspVM1, `<private-ip-of-mspVM1>`, 5556
-  - mspVM2, `<private-ip-of-mspVM2>`, 5556
-- Page19: Assign Servers to machine
+- Page9: Server Templates
+  - Add forms-dynamic-cluster-template
+    - Name: forms-dynamic-cluster-template
+    - Listen Port: 8001
+    - SSL Port: 8100
+  - Add reports-dynamic-cluster-template
+    - Name: reports-dynamic-cluster-template
+    - Listen Port: 9001
+    - SSL Port: 8100
+  - There should be 4 templates listed: wsm-cache-server-template, wsmpm-server-template, forms-dynamic-cluster-template, reports-dynamic-cluster-template
+- Page10: Dynamic Clusters
+  - cluster_forms
+    - Server Template: forms-dynamic-cluster-template
+    - Server Name Prefix: forms
+    - Dynamic Cluster Size: 2
+    - Machine Name Match Expression: machine-formsVM*
+    - Calculated Machine Names: true
+    - Calculated Listen Ports: true
+  - cluster_reports
+    - Server Template: reports-dynamic-cluster-template
+    - Server Name Prefix: reports
+    - Dynamic Cluster Size: 2
+    - Machine Name Match Expression: machine-reportsVM*
+    - Calculated Machine Names: true
+    - Calculated Listen Ports: true
+- Page11: Coherence Cluster
+  - defaultCoherenceCluster
+- Page12: Machines
+  - adminVM
+    - Node Manager Listen Address: `<private-ip-of-adminvm>`
+    - Node Manager Listen Port: 5556
+  - machine-formsVM1
+    - Node Manager Listen Address: `<private-ip-of-formsvm1>`
+    - Node Manager Listen Port: 5556
+  - machine-formsVM2
+    - Node Manager Listen Address: `<private-ip-of-formsvm2>`
+    - Node Manager Listen Port: 5556
+  - machine-formsVM3
+    - Node Manager Listen Address: `<private-ip-of-formsvm3>`
+    - Node Manager Listen Port: 5556
+  - machine-formsVM4
+    - Node Manager Listen Address: `<private-ip-of-formsvm4>`
+    - Node Manager Listen Port: 5556
+  - machine-reportsVM1
+    - Node Manager Listen Address: `<private-ip-of-reportsvm1>`
+    - Node Manager Listen Port: 5556
+  - machine-reportsVM2
+    - Node Manager Listen Address: `<private-ip-of-reportsvm2>`
+    - Node Manager Listen Port: 5556
+  - machine-reportsVM3
+    - Node Manager Listen Address: `<private-ip-of-reportsvm3>`
+    - Node Manager Listen Port: 5556
+  - machine-reportsVM4
+    - Node Manager Listen Address: `<private-ip-of-reportsvm4>`
+    - Node Manager Listen Port: 5556
+  - ohsVM1
+    - Node Manager Listen Address: `<private-ip-of-ohsvm1>`
+    - Node Manager Listen Port: 5556
+  - ohsVM2
+    - Node Manager Listen Address: `<private-ip-of-ohsvm2>`
+    - Node Manager Listen Port: 5556
+  - ohsVM3
+    - Node Manager Listen Address: `<private-ip-of-ohsvm1>`
+    - Node Manager Listen Port: 5556
+- Page13: Assign Servers to Machines
   - adminVM
     - admin
-  - mspVM1
-    - WLS_FORMS1
-    - WLS_REPORTS1
-  - mspVM2
-    - WLS_FORMS2
-    - WLS_REPORTS2
-- Page20: virtual targets
-  - Keep default
-- Page21: Partitions
-  - Keep default
-- Page22: System Components
-  - forms1, FORMS, 3600, 0
-  - forms2, FORMS, 3600, 0
-- Page22: Assign System Component
-  - mspVM1
+- Page14: Virtual Targets
+  - no
+- Page15: Partitions
+  - no
+- Page16:
+  - forms1: FORMS, 3600, 0
+  - forms2: FORMS, 3600, 0
+  - forms3: FORMS, 3600, 0
+  - forms4: FORMS, 3600, 0
+- Page17: Assign System Component
+  - machine-formsVM1
     - SystemComonent
       - forms1
-  - mspVM2
+  - machine-formsVM2
     - SystemComonent
       - forms2
+  - machine-formsVM3
+    - SystemComonent
+      - forms3
+  - machine-formsVM4
+    - SystemComonent
+      - forms4
 - Page20: Deployments Targeting
   - AdminServer
     - admin
-      - Keep Default
+      - DMS Application#12.2.1.1.0
+      - coherence-transaction-rar
+      - em
+      - fads#1.0
+      - fads-ui#1.0
+      - opss-rest
+      - state-management-provider-menory...
+      - wlsm-pm
+      - Libraries: keep default
   - Cluster
     - cluster_forms
       - AppDeployment
         - DMS Application#12.2.1.1.0
         - coherence-transaction-rar
         - reportsapp#12.2.1
-        - state-management-provider-memory-rar
+        - state-management-provider-menory...
         - wsm-pm
-      - Libraries
-        <details>
-        <summary>Libraries</summary>
-        <p>
-        - UIX (11,12.2.1.3.0) <br>
-        - adf.oracle.businesseditor (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.groovy (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0) <br>
-        - jsf (2.0,1.0.0.0_2-2-8) <br>
-        - jstl (1.2,1.2.0.1) <br>
-        - odl.clickhistory (1.0,12.2.1) <br>
-        - odl.clickhistory.webapp (1.0,12.2.1) <br>
-        - ohw-rcf (5,12.2.1.3.0) <br>
-        - ohw-uix (5,12.2.1.3.0) <br>
-        - oracle.adf.dconfigbeans (1.0,12.2.1.3.0) <br>
-        - oracle.adf.desktopintegration (1.0,12.2.1.3.0) <br>
-        - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0) <br>
-        - oracle.adf.management (1.0,12.2.1.3.0) <br>
-        - oracle.bi.adf.model.slib (1.0,12.2.1.3.0) <br>
-        - oracle.bi.adf.view.slib (1.0,12.2.1.3.0) <br>
-        - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0) <br>
-        - oracle.bi.composer (11.1.1,0.1) <br>
-        - oracle.bi.jbips (11.1.1,0.1) <br>
-        - oracle.dconfig-infra (2.0,12.2.1) <br>
-        - oracle.formsapp.dependencieslib (12.2.1,12.2.1) <br>
-        - oracle.jrf.system.filter <br>
-        - oracle.jsp.next (12.2.1,12.2.1) <br>
-        - oracle.pwdgen (2.0,12.2.1) <br>
-        - oracle.sdp.client (2.0,12.2.1.3.0) <br>
-        - oracle.sdp.messaging (2.0,12.2.1.3.0) <br>
-        - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3) <br>
-        - oracle.wsm.seedpolicies (2.0,12.2.1.3) <br>
-        - orai18n-adf (11,11.1.1.1.0) <br>
-        - owasp.esapi (2.0,12.2.1) <br>
-        </p>
-        </details>
-    - clusters_reports
-      - AppDeployment
-        - DMS Application#12.2.1.1.0
-        - coherence-transaction-rar
-        - reports#12.2.1
-        - state-management-provider-memory-rar
-        - wsm-pm
-      - Libraries
-        <details><summary>Libraries</summary><p>
-        - UIX (11,12.2.1.3.0) <br>
-        - adf.oracle.businesseditor (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.groovy (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0) <br>
-        - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0) <br>
-        - jsf (2.0,1.0.0.0_2-2-8) <br>
-        - jstl (1.2,1.2.0.1) <br>
-        - odl.clickhistory (1.0,12.2.1) <br>
-        - odl.clickhistory.webapp (1.0,12.2.1) <br>
-        - ohw-rcf (5,12.2.1.3.0) <br>
-        - ohw-uix (5,12.2.1.3.0) <br>
-        - oracle.adf.dconfigbeans (1.0,12.2.1.3.0) <br>
-        - oracle.adf.desktopintegration (1.0,12.2.1.3.0) <br>
-        - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0) <br>
-        - oracle.adf.management (1.0,12.2.1.3.0) <br>
-        - oracle.bi.adf.model.slib (1.0,12.2.1.3.0) <br>
-        - oracle.bi.adf.view.slib (1.0,12.2.1.3.0) <br>
-        - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0) <br>
-        - oracle.bi.composer (11.1.1,0.1) <br>
-        - oracle.bi.jbips (11.1.1,0.1) <br>
-        - oracle.dconfig-infra (2.0,12.2.1) <br>
-        - oracle.jrf.system.filter <br>
-        - oracle.jsp.next (12.2.1,12.2.1) <br>
-        - oracle.pwdgen (2.0,12.2.1) <br>
-        - oracle.reports.applib (12.2.1,12.2.1) <br>
-        - oracle.sdp.client (2.0,12.2.1.3.0) <br>
-        - oracle.sdp.messaging (2.0,12.2.1.3.0) <br>
-        - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3) <br>
-        - oracle.wsm.seedpolicies (2.0,12.2.1.3) <br>
-        - orai18n-adf (11,11.1.1.1.0) <br>
-        - owasp.esapi (2.0,12.2.1) <br>
-        </p></details>
-- Page21: Services Targeting
-  - AdminServer
-    - admin
-      - JDBCSystemResource
-        - LocalSvcTblDataSource
-        - WLSSchemaDataSource
-        - mds-owsm
-        - opss-audit-DBDS
-        - opss-audit-viewDS
-        - opss-data-source
-      - ShutdownClass
-        - DMSShutDown
-      - StartupClass
-        - AWT Applciation Context Startup Class
-        - DMS-Startup
-        - JRF Startup Class
-        - ODL-Startup
-        - WSM Startup Class
-        - Web Services Startup Class
-      - WLDFSystemResource
-        - Module-FMDFW
+      - Liraries
+        - UIX (11,12.2.1.3.0)
+        - adf.oracle.businesseditor (1.0,12.2.1.3.0)
+        - adf.oracle.domain (1.0,12.2.1.3.0)
+        - adf.oracle.domain.groovy (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0)
+        - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0)
+        - fads-dbtools-library
+        - fads-sqlcl-library
+        - jsf (2.0,1.0.0.0_2-2-8)
+        - jstl (1.2,1.2.0.1)
+        - odl.clickhistory (1.0,12.2.1)
+        - odl.clickhistory.webapp (1.0,12.2.1)
+        - ohw-rcf (5,12.2.1.3.0)
+        - ohw-uix (5,12.2.1.3.0)
+        - oracle.adf.dconfigbeans (1.0,12.2.1.3.0)
+        - oracle.adf.desktopintegration (1.0,12.2.1.3.0)
+        - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0)
+        - oracle.adf.management (1.0,12.2.1.3.0)
+        - oracle.bi.adf.model.slib (1.0,12.2.1.3.0)
+        - oracle.bi.adf.view.slib (1.0,12.2.1.3.0)
+        - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0)
+        - oracle.bi.composer (11.1.1,0.1)
+        - oracle.bi.jbips (11.1.1,0.1)
+        - oracle.dconfig-infra (2.0,12.2.1)
+        - oracle.formsapp.dependencieslib (12.2.1,12.2.1)
+        - oracle.jrf.system.filter
+        - oracle.jsp.next (12.2.1,12.2.1)
+        - oracle.pwdgen (2.0,12.2.1)
+        - oracle.sdp.client (2.0,12.2.1.3.0)
+        - oracle.sdp.messaging (2.0,12.2.1.3.0)
+        - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3)
+        - oracle.wsm.seedpolicies (2.0,12.2.1.3)
+        - orai18n-adf (11,11.1.1.1.0)
+        - owasp.esapi (2.0,12.2.1)
+      - clusters_reports
+        - AppDeployment
+          - DMS Application#12.2.1.1.0
+          - coherence-transaction-rar
+          - reports#12.2.1
+          - state-management-provider-menory...
+          - wsm-pm
+        - Liraries
+          - UIX (11,12.2.1.3.0)
+          - adf.oracle.businesseditor (1.0,12.2.1.3.0)
+          - adf.oracle.domain (1.0,12.2.1.3.0)
+          - adf.oracle.domain.groovy (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.antlr-runtime (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpclient (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpclient-cache (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpcore (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.httpmime (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.apache.velocity (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.batik-bundle (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.guava (1.0,12.2.1.3.0)
+          - adf.oracle.domain.webapp.xml-apis-ext (1.0,12.2.1.3.0)
+          - fads-dbtools-library
+          - fads-sqlcl-library
+          - jsf (2.0,1.0.0.0_2-2-8)
+          - jstl (1.2,1.2.0.1)
+          - odl.clickhistory (1.0,12.2.1)
+          - odl.clickhistory.webapp (1.0,12.2.1)
+          - ohw-rcf (5,12.2.1.3.0)
+          - ohw-uix (5,12.2.1.3.0)
+          - oracle.adf.dconfigbeans (1.0,12.2.1.3.0)
+          - oracle.adf.desktopintegration (1.0,12.2.1.3.0)
+          - oracle.adf.desktopintegration.model (1.0,12.2.1.3.0)
+          - oracle.adf.management (1.0,12.2.1.3.0)
+          - oracle.bi.adf.model.slib (1.0,12.2.1.3.0)
+          - oracle.bi.adf.view.slib (1.0,12.2.1.3.0)
+          - oracle.bi.adf.webcenter.slib (1.0,12.2.1.3.0)
+          - oracle.bi.composer (11.1.1,0.1)
+          - oracle.bi.jbips (11.1.1,0.1)
+          - oracle.dconfig-infra (2.0,12.2.1)
+          - oracle.jrf.system.filter
+          - oracle.jsp.next (12.2.1,12.2.1)
+          - oracle.pwdgen (2.0,12.2.1)
+          - oracle.reports.applib (12.2.1,12.2.1)
+          - oracle.sdp.client (2.0,12.2.1.3.0)
+          - oracle.sdp.messaging (2.0,12.2.1.3.0)
+          - oracle.wsm.idmrest.sharedlib (1.0,12.2.1.3)
+          - oracle.wsm.seedpolicies (2.0,12.2.1.3)
+          - orai18n-adf (11,11.1.1.1.0)
+          - owasp.esapi (2.0,12.2.1)
+- Page21: Service Targeting
+  - Admin Server
+    - keep default
   - Cluster
     - cluster_forms
-      - JDBCSystemResource
+      - JDBSSystemResource
         - opss-audit-DBDS
         - opss-audit-viewDS
         - opss-data-source
-      - ShutdownClass
-        - DMSShutDown
-      - StartupClass
-        - AWT Applciation Context Startup Class
-        - DMS-Startup
-        - JRF Startup Class
-        - ODL-Startup
-        - WSM Startup Class
-        - Web Services Startup Class
-      - WLDFSystemResource
-        - Module-FMDFW
     - cluster_reports
-      - JDBCSystemResource
+      - JDBSSystemResource
         - opss-audit-DBDS
         - opss-audit-viewDS
         - opss-data-source
-      - ShutdownClass
-        - DMSShutDown
-      - StartupClass
-        - AWT Applciation Context Startup Class
-        - DMS-Startup
-        - JRF Startup Class
-        - ODL-Startup
-        - WSM Startup Class
-        - Web Services Startup Class
-      - WLDFSystemResource
-        - Module-FMDFW
-- The process should be completed without error.
-- Pack the domain and copy the domain configuration to managed machines.
-  ```shell
-  rm /tmp/cluster.jar -f
+- The process should be completed withour error.
+- Exit oracle user, use `root`
+- Pack domain
+  ```
+  rm /tmp/cluster.jar
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-  bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
+  bash pack.sh -domain=/u01/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
   ```
+- Copy the cluster.jar to formsVM*, reportsVM* and ohsVM*.
   ```
-  scp /tmp/cluster.jar weblogic@mspVM1:/tmp/cluster.jar
-
-  scp /tmp/cluster.jar weblogic@mspVM2:/tmp/cluster.jar
-  ```
-- Exit `oracle` user: `exit`
-- Use root user: `sudo su`
-- Create service for node manager and admin server
-  - Create service for admin server   
-    Let's create the credentials for weblogic account.
-    ```shell
-    mkdir -p /u02/domains/wlsd/servers/admin/security
-    cat <<EOF >/u02/domains/wlsd/servers/admin/security/boot.properties
-    username=weblogic
-    password=Secret123456
-    EOF
-    ```
-    ```shell
-    cat <<EOF >/etc/systemd/system/wls_admin.service
-    [Unit]
-    Description=WebLogic Adminserver service
-    After=network-online.target
-    Wants=network-online.target
-    
-    [Service]
-    Type=simple
-    WorkingDirectory="/u02/domains/wlsd"
-    ExecStart="/u02/domains/wlsd/startWebLogic.sh"
-    ExecStop="/u02/domains/wlsd/bin/customStopWebLogic.sh"
-    User=oracle
-    Group=oracle
-    KillMode=process
-    LimitNOFILE=65535
-    Restart=always
-    RestartSec=3
-    
-    [Install]
-    WantedBy=multi-user.target
-    EOF
-    ```
-  - Create service for node manager
-    ```bash
-    cat <<EOF >/etc/systemd/system/wls_nodemanager.service
-    [Unit]
-    Description=WebLogic nodemanager service
-    After=network-online.target
-    Wants=network-online.target
-    [Service]
-    Type=simple
-    # Note that the following three parameters should be changed to the correct paths
-    # on your own system
-    WorkingDirectory="/u02/domains/wlsd"
-    ExecStart="/u02/domains/wlsd/bin/startNodeManager.sh"
-    ExecStop="/u02/domains/wlsd/bin/stopNodeManager.sh"
-    User=oracle
-    Group=oracle
-    KillMode=process
-    LimitNOFILE=65535
-    Restart=always
-    RestartSec=3
-    [Install]
-    WantedBy=multi-user.target
-    EOF
-    ```
-- Start node manager and admin server, it takes about 10 min for admin server up.
-  ```
-  sudo systemctl enable wls_nodemanager
-  sudo systemctl enable wls_admin
-  sudo systemctl daemon-reload
-  sudo systemctl start wls_nodemanager
-  sudo systemctl start wls_admin
+  sudo scp /tmp/cluster.jar weblogic@mspVM*:/tmp/cluster.jar
   ```
 
-Now you are able to access admin console with `http://adminvm-ip:7001/console`, and Enterprise Manager with `http://adminvm-ip:7001/em`.
-
-### Create domain on managed machine
-
-Now, you have Forms and Reports configured in adminVM, let's apply the domain on mspVM1 and mspVM2. 
-
-You can also follow the steps to apply domain on a new machine for new replicas.   
-
-Configure domain on managed machine:
-1. SSH to your machine, e.g login to mspVM1 with command `ssh weblogic@mspVM1`
-2. Use `root` user to set the ownership of domain package
+Apply the configuration to managed server.
+- SSH to formsVM1. 
+- Use `root` user
+   ```
+   chown oracle:oracle /tmp/cluster.jar
+   ```
+- Make sure there is not process for WLS and nodemanager, `ps -aux | grep "oracle"`
   ```
-  sudo su
-  chown oracle:oracle /tmp/cluster.jar
+  # if there are process then run the command to kill the service.
+  # stop admin server
+  sudo systemctl stop wls_admin
+  # stop node manager
+  sudo systemctl stop wls_nodemanager
+
+  kill -9 processid
+
+  rm /u01/domains/wlsd -f -r
   ```
-2. Use `oracle` user, `sudo su - oracle`
-3. Unpack the domain
+- Disable firewall. 
+  ```
+  sudo systemctl stop firewalld
+  sudo systemctl disable firewalld
+  ```
+- Disable the wls_admin service
+  ```
+  systemctl disable wls_admin
+  ```
+- Use `oracle` user, `sudo su - oracle`
+- Unpack the domain
   ```
   cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-  bash unpack.sh -domain=/u02/domains/wlsd -template=/tmp/cluster.jar 
+  bash unpack.sh -domain=/u01/domains/wlsd -template=/tmp/cluster.jar 
   ```
-4. Make sure the node manager listen address is correct by `cat /u02/domains/wlsd/nodemanager/nodemanager.properties`. The listen address should be private IP of the machine.
-5. Exit oracle user with command `exit`
-6. Use root user: `sudo su`
-7. Create service for node manager
-  ```shell
-  cat <<EOF >/etc/systemd/system/wls_nodemanager.service
-  [Unit]
-  Description=WebLogic nodemanager service
-  After=network-online.target
-  Wants=network-online.target
-  [Service]
-  Type=simple
-  # Note that the following three parameters should be changed to the correct paths
-  # on your own system
-  WorkingDirectory="/u02/domains/wlsd"
-  ExecStart="/u02/domains/wlsd/bin/startNodeManager.sh"
-  ExecStop="/u02/domains/wlsd/bin/stopNodeManager.sh"
-  User=oracle
-  Group=oracle
-  KillMode=process
-  LimitNOFILE=65535
-  Restart=always
-  RestartSec=3
-  [Install]
-  WantedBy=multi-user.target
-  EOF
+- Make sure the node manager listen address is correct in `/u01/domains/wlsd/nodemanager/nodemanager.properties`
+- Exit oracle user
+- Start node manager
   ```
-8. Start node manager
-  ```
-  sudo systemctl enable wls_nodemanager
-  sudo systemctl daemon-reload
   sudo systemctl start wls_nodemanager
   ```
+- Apply above steps to `formsVM*`, `reportsVM*` and `ohsVM*`.
 
-For initial setup, apply step 1-8 to mspVM2, and continue from [Create and start Reports components](#create-and-start-reports-components). 
-For new replicas, apply step 1-8 to your new machines, and continue from [Create and start Reports tools for new replicas](#create-and-start-reports-tools).
 
-### Create and start Reports components
-Now, you have node manager running on adminVM, mspVM1, mspVM2, and admin server up in adminVM.   
-To successfully start Reports server, you must create and start the Reports components.
-
-Let's create the ReportsToolsComponent using WLST.
-
-- SSH to adminVM: `ssh weblogic@adminvm`
-- Use `oracle` user: `sudo su - oracle`
-- Use WLST to create Reports tools instance.
-  ```
-  cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-  ./wlst.sh
-
-  # connect admin server, replace adminvm-ip with the real value.
-  connect("weblogic","Secret123456", "adminvm-ip:7001")
-
-  createReportsToolsInstance(instanceName='reptools1', machine='mspVM1')
-  createReportsToolsInstance(instanceName='reptools2', machine='mspVM2')
-
-  # exit WLST
-  exit()
-  ```
-  Those commands should be finished without error. You have to resolve error before moving on.
-- Start Reports tools.
-  ```
-  cd /u02/domains/wlsd/bin
-  # the commands require you to input password of node manager.
-  ./startComponent.sh reptools1
-  ./startComponent.sh reptools2
-  ```
-  The Reports tools should start successfully.
-
-### Start Forms and Reports managed servers
-
-Now, you have Reports tools components created and running, you are able to start the managed server and start the Reports In-process server.
-
-- Login admin console: http://adminvm-ip:7001/console
-- Select Environment -> Servers -> Control
-- Start WLS_FORMS1, WLS_FORMS2, WLS_REPORTS1 and WLS_REPORTS2.
-- The servers should be running.
-
-Now you are able to start Reports in process server from browser.
-- Start reports server on mspVM1 with the URL
-  - `http://<mspVM1-ip>:9002/reports/rwservlet/startserver`
-  - You will get output `1|0` from the browser if the server is up.
-- Start reports server on mspVM2 with the URL
-  - `http://<mspVM2-ip>:9002/reports/rwservlet/startserver`
-  - You will get output `1|0` from the browser if the server is up.
-
-## Add Forms and Reports replicas
-
-You are able to add Forms and Reports replicas by cloning machine and starting the corresponding components.
-
-### Create a new machine for new replicas
-
-Clone adminVM following [Clone machine for managed servers](#clone-machine-for-managed-servers), let's name the new machine with `mspVM3`.
-
-### Create managed servers and Forms component
-
-This is an example to start Forms and Reports on mspVM3, replace the machine name and component name with yours.
-
-Firstly, you are required to create and start replated components. This document will leverage WLST offline mode to update the existing domain with new machine, new managed servers and new component, which requires restart on admin server to cause changes working.
-
-Use WLST to add new replicas:
-- SSH to adminVM and switch to root user
-- Stop admin server: 
+Restart the admin server:
+- Use `root` user, stop the wls_admin service.
   ```
   sudo systemctl stop wls_admin
-  kill -9 `ps -ef | grep 'Dweblogic.Name=admin' | grep -v grep | awk '{print $2}'`
-  ```
-- Switch to `oracle` user: `sudo su - oracle`
-- Prepare Python script to create machine, managed servers and Forms component, modify the the value of Shell variables.
-  ```shell
-  # Modify the value of variables with yours.
-  # Keep the index value the same with Azure Virtual Machine index
-  index=3
-  # Private IP address of the new machine
-  vmIP="10.0.0.8"
-  # Machine name
-  vmName="mspVM${index}"
-  # New Forms managed server name
-  formsSvrName="WLS_FORMS${index}"
-  # New Forms system component name
-  formsSysCompName="forms${index}"
-  # New Reports managed server name
-  reportsSvrName="WLS_REPORTS${index}"
-  cat <<EOF >create-forms3.py
-  import sys, traceback
-  vmIp="${vmIP}"
-  vmName="${vmName}"
-  formsSvrName="${formsSvrName}"
-  formsSysCompName="${formsSysCompName}"
-  reportsSvrName="${reportsSvrName}"
-  formsSvrGrp=["FORMS-MAN-SVR"]
-  reportsSvrGrp=["REPORTS-APP-SERVERS"]
 
-  readDomain('/u02/domains/wlsd')
-  print('\nCreate Machine ')
-  cd('/')
-  create(vmName,'Machine')
-  cd('Machine/'+vmName)
-  create(vmName,'NodeManager')
-  cd('NodeManager/'+vmName)
-  set('ListenAddress',vmIp)
-  print('\nCreate ' + formsSvrName)
-  cd('/')
-  create(formsSvrName, 'Server')
-  cd('/Servers/'+formsSvrName)
-  set('ListenAddress',vmIp)
-  set('ListenPort',int('9001'))
-  set('Machine',vmName)
-  cd('/')
-  assign('Server',formsSvrName,'Cluster','cluster_forms')
-  cd('/')
-  setServerGroups(formsSvrName, formsSvrGrp)
-  print('\nCreate '+ reportsSvrName)
-  cd('/')
-  create(reportsSvrName, 'Server')
-  cd('/Servers/'+ reportsSvrName)
-  set('ListenAddress',vmIp)
-  set('ListenPort',int('9002'))
-  set('Machine',vmName)
-  cd('/')
-  assign('Server',reportsSvrName,'Cluster','cluster_reports')
-  cd('/')
-  setServerGroups(reportsSvrName, reportsSvrGrp)
-  print('\nCreate FORMS SystemComponent '+formsSysCompName)
-  cd('/')
-  create(formsSysCompName, 'SystemComponent')
-  cd('/SystemComponent/'+formsSysCompName)
-  cmo.setComponentType('FORMS')
-  set('Machine', vmName)
-  updateDomain()
-  closeDomain()
-  EOF
+  # double check the admin server process
+  ps -aux | grep "Dweblogic.Name=admin"
+
+  # please kill the process if there is
+  kill -9 <admin-process-id>
   ```
-- Run the script with WLST offline mode, the script should be completed without errors.
-  ```
-  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-forms3.py
-  ```
-- Restart the domain and admin server to cause changes happen. It takes about 10 min for the admin server up.
+- Start the service again
   ```
   sudo systemctl start wls_admin
+
+  # you can check the status
+  sudo systemctl status wls_admin
   ```
-  Access http://adminvm-ip:7001/console from browser to make sure the admin server is up.
+You shoud be able to access the admin console once it's ready.
 
-### Apply domain on the new machine
 
-Now, you have finished updating the domain. Let's pack the domain and apply the domain to new machine.
+Start Forms and Reports server.
+- Login admin console
+  - Select wlsd -> Environment -> Clusters -> cluster_reports -> Control, start all the servers.
+  - Select wlsd -> Environment -> Clusters -> cluster_forms -> Control, start all the servers.
 
-- Pack the domain on adminVM:
-  - SSH to adminVM: `ssh weblogic@adminVM`
-  - Use oracle user: `sudo su - oracle`
-  - Pack the domain
-    ```shell
-    rm /tmp/cluster.jar -f
-    cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
-    bash pack.sh -domain=/u02/domains/wlsd -managed=true -template=/tmp/cluster.jar -template_name="ofrwlsd"
-    ```
-- Copy the domain package to mspVM3: `scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar`
-- Create domain on mspVM3 and start node manager following [Create domain for managed servers](#create-domain-on-managed-machine)
+## Configure HTTP Servers
 
-### Create and start Reports tools
+Now you have the Forms and Reports servers running, let's configure the HTTP Server.
 
-To enable Reports in process server, you are required to create and start Reports Tools Component. Follow the steps to enable Reports Tools component for new Reports replicas.
+- Login EM portal.
+- Select WebLogic Domain -> Administration -> OHS Instances
+- Click the lock icon and select Lock & Edit
+- Click Create button to create OHS instance.
+  - ohs1
+    - Name: ohs1
+    - Machine name: ohsVM1
+  - ohs2
+    - Name: ohs2
+    - Machine name: ohsVM2
+  - ohs3
+    - Name: ohs3
+    - Machine name: ohsVM3
+- Click the lock icon and Activate changes.
 
-- SSH to adminVM: `ssh weblogic@adminVM`
-- Use oracle user: `sudo su - oracle`
-- Prepare Python script to create Reports component, please modify value of `adminVMIP`, `wlsUsername`, `wlsPassword` and `index`.
-  ```shell
-  # Private IP of adminVM
-  adminVMIP=10.0.0.4
-  # Username of WebLogic admin account
-  wlsUsername="weblogic"
-  # Password of WebLogic admin account
-  wlsPassword="Secret123456"
-  # Keep the index value the same with Azure Virtual Machine index
-  index=3
-
-  repToolsName="reptools${index}"
-  repToolsTargetMachine="mspVM${index}"
-  cat <<EOF >create-reportstools.py
-  connect("${wlsUsername}","${wlsPassword}", "${adminVMIP}:7001")
-  createReportsToolsInstance(instanceName="${repToolsName}", machine="${repToolsTargetMachine}")
-  EOF
+Before we start the OHS servers, we have to configure the entries.
+- SSH to ohsVM1
+- Use `oracle` user
+- Edit mod_wl_ohs.conf    
+  Input the IP placehoder with real private IP, make sure the ports are correct.  
+  Replace `ohs1` with the expected ohs component name.
   ```
-- Run the script using WLST online mode, the script should be completed without errors.
+  cat <<EOF >/u01/domains/wlsd/config/fmwconfig/components/OHS/instances/ohs1/mod_wl_ohs.conf
+  # NOTE : This is a template to configure mod_weblogic.
+
+  LoadModule weblogic_module   "\${PRODUCT_HOME}/modules/mod_wl_ohs.so"
+
+  # This empty block is needed to save mod_wl related configuration from EM to this file when changes are made at the Base Virtual Host Level
+  <IfModule weblogic_module>
+        WLIOTimeoutSecs 900
+        KeepAliveSecs 290
+        FileCaching ON
+        WLSocketTimeoutSecs 15
+        DynamicServerList ON
+        WLProxySSL ON
+        WebLogicCluster <formsvm1-ip>:8002,<formsvm2-ip>:8003,<formsvm3-ip>:8004,<formsvm4-ip>:8005
+  </IfModule>
+
+  <Location /forms/>
+        SetHandler weblogic-handler
+        DynamicServerList ON
+        WLProxySSL ON
+        WebLogicCluster <formsvm1-ip>:8002,<formsvm2-ip>:8003,<formsvm3-ip>:8004,<formsvm4-ip>:8005
+  </Location>
+
+  <Location /reports/>
+        SetHandler weblogic-handler
+        DynamicServerList ON
+        WLProxySSL ON
+        WebLogicCluster <reportsvm1-ip>:9002,<reportsvm2-ip>:9003,<reportsvm3-ip>:9004,<reportsvm4-ip>:9005
+  </Location>
+  EOF  
   ```
-  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh create-reportstools.py
+  Replace `ohs1` with the expected ohs component name.
   ```
-- Start Reports system components on mspVM3, the commands should be completed without errors.
-
-  Replace `reptools3` with your component name, should be `reptools${index}` created in last step.
-  ```shell
-  cd /u02/domains/wlsd/bin
-  # the command will ask for node manager password
-  ./startComponent.sh reptools3
+  COMPONENT_NAME="ohs1"
+  mkdir /u01/domains/wlsd/config/fmwconfig/components/OHS/${COMPONENT_NAME}
+  cp /u01/domains/wlsd/config/fmwconfig/components/OHS/instances/${COMPONENT_NAME}/mod_wl_ohs.conf /u01/domains/wlsd/config/fmwconfig/components/OHS/${COMPONENT_NAME}/mod_wl_ohs.conf
   ```
 
-### Start servers
+- Apply above steps to ohsVM2 and ohsVM3.
 
-Forms and Reports system components on mspVM3 are ready, and node manager is up on mspVM3. Let's start the managed server from console portal.
-
-- Login admin console: http://adminvm-ip:7001/console
-- Select Environment -> Servers -> Control
-- Start WLS_FORMS3, WLS_REPORTS3.
-- The servers should be running.
-
-Let's start Reports in process server from browser.
-- Start reports server on mspVM3 with the URL
-  - `http://<mspVM3-ip>:9002/reports/rwservlet/startserver`
-  - You will get output `1|0` from the browser if the server is up.
-
-**Note**: if you have setup Applcation Gateway for load balancing, add the private IP of your new machine to backend pool. then the Applicatin Gateway is able to managed the traffic to the new replicas.
+Start OHS servers.
+- Login EM portal.
+- Select WebLogic Domain -> Administration -> OHS Instances
+- Click `ohs1` and start.
+- Click `ohs2` and start.
+- Click `ohs3` and start.
 
 ## Configure Private Application Gateway
 
 ### Create Application Gateway
-
-This sample will use Azure Application Gateway as the top level load balancing of Forms cluster. 
-
-Follow the step to create the Application Gateway, you must enable `Cookie-based affinity` for Forms applciation. Make sure you are using a correct backend port, here is `9001`.
-
 - Expand the portal menu and select Create a resource.
 - Select Networking and then select Application Gateway in the Featured list.
 - Enter myAppGateway for the name of the application gateway and myResourceGroupAG for the new resource group.
@@ -925,9 +490,8 @@ Follow the step to create the Application Gateway, you must enable `Cookie-based
 - For Target type, select Backend pool, and then select appGatewayBackendPool.
 - For HTTP setting, select Add new.
 - For HTTP setting name, type http-setting-01.
-  - For Additional settings, enable **Cookie-based affinity**.
 - For Backend protocol, select HTTP.
-- For Backend port, type `9001`.
+- For Backend port, type 7777
 - Accept the remaining defaults, and select Add.
 - On the Add a routing rule page, select Add.
 - Select Next: Tags.
@@ -939,69 +503,55 @@ Wait for the resources completed.
 
 - Go to Azure Portal, open the Applciation Gateway instance.
 - Select Settings -> Backend pools - appGatewayBackendPool
-  Add IP address of managed servers.
+  Add IP address of OHS servers.
   - Item1
     - Type: IP address or FQDN
-    - Target: private IP of mspVM1
+    - Target: private IP of ohsVM1
   - Item2
     - Type: IP address or FQDN
-    - Target: private IP of mspVM2
+    - Target: private IP of ohsVM2
   - Item3
     - Type: IP address or FQDN
-    - Target: private IP of mspVM3
+    - Target: private IP of ohsVM3
 
-### Configure Health Probe
- 
-- Go to Azure Portal, open the Applciation Gateway instance.
-- Select Settings -> Health probes -> Add
-  - Name: `FORMS-HEALTH-PROBE`
-  - Host: `127.0.0.1`. Do not change the value.
-  - Pick host name from backend HTTP settings: No
-  - Path: `/forms/frmservlet`
-  - Keep other properties with default value.
+Then you should be able to access Forms and Reports using private IP of application gateway.
+- http://app-gateway-ip/forms/frmservlet
+- http://app-gateway-ip/reports/rwservlet
 
-After the health probe is completed without error, associate the http setting with the probe.
-- Select Settings -> HTTP Settings -> http-setting-01
-  - Use custom probe: yes
-  - Custom probe: `FORMS-HEALTH-PROBE`
-  - Save
-
-Check the backend health:
+Application Gateway has enabled monitoring the backend health:
+  - Go to the application gateway from Azure Portal
   - Select Monitoring -> Backend health
   - The status of Servers should be Healthy.
-
-Then you should be able to access Forms using private IP of application gateway.
-- http://app-gateway-ip/forms/frmservlet
-
-If you want to also manage the traffic to Reports cluster, you can add Path-based routing to `/reports/rwservlet` in the rule.
-
-## Create High Available Administration Server
-
-WIP
 
 ## Validate
 
 Validate the Forms testing application.
 - Make sure the application is running in each managed server.
   - Forms
-    - `http://<mspvm1-ip>:9001/forms/frmservlet`
-    - `http://<mspvm2-ip>:9001/forms/frmservlet`
-    - `http://<mspvm3-ip>:9001/forms/frmservlet`
+    - `http://<formsvm1-ip>:8002/forms/frmservlet`
+    - `http://<formsvm2-ip>:8003/forms/frmservlet`
+    - `http://<formsvm3-ip>:8004/forms/frmservlet`
+    - `http://<formsvm4-ip>:8005/forms/frmservlet`
   - Reports
-    - `http://<mspvm1-ip>:9002/reports/rwservlet`
-    - `http://<mspvm2-ip>:9002/reports/rwservlet`
-    - `http://<mspvm3-ip>:9002/reports/rwservlet`
+    - `http://<reportsvm1-ip>:9002/reports/rwservlet`
+    - `http://<reportsvm2-ip>:9003/reports/rwservlet`
+    - `http://<reportsvm3-ip>:9004/reports/rwservlet`
+    - `http://<reportsvm4-ip>:9005/reports/rwservlet`
+- Make sure the OHS server are available, find logs in access.log of each server to check the loadbalancing.
+  - `http://ohs1-ip:7777/forms/frmservlet`
+  - `http://ohs2-ip:7777/forms/frmservlet`
+  - `http://ohs3-ip:7777/forms/frmservlet`
+  - `http://ohs1-ip:7777/reports/rwservlet`
+  - `http://ohs2-ip:7777/reports/rwservlet`
+  - `http://ohs3-ip:7777/reports/rwservlet`
 
-- Make sure the application gateway is able to access Forms application.
+- Make sure the application gateway is able to access OHS servers.
   - http://app-gateway-ip/forms/frmservlet
-
-## Clean up
-
-Delete the resource group from Azure portal.
+  - http://app-gateway-ip/reports/rwservlet
 
 ## Troubleshoot
 1. EM is slow    
-    Enable caching of FMW Discovery data.
+    Enable caching of FMw Discovery data.
     - Login EM
     - Select WebLogic domain -> System MBean Browser -> Application Defined MBeans -> emoms.props -> Server.admin -> Application.em -> Properties -> emoms-prop
     - Click Operations
@@ -1011,32 +561,131 @@ Delete the resource group from Azure portal.
       2. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_CACHE_AGE=7200000
       3. oracle.sysman.emas.discovery.wls.FMW_DISCOVERY_MAX_WAIT_TIME=10000
     - Select WebLogic domain -> Refresh WebLogic domain.
-  
-2. SSH WARNING: POSSIBLE DNS SPOOFING DETECTED!   
-    You may run into this error when connect a machine using SSH, see the details:
-    ```text
-    [oracle@adminVM1 bin]$ scp /tmp/cluster.jar weblogic@mspVM3:/tmp/cluster.jar
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    @       WARNING: POSSIBLE DNS SPOOFING DETECTED!          @
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    The ECDSA host key for mspvm3 has changed,
-    and the key for the corresponding IP address 10.0.0.10
-    is unknown. This could either mean that
-    DNS SPOOFING is happening or the IP address for the host
-    and its host key have changed at the same time.
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    @    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
-    Someone could be eavesdropping on you right now (man-in-the-middle attack)!
-    It is also possible that a host key has just been changed.
-    The fingerprint for the ECDSA key sent by the remote host is
-    SHA256:VEn4PQNWtIJhA337odSkzhPS1rIZ6oz0Bco6+ZNuvsk.
-    Please contact your system administrator.
-    Add correct host key in /u01/oracle/.ssh/known_hosts to get rid of this message.
-    Offending ECDSA key in /u01/oracle/.ssh/known_hosts:2
-    ECDSA host key for mspvm3 has changed and you have requested strict checking.
-    Host key verification failed.
-    lost connection
+
+2. Fail to start In-process Reports Server
+
+    Issue description:
     ```
-    Solution: remove `~/.ssh/knownhosts`
+    Succesffully access help page with http://hostname:port/reports/rwservlet.
+    Trying to access the Reports Server gives following error:
+    REP-51002: Bind to Reports Server reports failed
+
+    This error is given when you try to access Reports Server using getserverinfo or showjobs.  For example:
+    http://hostname:port/reports/rwservlet/getserverinfo?server=reports
+    or
+    http://hostname:port/reports/rwservlet/showjobs?server=reports
+
+    Also, running the command "rwdiag.sh -findAll" gives error:
+    REP-50503 No server found in the network
+
+    However, in the Reports Server trace files, it shows that the Reports Server is actually up and running.  There are no errors in the trace files.
+    ```
+
+    The issue was caused by no mbean created for in process Reports server.
+    Follow the step to fix the issue:
+    - ssh to reportsVM1, use `oracle` user
+    - Run the commands to create mbean.xml
+      ```
+      cd /u01/domains/wlsd/config/fmwconfig/components
+      mkdir ReportsServerComponent
+      mkdir ReportsBridgeComponent
+      mkdir ReportsServerComponent/mbeans
+      mkdir ReportsBridgeComponent/mbeans
+      ```
+
+      ```
+      cat <<EOF >ReportsServerComponent/mbeans/mbeans.xml
+      <?xml version = '1.0' encoding = 'UTF-8' standalone='yes'?>
+      <application-mbeans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                          xsi:noNamespaceSchemaLocation="http://xmlns.oracle.com/oracleas/schema/11/application-mbeans-11_1.xsd"
+                          schema-major-version="11" schema-minor-version="1">
+        <!-- TODO is there a way we can refer OracleHome directly here -->
+        <config-mbeans absolute-location="true" location="/u01/app/wls/install/oracle/middleware/oracle_home/reports/jlib/confmbean.jar">
+          <!-- Component Manager Mbean -->
+          <jmx-config-mbean management-interface="oracle.reports.admin.cam.server.ReportsServerComponentManagerMXBean"
+                            class="oracle.reports.admin.cam.server.ReportsServerComponentManager"
+                            objectname="oracle.reports:Type=ReportsServerComponent,Name=ReportsServerComponentManager">
+            <description>MBean used to create/remove Reports Server Component instances</description>
+          </jmx-config-mbean>
+          <!-- Oid association Mbean -->
+          <jmx-config-mbean management-interface="oracle.reports.admin.cam.server.OidAssociationMXBean"
+                            class="oracle.reports.admin.cam.server.OidAssocMbeanImpl"
+                            objectname="oracle.reports:Type=ReportsServerComponent,Name=OidAssociationMbean">
+            <description>MBean used to associate/dissociate Reports Server/Inprocess server to OID</description>
+          </jmx-config-mbean>
+        </config-mbeans>
+      </application-mbeans>
+      EOF
+      ```
+
+      ```
+      cat <<EOF >ReportsBridgeComponent/mbeans/mbeans.xml
+      <?xml version = '1.0' encoding = 'UTF-8' standalone='yes'?>
+      <application-mbeans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                          xsi:noNamespaceSchemaLocation="http://xmlns.oracle.com/oracleas/schema/11/application-mbeans-11_1.xsd"
+                          schema-major-version="11" schema-minor-version="1">
+        <!-- TODO is there a way we can refer OracleHome directly here -->
+        <config-mbeans absolute-location="true"
+                      location="/u01/app/wls/install/oracle/middleware/oracle_home/reports/jlib/confmbean.jar">
+          <!-- Component Manager Mbean -->
+          <jmx-config-mbean management-interface="oracle.reports.admin.cam.bridge.ReportsBridgeComponentManagerMXBean"
+                            class="oracle.reports.admin.cam.bridge.ReportsBridgeComponentManager"
+                            objectname="oracle.reports:Type=ReportsBridgeComponent,Name=ReportsBridgeComponentManager">
+            <description>MBean used to create/remove Reports Bridge Component instances</description>
+          </jmx-config-mbean>
+        </config-mbeans>
+      </application-mbeans>
+      EOF
+      ```
+    - Set the default in process Reports Server name
+      - Find all rwservlet.properties using command:
+        ```
+        cd /u01/domains/wlsd
+        find . -name rwservlet.properties
+        ```
+      - Then edit all the rwservlet.properties files listed in the output, uncomment the server property:
+
+        ```xml
+        <server>repserver1</server>
+        ```
+
+        For other reportsVM* machines, replace `repserver1` with expected values: `repserver2` for reportsVM2, `repserver3` for reportsVM3, and `repserver4` for reportsVM4.
+       
+    - Apply above steps to reportsVM2, reportsVM3, reportsVM4.
+
+    - ssh to adminVM, use oracle user
+    - Use WLST to create Reports tools and server instance.
+      ```
+      cd /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin
+      ./wlst.sh
+
+      # connect admin server
+      connect("weblogic","Secret123456", "adminvn-ip:7001")
+      createReportsToolsInstance(instanceName='reptools1', machine='machine-reportsVM1')
+      createReportsServerInstance(instanceName='repserver1',machine='machine-reportsVM1')
+      createReportsToolsInstance(instanceName='reptools2', machine='machine-reportsVM2')
+      createReportsServerInstance(instanceName='repserver2',machine='machine-reportsVM2')
+      createReportsToolsInstance(instanceName='reptools3', machine='machine-reportsVM3')
+      createReportsServerInstance(instanceName='repserver3',machine='machine-reportsVM3')
+      createReportsToolsInstance(instanceName='reptools4', machine='machine-reportsVM4')
+      createReportsServerInstance(instanceName='repserver4',machine='machine-reportsVM4')
+      ```
+    - Start Reports server instances.
+      ```
+      cd /u01/domains/wlsd/bin
+      ./startComponent.sh reptools1
+      ./startComponent.sh repserver1
+      ./startComponent.sh reptools2
+      ./startComponent.sh repserver2
+      ./startComponent.sh reptools3
+      ./startComponent.sh repserver3
+      ./startComponent.sh reptools4
+      ./startComponent.sh repserver4
+      ```
+
+    Now you should be able to access the Reports servers, if not, restart the mamaged server from admin console:
+    - http://repotsvm1-ip:9002/reports/rwservlet/getserverinfo?server=repserver1
+    - http://repotsvm2-ip:9003/reports/rwservlet/getserverinfo?server=repserver2
+    - http://repotsvm3-ip:9004/reports/rwservlet/getserverinfo?server=repserver3
+    - http://repotsvm4-ip:9005/reports/rwservlet/getserverinfo?server=repserver4
+
