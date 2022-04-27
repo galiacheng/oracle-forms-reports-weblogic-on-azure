@@ -1257,6 +1257,8 @@ Follow the steps to test failover manually:
 
 You should be able to access Admin Server and have the same domain configuration as that runs on adminVM.
 
+You are able to automate assigning secondary IP using [AssignIP-Workflow.ps1](#scripts/AssignIP-Workflow.ps1) in Automation Account. Follow [Azure Automation Account](https://docs.microsoft.com/en-us/azure/automation/automation-create-standalone-account?tabs=azureportal) to create Runbook and configure credentials. The script is using user managed identity, you must assign at least **Contributor** role to the user identity.
+
 ### Use Azure Site Recovery
 
 Azure Site Recovery will back up the disk of VM once you enable and protect the replica, you need not move the domain configuration to shared storage.
@@ -1303,6 +1305,47 @@ It takes about 15 min to complete the failover steps. You still need to assign t
 - Remove secondary IP from source adminVM: go to Azure Portal -> open source adminVM -> select **Settings** -> select **Networking** -> open the network interface -> select **Settings** -> select **IP Configurations** -> remove `ipconfig2` which was configured with virtual IP of Admin Server.
 - Assign secondary IP to target adminVM: go to Azure Portal -> open target adminVM -> select **Settings** -> select **Networking** -> open the network interface -> select **Settings** -> select **IP Configurations** -> Add `ipconfig2` with static IP address, here is `10.0.0.16`.
 - Wait for Admin Server ready.
+
+You have to commit the failover after Admin Server is up: Select Protected items -> Replicated istems -> adminVM -> commit.
+
+#### Custom recovery plan
+
+You are able to automate above step with a custom recovery plan.
+
+Before creating a custom plan, you're required to have a Automation Account in a different region:
+
+- Follow [Create a standalone Azure Automation account](https://docs.microsoft.com/en-us/azure/automation/automation-create-standalone-account?tabs=azureportal) to create an automation account in West US.
+- Follow [Create a user-assigned managed identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/how-manage-user-assigned-managed-identities?pivots=identity-mi-methods-azp#create-a-user-assigned-managed-identity) to create a user-assigned managed identity, and grant it with subscription **Contributor** role.
+- Modify [AssignIP-Workflow.ps1](#scripts/AssignIP-Workflow.ps1) with your values, and import it as a runbook to the automation account.
+- Publish the runbook.
+
+Now you are ready to create a custom plan:
+
+- Go to recovery service vault from Azure Portal.
+- Select Manage - Recovery Plans -> Add Recovery plan
+  - Name: WLSAdminZone2ZoneRecovery
+  - Source: East US
+  - Check "Select this check box if you would like to failover machines across zones within the same region"
+  - Source zone: 1
+  - Target zone: 3
+  - Allow items with deployment model: Resource Manager
+  - Selected items: select adminVM
+  - Click Create
+
+After the plan is completed, open the plan, you will find **Customize** button, hit that button and add a post action to group 1.
+
+Steps to add post action to group 1:
+
+- Name: Assign-IP
+- Automation account name: select the automation account created previously.
+- Runbook name: AssignIP-Workflow.
+- Click OK.
+
+Save the recovery plan. The plan is able to assign IP to target VM automatically.
+
+Open the plan and click failover, the plan will provison and start target machine in the target resource group. You have to commit the failover after Admin Server is up: Select the plan and click **Commit**.
+
+Please note that, if you fail back from target machine to source machine, you have to assign IP maunaully, the plan will not trigger the post action for **Re-protect**.
 
 ## Validate
 
