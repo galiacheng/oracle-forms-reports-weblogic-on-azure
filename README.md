@@ -14,6 +14,8 @@ You will get Forms and Reports running as the picture shows:
 
 Network and Availability Zone topology. This sample does not cover high availability for Oracle Database, you can follow [Oracle HA in Azure- Options](https://techcommunity.microsoft.com/t5/data-architecture-blog/oracle-ha-in-azure-options/ba-p/2281896) to create Oracle Data Guard.
 
+Azure Application Gateways are always deployed in a highly available fashion. You can scale up following [Scaling Application Gateway v2](https://docs.microsoft.com/en-us/azure/application-gateway/application-gateway-autoscaling-zone-redundant).
+
 ![Network and Availability Zone Topology](resources/network-and-availability-zones-topology.png)
 
 ## Contents
@@ -55,7 +57,7 @@ An Azure account with an active subscription. [Create an account for free](https
 ## Provision Azure WebLogic Virtual Machine
 
 Azure provides a series of Oracle WebLogic base images, it'll save your effort for Oracle tools installation.
-This document will setup Oracle Forms and Reports based on the Azure WebLogic base image, follow the steps to provision a machine with JDK and WebLogic installed:
+This sample will setup Oracle Forms and Reports based on the Azure WebLogic base image, follow the steps to provision a machine with JDK and WebLogic installed:
 
 - Open [Azure portal](https://portal.azure.com/) from your browser.
 - Search `WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6`, you will find the WebLogic offers, select **WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6**, and click **Create** button.
@@ -78,7 +80,7 @@ It will take 10min for the offer completed. After the deployment finishes, you w
 
 ## Create Oracle Database
 
-You are required to have a database to configure the JRF domain for Forms and Reports. This document will use Oracle Database.
+You are required to have a database to configure the JRF domain for Forms and Reports. This sample uses Oracle Database.
 Follow this [document](https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/oracle/oracle-database-quick-create) to create an Oracle database
 
 If you are following the document to create Oracle database, write down the credentials to create domain schema, username and password should be: `sys/OraPasswd1`
@@ -272,7 +274,7 @@ The following steps leverage XServer and RCU to create schemas on the Oracle dat
 - `bash /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/bin/rcu`
 - Step2: Create Repository -> System Load and Product Load
 - Step3: Input the connection information of Oracle database.
-- Step4: please note down the prefix, which will be used in the following configuration, this document uses `DEV0402`.
+- Step4: please note down the prefix, which will be used in the following configuration, this sample uses `DEV0402`.
   - STB
   - OPSS
   - IAU
@@ -840,7 +842,7 @@ Clone adminVM following [Clone machine for managed servers](#clone-machine-for-m
 
 ### Create managed servers and Forms component
 
-Firstly, you are required to create and start replated components. This document will leverage WLST offline mode to update the existing domain with new machine, new managed servers and new component, which requires restart on Admin Server to cause changes working.
+Firstly, you are required to create and start replated components. This sample leverages WLST offline mode to update the existing domain with new machine, new managed servers and new component, which requires restart on Admin Server to cause changes working.
 
 This is an example to update the existing domain to start Forms and Reports on mspVM3, replace the machine name and component name with yours.
 
@@ -1130,7 +1132,7 @@ To move on, make sure you have enable secondary IP for Admin Server, see [Config
 
 ### Use a pre-defined backup machine
 
-To make sure the domain configuration is the same in both machines, this approach move the domain configuration to shared storage, Azure File NFS share.
+To make sure the domain configuration is the same in both machines, this approach move the domain configuration to shared storage, this sample uses Azure File NFS share.
 
 - [Create NFS share](#create-nfs-share)
 - [Mount NFS share to adminVM](#mount-nfs-share-to-adminvm)
