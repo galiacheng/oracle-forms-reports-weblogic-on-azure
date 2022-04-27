@@ -1263,6 +1263,10 @@ You are able to automate assigning secondary IP using [AssignIP-Workflow.ps1](#s
 
 Azure Site Recovery will back up the disk of VM once you enable and protect the replica, you need not move the domain configuration to shared storage.
 
+- [Enable Azure Site Recovery](#enable-azure-site-recovery)
+- [Failover Manually](#failover-manually)
+- [Custom recovery plan](#custom-recovery-plan)
+
 #### Enable Azure Site Recovery
 
 Follow the step to enable ASR:
