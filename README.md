@@ -1298,7 +1298,7 @@ Follow the steps to start failover.
 - Open adminVM, the **Failover** should be available, otherwise, you have troubleshoot and resolve error before moving on.
 - Click Failover and start the process, please check `shutdown virtual machine` if your adminVM is running.
 
-It takes about 15 min to completed the failover steps. You still need to assign the virtual IP address to the target machine:
+It takes about 15 min to complete the failover steps. You still need to assign the virtual IP address of Admin Server to the target machine:
 
 - Remove secondary IP from source adminVM: go to Azure Portal -> open source adminVM -> select **Settings** -> select **Networking** -> open the network interface -> select **Settings** -> select **IP Configurations** -> remove `ipconfig2` which was configured with virtual IP of Admin Server.
 - Assign secondary IP to target adminVM: go to Azure Portal -> open target adminVM -> select **Settings** -> select **Networking** -> open the network interface -> select **Settings** -> select **IP Configurations** -> Add `ipconfig2` with static IP address, here is `10.0.0.16`.
