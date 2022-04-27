@@ -1266,7 +1266,7 @@ You are able to automate assigning secondary IP using [AssignIP-Workflow.ps1](#s
 Azure Site Recovery will back up the disk of VM once you enable and protect the replica, you need not move the domain configuration to shared storage.
 
 - [Enable Azure Site Recovery](#enable-azure-site-recovery)
-- [Failover Manually](#failover-manually)
+- [Failover manually](#failover-manually)
 - [Custom recovery plan](#custom-recovery-plan)
 
 #### Enable Azure Site Recovery
@@ -1295,7 +1295,7 @@ Follow the step to enable ASR:
 
 It takes about 1 hour for the resources ready. Once the deployment completes, you are able to find the replica from Recovery service vault.
 
-#### Failover Manually
+#### Failover manually
 
 ASR allow you to test failover in a seperated vnet. You are able to test failover to validate vM resource, but the Admin Server fails to access managed servers in a seperate vnet.
 
