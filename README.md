@@ -10,11 +10,11 @@ This document guides you to create highly available Oracle Forms and Reports clu
 
 You will get Forms and Reports running as the picture shows:
 
-![Oracle Forms and Reports Architecture](overview.png)
+![Oracle Forms and Reports Architecture](resources/overview.png)
 
 Network and Availability Zone topology. This sample does not cover high availability for Oracle Database, you can follow [Oracle HA in Azure- Options](https://techcommunity.microsoft.com/t5/data-architecture-blog/oracle-ha-in-azure-options/ba-p/2281896) to create Oracle Data Guard.
 
-![Network and Availability Zone Topology](network-and-availability-zones-topology.png)
+![Network and Availability Zone Topology](resources/network-and-availability-zones-topology.png)
 
 ## Contents
 
@@ -1356,7 +1356,7 @@ Please note that, if you fail back from target machine to source machine, you ha
 
 Validate the Forms testing application.
 
-- Make sure the application is running in each managed server.
+- Make sure the application is running in each managed server. 
   - Forms
     - `http://<mspvm1-ip>:9001/forms/frmservlet`
     - `http://<mspvm2-ip>:9001/forms/frmservlet`
