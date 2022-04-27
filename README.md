@@ -1310,15 +1310,15 @@ It takes about 15 min to complete the failover steps. You still need to assign t
 - Assign secondary IP to target adminVM: go to Azure Portal -> open target adminVM -> select **Settings** -> select **Networking** -> open the network interface -> select **Settings** -> select **IP Configurations** -> Add `ipconfig2` with static IP address, here is `10.0.0.16`.
 - Wait for Admin Server ready.
 
-You have to commit the failover after Admin Server is up: Select Protected items -> Replicated istems -> adminVM -> commit.
+You have to commit the failover after Admin Server is up: select Protected items -> Replicated istems -> adminVM -> commit.
 
 #### Custom recovery plan
 
-You are able to automate above step with a custom recovery plan.
+You are able to automate above steps with a custom recovery plan.
 
-Before creating a custom plan, you're required to have a Automation Account in a different region:
+Before creating a custom plan, you're required to have an automation account in a different region:
 
-- Follow [Create a standalone Azure Automation account](https://docs.microsoft.com/en-us/azure/automation/automation-create-standalone-account?tabs=azureportal) to create an automation account in West US.
+- Follow [Create a standalone Azure Automation account](https://docs.microsoft.com/en-us/azure/automation/automation-create-standalone-account?tabs=azureportal) to create an automation account in **West US**.
 - Follow [Create a user-assigned managed identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/how-manage-user-assigned-managed-identities?pivots=identity-mi-methods-azp#create-a-user-assigned-managed-identity) to create a user-assigned managed identity, and grant it with subscription **Contributor** role.
 - Modify [AssignIP-Workflow.ps1](#scripts/AssignIP-Workflow.ps1) with your values, and import it as a runbook to the automation account.
 - Publish the runbook.
@@ -1340,6 +1340,7 @@ After the plan is completed, open the plan, you will find **Customize** button, 
 
 Steps to add post action to group 1:
 
+- Right click Group 1 item, select "Add post actions"
 - Name: Assign-IP
 - Automation account name: select the automation account created previously.
 - Runbook name: AssignIP-Workflow.
@@ -1347,7 +1348,7 @@ Steps to add post action to group 1:
 
 Save the recovery plan. The plan is able to assign IP to target VM automatically.
 
-Open the plan and click failover, the plan will provison and start target machine in the target resource group. You have to commit the failover after Admin Server is up: Select the plan and click **Commit**.
+Open the plan and click failover, the plan will provison and start target machine in the target resource group. You have to commit the failover after Admin Server is up: select the plan and click **Commit**.
 
 Please note that, if you fail back from target machine to source machine, you have to assign IP maunaully, the plan will not trigger the post action for **Re-protect**.
 
