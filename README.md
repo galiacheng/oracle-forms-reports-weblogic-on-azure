@@ -1259,6 +1259,51 @@ You should be able to access Admin Server and have the same domain configuration
 
 ### Use Azure Site Recovery
 
+Azure Site Recovery will back up the disk of VM once you enable and protect the replica, you need not move the domain configuration to shared storage.
+
+#### Enable Azure Site Recovery
+
+Follow the step to enable ASR:
+
+- Go to Azure Portal and open adminVM
+- Select Operations -> Disaster recovery
+  - Basics
+    - Disaster Recovery between Availability Zones? **Yes**
+  - Advanced settings
+    - Target settings, please node down the target resource group, you will use it in the automation script.
+      | General settings | Source | Target |
+      |-----------|-----------|-----------|
+      |Subscription | Source subscription | Target subscription |
+      | VM resource group |  Do not change | Append `-asr` to the end of source resource group name. |
+      | Virtual network | Do not change | Do not change |
+      | Availability | Availability zone 1 | Availability zone 3 |
+      | Proximity placement group | Not applicable | Select new group |
+    - Replication settings.
+      - Recovery service vault, you are able to select an existing vault.
+    - Extension settings
+      - Update settings: Allow ASR to manage
+      - Automation account: you are able to select an existing automation account.
+  - Click Review and start replication
+
+It takes about 1 hour for the resources ready. Once the deployment completes, you are able to find the replica from Recovery service vault.
+
+#### Failover Manually
+
+ASR allow you to test failover in a seperated vnet. You are able to test failover to validate vM resource, but the Admin Server fails to access managed servers in a seperate vnet.
+
+Follow the steps to start failover.
+
+- Open your recovery service vault from Azure Portal.
+- Select Protected items -> Replicated istems, you should find the adminVM listed and the status is **Protected**, if not, you have to wait for the status becomes **Protected**.
+- Open adminVM, the **Failover** should be available, otherwise, you have troubleshoot and resolve error before moving on.
+- Click Failover and start the process, please check `shutdown virtual machine` if your adminVM is running.
+
+It takes about 15 min to completed the failover steps. You still need to assign the virtual IP address to the target machine:
+
+- Remove secondary IP from source adminVM: go to Azure Portal -> open source adminVM -> select **Settings** -> select **Networking** -> open the network interface -> select **Settings** -> select **IP Configurations** -> remove `ipconfig2` which was configured with virtual IP of Admin Server.
+- Assign secondary IP to target adminVM: go to Azure Portal -> open target adminVM -> select **Settings** -> select **Networking** -> open the network interface -> select **Settings** -> select **IP Configurations** -> Add `ipconfig2` with static IP address, here is `10.0.0.16`.
+- Wait for Admin Server ready.
+
 ## Validate
 
 Validate the Forms testing application.
