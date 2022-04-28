@@ -1128,7 +1128,7 @@ The following table lists some difference between two approaches:
 | RTO | 3-9 min. <br> Need not shutdown the primary machine: 3-5 min. <br> Have to shutdown the primary machine: 8-9 min.  | 8-20 min.<br> Need not shutdown the primary machine: 8-12 min. <br> Have to shutdown the primary machine: 15-20 min. |
 | Pros and Cons | **Pros**:<br> 1. Save time to provision a new machine. <br> **Cons**: <br> 1. Domain configuration in NFS share may cause longer network latency and effect the performance of Admin Server. <br>2. Extra cost for the pre-defined machine. | **Pros**:<br> 1. No additional infrastructure. <br>2. Leverage ASR to backup and protect the running machine. <br> **Cons**: <br> 1. Takes longer to failover as it has to provison target resources. 2. Extra cost for ASR. |
 
-To move on, make sure you have enable secondary IP for Admin Server, see [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server).
+To move on, make sure you have enabled secondary IP for Admin Server, see [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server).
 
 ### Use a pre-defined backup machine
 
