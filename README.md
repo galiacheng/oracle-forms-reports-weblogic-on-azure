@@ -1297,13 +1297,13 @@ It takes about 1 hour for the resources ready. Once the deployment completes, yo
 
 #### Failover manually
 
-ASR allow you to test failover in a seperated vnet. You are able to test failover to validate vM resource, but the Admin Server fails to access managed servers in a seperate vnet.
+ASR allows you to test failover in a seperated vnet. You are able to test failover to validate VM resource, but the Admin Server fails to access managed servers in a seperate vnet.
 
 Follow the steps to start failover.
 
 - Open your recovery service vault from Azure Portal.
 - Select Protected items -> Replicated istems, you should find the adminVM listed and the status is **Protected**, if not, you have to wait for the status becomes **Protected**.
-- Open adminVM, the **Failover** should be available, otherwise, you have troubleshoot and resolve error before moving on.
+- Open adminVM, the **Failover** button should be available, otherwise, you have to troubleshoot and resolve error before moving on.
 - Click Failover and start the process, please check `shutdown virtual machine` if your adminVM is running.
 
 It takes about 15 min to complete the failover steps. You still need to assign the virtual IP address of Admin Server to the target machine:
