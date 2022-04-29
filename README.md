@@ -1278,7 +1278,7 @@ Follow the step to enable ASR:
   - Basics
     - Disaster Recovery between Availability Zones? **Yes**
   - Advanced settings
-    - Target settings, please node down the target resource group, you will use it in the automation script.
+    - Target settings, please note down the target resource group, you will use it in the automation script.
       | General settings | Source | Target |
       |-----------|-----------|-----------|
       |Subscription | Source subscription | Target subscription |
