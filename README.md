@@ -12,9 +12,11 @@ You will get Forms and Reports running as the picture shows:
 
 ![Oracle Forms and Reports Architecture](resources/overview.png)
 
-Network and Availability Zone topology. This sample does not cover high availability for Oracle Database, you can follow [Oracle HA in Azure- Options](https://techcommunity.microsoft.com/t5/data-architecture-blog/oracle-ha-in-azure-options/ba-p/2281896) to create Oracle Data Guard.
+This sample does not cover high availability for Oracle Database, you can follow [Oracle HA in Azure- Options](https://techcommunity.microsoft.com/t5/data-architecture-blog/oracle-ha-in-azure-options/ba-p/2281896) to create Oracle Data Guard.
 
 Azure Application Gateways are always deployed in a highly available fashion. You can scale up following [Scaling Application Gateway v2](https://docs.microsoft.com/en-us/azure/application-gateway/application-gateway-autoscaling-zone-redundant).
+
+See network and Availability Zone topology.
 
 ![Network and Availability Zone Topology](resources/network-and-availability-zones-topology.png)
 
