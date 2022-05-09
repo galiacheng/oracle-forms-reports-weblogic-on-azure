@@ -362,7 +362,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
 - `bash  /u01/app/wls/install/oracle/middleware/oracle_home/oracle_common/common/bin/config.sh`
 - Page1:
   - Create a new domain
-  - Location: `/02/domains/wlsd`
+  - Location: `/u02/domains/wlsd`
 - Page2: 
   - FADS
   - Oracle Forms
