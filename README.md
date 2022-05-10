@@ -179,7 +179,7 @@ Steps to install Oracle Fusion Middleware Infrastructure on adminVM:
   oracleHome=/u01/app/wls/install/oracle/middleware/oracle_home
   . $oracleHome/oracle_common/common/bin/setWlstEnv.sh
   ```
-- Install fmw_12.2.1.4.0_infrastructure.jar
+- Install fmw_12.2.1.4.0_infrastructure.jar, if you run into **ERROR: Temporary directory /tmp does not have enough free space.**, see [Troubleshoot#4](#troubleshoot)
   - Launch the installer
     ```
     java -jar fmw_12.2.1.4.0_infrastructure.jar
@@ -237,7 +237,7 @@ Now you have Forms and Reports installed in the adminVM. Let's clone the machine
 
 You have Oracle Forms and Reports installed in the adminVM, you are able to reuse the installation by cloning adminVM for managed servers.
 
-Follow the steps to clone adminVM, for high availability, let's create the disk and machine in different zones as shown in the table:
+Follow the steps to clone adminVM, for high availability, let's create the disk and machine in different zones as the table shows:
 
 | Index | Machine Name | Disk Name | Availability Zone |
 |----------|----------|----------|----------|
@@ -1448,3 +1448,25 @@ Delete the resource group from Azure portal.
     Root cause: incorret hostname and ip address.
 
     Solution: double check entries in /etc/hosts. See [Oracle support doc](https://support.oracle.com/epmos/faces/DocumentDisplay?_afrLoop=32587788759518&parent=EXTERNAL_SEARCH&sourceId=PROBLEM&id=726588.1&_afrWindowMode=0&_adf.ctrl-state=21lszme5t_4).
+
+4. ERROR: Temporary directory /tmp does not have enough free space.
+
+    ```text
+    -bash-4.2$ ./fmw_12.2.1.4.0_fr_linux64.bin
+    ERROR: Temporary directory /tmp does not have enough free space. At least 3134 MB of free space are required.
+    Please input another directory or [Exit]:
+    
+    ```
+    
+    Solution: specify a tmp folder
+    
+    ```bash
+    sudo su - oracle
+    # create a tmp folder
+    mkdir /u01/oracle/tmp
+    # export DISPLAY variable
+    export DISPLAY=<yourWindowsVMVNetInternalIpAddress>:0.0
+    # install again
+    ./fmw_12.2.1.4.0_fr_linux64.bin -J-Djava.io.tmpdir=/u01/oracle/tmp
+    
+    ```
