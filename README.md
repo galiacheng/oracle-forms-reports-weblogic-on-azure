@@ -62,7 +62,7 @@ Azure provides a series of Oracle WebLogic base images, it'll save your effort f
 This sample will setup Oracle Forms and Reports based on the Azure WebLogic base image, follow the steps to provision a machine with JDK and WebLogic installed:
 
 - Open [Azure portal](https://portal.azure.com/) from your browser.
-- Search `WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6`, you will find the WebLogic offers, select **WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6**, and click **Create** button.
+- Search `WebLogic 12.2.1.4.0 Base Image and JDK8`, you will find the WebLogic offers, select **WebLogic 12.2.1.4.0 Base Image and JDK8 on OL7.6** or **WebLogic Server 12.2.1.4.0 and JDK8 on RHEL7.6**, and click **Create** button.
 - Input values in the **Basics** blade:
   - Subscription: select your subscription.
   - Resource group: click **Create new**, input a name.
