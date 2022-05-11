@@ -148,7 +148,7 @@ Steps to install Oracle Fusion Middleware Infrastructure on adminVM:
   ```
   # dependencies for XServer access
   sudo yum install -y libXtst
-  sudu yum install -y libSM
+  sudo yum install -y libSM
   sudo yum install -y libXrender
   # dependencies for Forms and Reports
   sudo yum install -y compat-libcap1
