@@ -436,7 +436,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
 - Page17: Coherence Cluster
   - Keep default
 - Page18: Machines
-  - adminVM, `<private-ip-of-adminVM>`, 5556
+  - adminVM, the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), 5556
   - mspVM1, `<private-ip-of-mspVM1>`, 5556
   - mspVM2, `<private-ip-of-mspVM2>`, 5556
 - Page19: Assign Servers to machine
@@ -664,7 +664,7 @@ Now, the machine and database are ready, let's move on to create a new domain fo
     Type=simple
     WorkingDirectory="/u02/domains/wlsd"
     ExecStart="/u02/domains/wlsd/startWebLogic.sh"
-    ExecStop="/u02/domains/wlsd/bin/customStopWebLogic.sh"
+    ExecStop="/u02/domains/wlsd/bin/stopWebLogic.sh"
     User=oracle
     Group=oracle
     KillMode=process
