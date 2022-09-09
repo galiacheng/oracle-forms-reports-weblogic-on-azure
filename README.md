@@ -1470,3 +1470,45 @@ Delete the resource group from Azure portal.
     ./fmw_12.2.1.4.0_fr_linux64.bin -J-Djava.io.tmpdir=/u01/oracle/tmp
     
     ```
+5. How to copy files to WLS machine?
+
+    You are able to use `scp` command to copy files to WLS machine, if you want to enable WLS proccess to access those files, make sure the copied files are owned by `oracle`.
+
+    The following example copys files from local machine to mspVM1:  
+
+    ```bash
+    scp mylibs.zip weblogic@<mspvm1-ip>:/home/weblogic/mylibs.zip
+    ```
+
+    Now, SSH to mspVM1 and unzip the files to `/u01/oracle/mylibs`.
+
+    ```bash
+    ssh weblogic@<mspvm1-ip>
+
+    sudo su
+
+    unzip /home/weblogic/mylibs.zip -d /u01/oracle/mylibs
+
+    rm /home/weblogic/mylibs.zip
+    ```
+
+    Go to `/u01/oracle/mylibs` and valid the files. Set the file ownership:
+
+    ```
+    chown oracle:oracle /home/oracle/mylibs -R
+    ```
+
+    Now you are able to use `oracle` user to move to files to any place that owns by `oracle`.
+
+    The following example is to move files to `/u02/domains/wlsd/lib/`
+
+    ```
+    mv -R /home/oracle/mylibs/* /u02/domains/wlsd/lib/
+    ```
+
+    To check the owner of files:
+
+    ```
+    ls -l /u02/domains/wlsd/lib/
+    ```
+
