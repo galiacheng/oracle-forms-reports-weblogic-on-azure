@@ -849,7 +849,7 @@ Orders to start Froms and Reports:
 - Start managed servers for Reports, they are `WLS_REPORTS1` on mspVM1 and `WLS_REPORTS2` on mspVM2, or `WLS_REPORTSN` on mspVMN for new replicas.
 
 The following WLST script is to `WLS_FORMS1`, `WLS_REPORTS1` on mspVM1. 
-Please the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with yours.
+Change the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), here is 10.0.0.16.
 To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME` and `REPORTS_SERVER_NAME` with corresponding values.
 
 Swith to `oracle` with `sudo su - oracle` and create script.
@@ -857,7 +857,7 @@ Swith to `oracle` with `sudo su - oracle` and create script.
 ```bash
 WLS_USER=weblogic
 WLS_PSWD=Secret123456
-ADMIN_SERVER_ADDRESS=10.0.0.4
+ADMIN_SERVER_ADDRESS=10.0.0.16
 FORMS_SERVER_NAME=WLS_FORMS1
 REPORT_SERVER_NAME=WLS_REPORTS1
 DOMAIN_HOME_PATH=/u02/domains/wlsd
@@ -865,14 +865,17 @@ DOMAIN_HOME_PATH=/u02/domains/wlsd
 cat <<EOF > $DOMAIN_HOME_PATH/startFormsReports.py 
 import os, sys
 connect('${WLS_USER}','${WLS_PSWD}','${ADMIN_SERVER_ADDRESS}:7001')
-status=state('${FORMS_SERVER_NAME}')
-if "RUNNING" not in status
+domainRuntime()
+cd("/ServerLifeCycleRuntimes/${FORMS_SERVER_NAME}")
+status=cmo.getState('${FORMS_SERVER_NAME}')
+if stauts != "RUNNING":
   start('${FORMS_SERVER_NAME}','Server')
 else:
   print 'Forms ${FORMS_SERVER_NAME} is already running'
 
-status=state('${REPORT_SERVER_NAME}')
-if "RUNNING" not in status
+cd("/ServerLifeCycleRuntimes/${REPORT_SERVER_NAME}")
+status=cmo.getState('${REPORT_SERVER_NAME}')
+if stauts != "RUNNING":
   start('${REPORT_SERVER_NAME}','Server')
 else:
   print 'Reports ${REPORT_SERVER_NAME} is already running'
@@ -882,13 +885,13 @@ EOF
 ```
 
 The following WLST script is to stop `WLS_FORMS1`, `WLS_REPORTS1` on mspVM1. 
-Please the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with yours.
+Change the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), here is 10.0.0.16.
 To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME` and `REPORTS_SERVER_NAME` with corresponding values.
 
 ```bash
 WLS_USER=weblogic
 WLS_PSWD=Secret123456
-ADMIN_SERVER_ADDRESS=10.0.0.4
+ADMIN_SERVER_ADDRESS=10.0.0.16
 FORMS_SERVER_NAME=WLS_FORMS1
 REPORT_SERVER_NAME=WLS_REPORTS1
 DOMAIN_HOME_PATH=/u02/domains/wlsd
@@ -903,16 +906,19 @@ disconnect()
 EOF
 ```
 
+Now, swith to `root` user with command `exit`, create and enable the service.
+
 ```bash
 INSTALL_PATH=/u01/app/wls/install
 DOMAIN_HOME_PATH=/u02/domains/wlsd
 cat <<EOF >/etc/systemd/system/ofmw.service
 [Unit]
 Description=Oracle Fusion Middleware Forms and Reports 12c
-After=network-online.target
-Wants=network-online.target
+After=wls_nodemanager.service
+Wants=wls_nodemanager.service
 [Service]
-Type=simple
+Type=oneshot
+RemainAfterExit=true
 WorkingDirectory="/u02/domains/wlsd"
 ExecStart="${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/startFormsReports.py"
 ExecStop="${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py"
@@ -920,14 +926,12 @@ User=oracle
 Group=oracle
 KillMode=process
 LimitNOFILE=65535
-Restart=always
-RestartSec=3
 [Install]
 WantedBy=multi-user.target
 EOF
 ```
 
-Now, swith to `root` with `sudo su ` and enable the service.
+
 
 ```bash
 sudo systemctl enable ofmw.service
