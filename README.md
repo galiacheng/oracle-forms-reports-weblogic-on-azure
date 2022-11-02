@@ -36,6 +36,7 @@ See network and Availability Zone topology.
   - [Apply domain to managed servers](#create-domain-on-managed-machine)
   - [Create and start Reports components](#create-and-start-reports-components)
   - [Start Forms and Reports](#start-forms-and-reports-managed-servers)
+  - [Configure Forms and Reports as Linux service](configure-forms-and-reports-as-linux-service)
 - [Add Forms and Reports replicas](#add-forms-and-reports-replicas)
   - [Create a new machine for new replicas](#create-a-new-machine-for-new-replicas)
   - [Create and start components](#create-forms-and-reports-components)
@@ -833,6 +834,151 @@ Now you are able to start Reports in process server from browser.
 - Start reports server on mspVM2 with the URL
   - `http://<mspVM2-ip>:9002/reports/rwservlet/startserver`
   - You will get output `1|0` from the browser if the server is up.
+
+
+### Configure Forms and Reports as a Linux service
+
+Now, you have the Froms and Reports running on your managed machines. To start them automactically when the machine is rebooted, you are able to configure them as Linux service.
+
+Please note that, as Forms and Reports are running on managed nodes, no change needed for adminVM. 
+
+Orders to start Froms and Reports:
+
+- Start node manager.
+- Start managed servers for Forms, they are `WLS_FORMS1` on mspVM1 and `WLS_FORMS2` on mspVM2, or `WLS_FORMSN` on mspVMN for new replicas.
+- Start managed servers for Reports, they are `WLS_REPORTS1` on mspVM1 and `WLS_REPORTS2` on mspVM2, or `WLS_REPORTSN` on mspVMN for new replicas.
+- Start report components, they are `reptools1` on mspVM1 and `reptools2` on mspVM2, or `reptoolsn` on mspVMN for new replicas. 
+
+Before creating a Linux service to run the script, you must store node manager password, otherwise, the service will failed at aksing for password.
+Run the following command to store user config on mspVM1, you must apply the same steps to other managed machines, make sure the component name is correct:
+
+1. At the prompt, use `oracle` user (sudo su - oracle), enter the following command:
+
+```bash
+/u02/domains/wlsd/bin/startComponent.sh reptools1 storeUserConfig
+Please enter your password :
+```
+
+  The system will prompt for your Node Manager password.
+
+2. Type the password and press Enter. The system responds with this message:
+
+```text
+Creating a key file can reduce the security of your system if it is not a secured location after it is created. Do you want to create the key file? y or n.
+```
+
+3. Type y to store your Node manager password. When you subsequently use this command, you will not need to enter a password.
+
+  It creates hidden files in the users home directory after the above steps.
+  These files contain domain information.
+  When using startComponent.sh to start and stop Reports component after the above steps, password prompt is omitted.
+
+The following script is to start node manager, `WLS_FORMS1`, `WLS_REPORTS1` and `reptools1` on mspVM1. 
+Please change `FORMS_SERVER_NAME`, `REPORTS_SERVER_NAME` and `REPORTS_COMP_NAME` for servers on mspVM2 and other replicas.
+
+```bash
+cat <<EOF >/u02/domains/wlsd/startReportsAndForms.sh
+#!/bin/bash
+#
+# Define specific environment variables
+#
+
+export ORACLE_BASE=/u01/app/wls/install/oracle
+export ORACLE_HOME=$ORACLE_BASE/middleware/oracle_home
+export MW_HOME=$ORACLE_BASE/middleware/oracle_home
+export WLS_HOME=$MW_HOME/wlserver
+export WL_HOME=$WLS_HOME
+export DOMAIN_BASE=/u02/domains
+export DOMAIN_HOME=$DOMAIN_BASE/wlsd
+export FORMS_SERVER_NAME=WLS_FORMS1
+export REPORTS_SERVER_NAME=WLS_REPORTS
+export REPORTS_COMP_NAME=reptools1
+
+# Start Fusion Middleware Servers and Components
+
+# Start NodeManager
+nohup $DOMAIN_HOME/bin/startNodeManager.sh > /dev/null 2>&1 &
+sleep 30
+
+# Start the managed servers
+nohup $DOMAIN_HOME/bin/startManagedWebLogic.sh ${FORMS_SERVER_NAME} > /dev/null 2>&1 &
+nohup $DOMAIN_HOME/bin/startManagedWebLogic.sh ${REPORTS_SERVER_NAME} > /dev/null 2>&1 &
+sleep 15
+
+# Start components
+$DOMAIN_HOME/bin/startComponent.sh ${REPORTS_COMP_NAME}
+EOF
+```
+
+The following script is to stop node manager, `WLS_FORMS1`, `WLS_REPORTS1` and `reptools1` on mspVM1. 
+Please change `FORMS_SERVER_NAME`, `REPORTS_SERVER_NAME` and `REPORTS_COMP_NAME` for servers on mspVM2 and other replicas.
+
+```bash
+cat <<EOF >/u02/domains/wlsd/stopReportsAndForms.sh
+#!/bin/bash
+#
+# Define specific environment variables
+#
+
+export ORACLE_BASE=/u01/app/wls/install/oracle
+export ORACLE_HOME=$ORACLE_BASE/middleware/oracle_home
+export MW_HOME=$ORACLE_BASE/middleware/oracle_home
+export WLS_HOME=$MW_HOME/wlserver
+export WL_HOME=$WLS_HOME
+export DOMAIN_BASE=/u02/domains
+export DOMAIN_HOME=$DOMAIN_BASE/wlsd
+export FORMS_SERVER_NAME=WLS_FORMS1
+export REPORTS_SERVER_NAME=WLS_REPORTS
+export REPORTS_COMP_NAME=reptools1
+
+# Start Fusion Middleware Servers and Components
+
+# Start NodeManager
+nohup $DOMAIN_HOME/bin/stopNodeManager.sh > /dev/null 2>&1 &
+sleep 30
+
+# Start the managed servers
+nohup $DOMAIN_HOME/bin/stopManagedWebLogic.sh ${FORMS_SERVER_NAME} > /dev/null 2>&1 &
+nohup $DOMAIN_HOME/bin/stopManagedWebLogic.sh ${REPORTS_SERVER_NAME} > /dev/null 2>&1 &
+sleep 15
+
+# Start components
+$DOMAIN_HOME/bin/stopComponent.sh ${REPORTS_COMP_NAME}
+EOF
+```
+
+```bash
+cat <<EOF >/etc/systemd/system/ofmw.service
+[Unit]
+Description=Oracle Fusion Middleware Forms and Reports 12c
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+WorkingDirectory="/u02/domains/wlsd"
+ExecStart="/u02/domains/wlsd/startReportsAndForms.sh"
+ExecStop="/u02/domains/wlsd/stopReportsAndForms.sh"
+User=oracle
+Group=oracle
+KillMode=process
+LimitNOFILE=65535
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+Now, you don't need service `wls_nodemanager` any more as `ofmw.service` will start node manager also.
+
+```
+sudo systemctl stop wls_nodemanager
+sudo systemctl disable wls_nodemanager
+
+sudo systemctl enable ofmw.service
+sudo systemctl daemon-reload
+sudo systemctl start ofmw.service
+```
 
 ## Add Forms and Reports replicas
 
