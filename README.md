@@ -894,6 +894,7 @@ code="404"
 while [ "\${code}" != "200" ]
 do
   code=\$(curl -s -o /dev/null -w "%{http_code}" http://${MSPVM_ADDRESS}:9002/reports/)
+  echo "http code: \${code}."
   sleep 2
 done
 
