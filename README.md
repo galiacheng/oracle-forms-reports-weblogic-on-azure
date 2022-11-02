@@ -886,17 +886,14 @@ disconnect()
 EOF
 
 cat <<EOF >$DOMAIN_HOME_PATH/startFormsReports.sh
-
-DOMAIN_HOME_PATH=/u02/domains/wlsd
-
 ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/startFormsReports.py > /dev/null 2>&1 &
 
 echo Wait for Reports server ready
 
 code="404"
-while [ "${code}" != "200" ]
+while [ "\${code}" != "200" ]
 do
-  code=$(curl -s -o /dev/null -w "%{http_code}" http://${MSPVM_ADDRESS}:9002/reports/)
+  code=\$(curl -s -o /dev/null -w "%{http_code}" http://${MSPVM_ADDRESS}:9002/reports/)
   sleep 2
 done
 
@@ -928,9 +925,6 @@ disconnect()
 EOF
 
 cat <<EOF >$DOMAIN_HOME_PATH/stopFormsReports.sh
-INSTALL_PATH=/u01/app/wls/install
-DOMAIN_HOME_PATH=/u02/domains/wlsd
-
 ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py > /dev/null 2>&1 &
 echo Done!
 EOF
