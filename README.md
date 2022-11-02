@@ -125,7 +125,7 @@ After the Windows server is completed, RDP to the server.
 
 ## Install Oracle Fusion Middleware Infrastructure
 
-Download Oracle Fusion Middleware Infrastructure installer from https://www.oracle.com/middleware/technologies/forms/downloads.html#
+Download Oracle Fusion Middleware Infrastructure installer from https://www.oracle.com/webapps/redirect/signon?nexturl=https://download.oracle.com/otn/nt/middleware/12c/122140/fmw_12.2.1.4.0_infrastructure_Disk1_1of1.zip
 
 Unzip the file and copy `fmw_12.2.1.4.0_infrastructure.jar` to **adminVM**.
 Make sure `fmw_12.2.1.4.0_infrastructure.jar` is copied to /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar, owner of the file is `oracle`, you can set the ownership with command `chown oracle:oracle /u01/oracle/fmw_12.2.1.4.0_infrastructure.jar`.
