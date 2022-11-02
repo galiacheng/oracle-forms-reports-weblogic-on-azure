@@ -886,6 +886,8 @@ disconnect()
 EOF
 
 cat <<EOF >$DOMAIN_HOME_PATH/startFormsReports.sh
+#!/bin/sh
+
 ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/startFormsReports.py > /dev/null 2>&1 &
 
 echo Wait for Reports server ready
@@ -929,6 +931,8 @@ disconnect()
 EOF
 
 cat <<EOF >$DOMAIN_HOME_PATH/stopFormsReports.sh
+#!/bin/sh
+
 ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py > /dev/null 2>&1 &
 echo Done!
 EOF
@@ -947,8 +951,8 @@ Wants=wls_nodemanager.service
 Type=oneshot
 RemainAfterExit=true
 WorkingDirectory="/u02/domains/wlsd"
-ExecStart="$DOMAIN_HOME_PATH/startFormsReports.sh"
-ExecStop="$DOMAIN_HOME_PATH/stopFormsReports.sh"
+ExecStart="bash $DOMAIN_HOME_PATH/startFormsReports.sh"
+ExecStop="bash $DOMAIN_HOME_PATH/stopFormsReports.sh"
 User=oracle
 Group=oracle
 KillMode=process
