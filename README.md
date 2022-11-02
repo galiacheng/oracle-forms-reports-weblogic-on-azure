@@ -891,10 +891,12 @@ ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $
 echo Wait for Reports server ready
 
 code="404"
-while [ "\${code}" != "200" ]
+counter=1
+while [ "\${code}" != "200" ] && [ \${couter} -lt 300 ]
 do
   code=\$(curl -s -o /dev/null -w "%{http_code}" http://${MSPVM_ADDRESS}:9002/reports/)
-  echo "http code: \${code}."
+  echo "http code: \${code}, counter: \${counter}"
+  counter=`expr \$counter + 1`
   sleep 2
 done
 
