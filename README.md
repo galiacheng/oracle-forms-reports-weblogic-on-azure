@@ -891,7 +891,7 @@ export WL_HOME=$WLS_HOME
 export DOMAIN_BASE=/u02/domains
 export DOMAIN_HOME=$DOMAIN_BASE/wlsd
 export FORMS_SERVER_NAME=WLS_FORMS1
-export REPORTS_SERVER_NAME=WLS_REPORTS
+export REPORTS_SERVER_NAME=WLS_REPORTS1
 export REPORTS_COMP_NAME=reptools1
 
 # Start Fusion Middleware Servers and Components
@@ -928,7 +928,7 @@ export WL_HOME=$WLS_HOME
 export DOMAIN_BASE=/u02/domains
 export DOMAIN_HOME=$DOMAIN_BASE/wlsd
 export FORMS_SERVER_NAME=WLS_FORMS1
-export REPORTS_SERVER_NAME=WLS_REPORTS
+export REPORTS_SERVER_NAME=WLS_REPORTS1
 export REPORTS_COMP_NAME=reptools1
 
 # Start Fusion Middleware Servers and Components
