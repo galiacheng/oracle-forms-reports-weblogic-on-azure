@@ -935,7 +935,10 @@ INSTALL_PATH=/u01/app/wls/install
 cat <<EOF > $DOMAIN_HOME_PATH/stopFormsReports.py 
 import os, sys
 connect('${WLS_USER}','${WLS_PSWD}','${ADMIN_SERVER_ADDRESS}:7001')
+domainRuntime()
+cd("/ServerLifeCycleRuntimes/${FORMS_SERVER_NAME}")
 shutdown('${FORMS_SERVER_NAME}','Server')
+cd("/ServerLifeCycleRuntimes/${REPORT_SERVER_NAME}")
 shutdown('${REPORT_SERVER_NAME}','Server')
 
 disconnect()
