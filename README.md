@@ -888,9 +888,11 @@ INSTALL_PATH=/u01/app/wls/install
 DOMAIN_HOME_PATH=/u02/domains/wlsd
 
 ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/startFormsReports.py > /dev/null 2>&1 &
+sleep 600
 
 echo Start Reports In-process server
 curl http://localhost:9002/reports/rwservlet/startserver > /dev/null 2>&1 &
+sleep 120
 echo Done!
 EOF
 ```
@@ -921,7 +923,7 @@ INSTALL_PATH=/u01/app/wls/install
 DOMAIN_HOME_PATH=/u02/domains/wlsd
 
 ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py > /dev/null 2>&1 &
-
+sleep 120
 echo Done!
 EOF
 ```
