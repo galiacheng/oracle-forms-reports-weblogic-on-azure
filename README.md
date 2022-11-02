@@ -951,8 +951,8 @@ Wants=wls_nodemanager.service
 Type=oneshot
 RemainAfterExit=true
 WorkingDirectory="/u02/domains/wlsd"
-ExecStart="bash $DOMAIN_HOME_PATH/startFormsReports.sh"
-ExecStop="bash $DOMAIN_HOME_PATH/stopFormsReports.sh"
+ExecStart="$DOMAIN_HOME_PATH/startFormsReports.sh"
+ExecStop="$DOMAIN_HOME_PATH/stopFormsReports.sh"
 User=oracle
 Group=oracle
 KillMode=process
@@ -962,7 +962,15 @@ WantedBy=multi-user.target
 EOF
 ```
 
+Set file permission:
 
+```bash
+DOMAIN_HOME_PATH=/u02/domains/wlsd
+chmod 750 $DOMAIN_HOME_PATH/startFormsReports.py
+chmod 750 $DOMAIN_HOME_PATH/startFormsReports.sh
+chmod 750 $DOMAIN_HOME_PATH/stopFormsReports.py
+chmod 750 $DOMAIN_HOME_PATH/stopFormsReports.sh
+```
 
 ```bash
 sudo systemctl enable ofmw.service
