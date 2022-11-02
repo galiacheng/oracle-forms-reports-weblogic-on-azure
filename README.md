@@ -844,110 +844,68 @@ Please note that, as Forms and Reports are running on managed nodes, no change n
 
 Orders to start Froms and Reports:
 
-- Start node manager.
+- Start node manager. We have created service `wls_nodemanager` to start node manager.
 - Start managed servers for Forms, they are `WLS_FORMS1` on mspVM1 and `WLS_FORMS2` on mspVM2, or `WLS_FORMSN` on mspVMN for new replicas.
 - Start managed servers for Reports, they are `WLS_REPORTS1` on mspVM1 and `WLS_REPORTS2` on mspVM2, or `WLS_REPORTSN` on mspVMN for new replicas.
-- Start report components, they are `reptools1` on mspVM1 and `reptools2` on mspVM2, or `reptoolsn` on mspVMN for new replicas. 
 
-Before creating a Linux service to run the script, you must store node manager password, otherwise, the service will failed at aksing for password.
-Run the following command to store user config on mspVM1, you must apply the same steps to other managed machines, make sure the component name is correct:
+The following WLST script is to `WLS_FORMS1`, `WLS_REPORTS1` on mspVM1. 
+Please the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with yours.
+To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME` and `REPORTS_SERVER_NAME` with corresponding values.
 
-1. At the prompt, use `oracle` user (sudo su - oracle), enter the following command:
-
-    ```bash
-    bash /u02/domains/wlsd/bin/startComponent.sh reptools1 storeUserConfig
-    #Please enter your password :
-    ```
-
-    The system will prompt for your Node Manager password.
-
-2. Type the password and press Enter. The system responds with this message:
-
-    ```text
-    Creating a key file can reduce the security of your system if it is not a secured location after it is created. Do you want to create the key file? y or n.
-    ```
-
-3. Type y to store your Node manager password. When you subsequently use this command, you will not need to enter a password.
-
-    It creates hidden files in the users home directory after the above steps.
-    These files contain domain information.
-    When using startComponent.sh to start and stop Reports component after the above steps, password prompt is omitted.
-
-The following script is to start node manager, `WLS_FORMS1`, `WLS_REPORTS1` and `reptools1` on mspVM1. 
-Please change `FORMS_SERVER_NAME`, `REPORTS_SERVER_NAME` and `REPORTS_COMP_NAME` for servers on mspVM2 and other replicas.
+Swith to `oracle` with `sudo su - oracle` and create script.
 
 ```bash
-cat <<EOF >/u02/domains/wlsd/startReportsAndForms.sh
-#!/bin/bash
-#
-# Define specific environment variables
-#
+WLS_USER=weblogic
+WLS_PSWD=Secret123456
+ADMIN_SERVER_ADDRESS=10.0.0.4
+FORMS_SERVER_NAME=WLS_FORMS1
+REPORT_SERVER_NAME=WLS_REPORTS1
+DOMAIN_HOME_PATH=/u02/domains/wlsd
 
-export ORACLE_BASE=/u01/app/wls/install/oracle
-export ORACLE_HOME=$ORACLE_BASE/middleware/oracle_home
-export MW_HOME=$ORACLE_BASE/middleware/oracle_home
-export WLS_HOME=$MW_HOME/wlserver
-export WL_HOME=$WLS_HOME
-export DOMAIN_BASE=/u02/domains
-export DOMAIN_HOME=$DOMAIN_BASE/wlsd
-export FORMS_SERVER_NAME=WLS_FORMS1
-export REPORTS_SERVER_NAME=WLS_REPORTS1
-export REPORTS_COMP_NAME=reptools1
+cat <<EOF > $DOMAIN_HOME_PATH/startFormsReports.py 
+import os, sys
+connect('${WLS_USER}','${WLS_PSWD}','${ADMIN_SERVER_ADDRESS}:7001')
+status=state('${FORMS_SERVER_NAME}')
+if "RUNNING" not in status
+  start('${FORMS_SERVER_NAME}','Server')
+else:
+  print 'Forms ${FORMS_SERVER_NAME} is already running'
 
-# Start Fusion Middleware Servers and Components
+status=state('${REPORT_SERVER_NAME}')
+if "RUNNING" not in status
+  start('${REPORT_SERVER_NAME}','Server')
+else:
+  print 'Reports ${REPORT_SERVER_NAME} is already running'
 
-# Start NodeManager
-nohup $DOMAIN_HOME/bin/startNodeManager.sh > /dev/null 2>&1 &
-sleep 30
-
-# Start the managed servers
-nohup $DOMAIN_HOME/bin/startManagedWebLogic.sh ${FORMS_SERVER_NAME} > /dev/null 2>&1 &
-nohup $DOMAIN_HOME/bin/startManagedWebLogic.sh ${REPORTS_SERVER_NAME} > /dev/null 2>&1 &
-sleep 15
-
-# Start components
-$DOMAIN_HOME/bin/startComponent.sh ${REPORTS_COMP_NAME}
+disconnect()
 EOF
 ```
 
-The following script is to stop node manager, `WLS_FORMS1`, `WLS_REPORTS1` and `reptools1` on mspVM1. 
-Please change `FORMS_SERVER_NAME`, `REPORTS_SERVER_NAME` and `REPORTS_COMP_NAME` for servers on mspVM2 and other replicas.
+The following WLST script is to stop `WLS_FORMS1`, `WLS_REPORTS1` on mspVM1. 
+Please the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with yours.
+To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME` and `REPORTS_SERVER_NAME` with corresponding values.
 
 ```bash
-cat <<EOF >/u02/domains/wlsd/stopReportsAndForms.sh
-#!/bin/bash
-#
-# Define specific environment variables
-#
+WLS_USER=weblogic
+WLS_PSWD=Secret123456
+ADMIN_SERVER_ADDRESS=10.0.0.4
+FORMS_SERVER_NAME=WLS_FORMS1
+REPORT_SERVER_NAME=WLS_REPORTS1
+DOMAIN_HOME_PATH=/u02/domains/wlsd
 
-export ORACLE_BASE=/u01/app/wls/install/oracle
-export ORACLE_HOME=$ORACLE_BASE/middleware/oracle_home
-export MW_HOME=$ORACLE_BASE/middleware/oracle_home
-export WLS_HOME=$MW_HOME/wlserver
-export WL_HOME=$WLS_HOME
-export DOMAIN_BASE=/u02/domains
-export DOMAIN_HOME=$DOMAIN_BASE/wlsd
-export FORMS_SERVER_NAME=WLS_FORMS1
-export REPORTS_SERVER_NAME=WLS_REPORTS1
-export REPORTS_COMP_NAME=reptools1
+cat <<EOF > $DOMAIN_HOME_PATH/stopFormsReports.py 
+import os, sys
+connect('${WLS_USER}','${WLS_PSWD}','${ADMIN_SERVER_ADDRESS}:7001')
+shutdown('${FORMS_SERVER_NAME}','Server')
+shutdown('${REPORT_SERVER_NAME}','Server')
 
-# Start Fusion Middleware Servers and Components
-
-# Start NodeManager
-nohup $DOMAIN_HOME/bin/stopNodeManager.sh > /dev/null 2>&1 &
-sleep 30
-
-# Start the managed servers
-nohup $DOMAIN_HOME/bin/stopManagedWebLogic.sh ${FORMS_SERVER_NAME} > /dev/null 2>&1 &
-nohup $DOMAIN_HOME/bin/stopManagedWebLogic.sh ${REPORTS_SERVER_NAME} > /dev/null 2>&1 &
-sleep 15
-
-# Start components
-$DOMAIN_HOME/bin/stopComponent.sh ${REPORTS_COMP_NAME}
+disconnect()
 EOF
 ```
 
 ```bash
+INSTALL_PATH=/u01/app/wls/install
+DOMAIN_HOME_PATH=/u02/domains/wlsd
 cat <<EOF >/etc/systemd/system/ofmw.service
 [Unit]
 Description=Oracle Fusion Middleware Forms and Reports 12c
@@ -956,8 +914,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory="/u02/domains/wlsd"
-ExecStart="/u02/domains/wlsd/startReportsAndForms.sh"
-ExecStop="/u02/domains/wlsd/stopReportsAndForms.sh"
+ExecStart="${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/startFormsReports.py"
+ExecStop="${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py"
 User=oracle
 Group=oracle
 KillMode=process
@@ -969,12 +927,9 @@ WantedBy=multi-user.target
 EOF
 ```
 
-Now, you don't need service `wls_nodemanager` any more as `ofmw.service` will start node manager also.
+Now, swith to `root` with `sudo su ` and enable the service.
 
-```
-sudo systemctl stop wls_nodemanager
-sudo systemctl disable wls_nodemanager
-
+```bash
 sudo systemctl enable ofmw.service
 sudo systemctl daemon-reload
 sudo systemctl start ofmw.service
