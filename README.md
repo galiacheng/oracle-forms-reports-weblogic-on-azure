@@ -847,9 +847,12 @@ Orders to start Froms and Reports:
 - Start node manager. We have created service `wls_nodemanager` to start node manager.
 - Start managed servers for Forms, they are `WLS_FORMS1` on mspVM1 and `WLS_FORMS2` on mspVM2, or `WLS_FORMSN` on mspVMN for new replicas.
 - Start managed servers for Reports, they are `WLS_REPORTS1` on mspVM1 and `WLS_REPORTS2` on mspVM2, or `WLS_REPORTSN` on mspVMN for new replicas.
+- Start Reports In-process server accessing http://${MSPVM_ADDRESS}:9002/reports/rwservlet/startserver.
 
 The following WLST script is to `WLS_FORMS1`, `WLS_REPORTS1` on mspVM1. 
+
 Change the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), here is 10.0.0.16.
+
 To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME`, `REPORTS_SERVER_NAME` and `MSPVM_ADDRESS` with corresponding values.
 
 Swith to `oracle` with `sudo su - oracle` and create script.
@@ -909,7 +912,9 @@ EOF
 ```
 
 The following WLST script is to stop `WLS_FORMS1`, `WLS_REPORTS1` on mspVM1. 
+
 Change the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), here is 10.0.0.16.
+
 To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME` and `REPORTS_SERVER_NAME` with corresponding values.
 
 ```bash
@@ -962,7 +967,7 @@ WantedBy=multi-user.target
 EOF
 ```
 
-Set file permission:
+Change file permission:
 
 ```bash
 DOMAIN_HOME_PATH=/u02/domains/wlsd
@@ -971,6 +976,8 @@ chmod 750 $DOMAIN_HOME_PATH/startFormsReports.sh
 chmod 750 $DOMAIN_HOME_PATH/stopFormsReports.py
 chmod 750 $DOMAIN_HOME_PATH/stopFormsReports.sh
 ```
+
+Enable the service:
 
 ```bash
 sudo systemctl enable ofmw.service
