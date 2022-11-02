@@ -850,7 +850,7 @@ Orders to start Froms and Reports:
 
 The following WLST script is to `WLS_FORMS1`, `WLS_REPORTS1` on mspVM1. 
 Change the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), here is 10.0.0.16.
-To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME` and `REPORTS_SERVER_NAME` with corresponding values.
+To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME`, `REPORTS_SERVER_NAME` and `MSPVM_ADDRESS` with corresponding values.
 
 Swith to `oracle` with `sudo su - oracle` and create script.
 
@@ -861,6 +861,8 @@ ADMIN_SERVER_ADDRESS=10.0.0.16
 FORMS_SERVER_NAME=WLS_FORMS1
 REPORT_SERVER_NAME=WLS_REPORTS1
 DOMAIN_HOME_PATH=/u02/domains/wlsd
+INSTALL_PATH=/u01/app/wls/install
+MSPVM_ADDRESS=10.0.0.6
 
 cat <<EOF > $DOMAIN_HOME_PATH/startFormsReports.py 
 import os, sys
@@ -884,15 +886,22 @@ disconnect()
 EOF
 
 cat <<EOF >$DOMAIN_HOME_PATH/startFormsReports.sh
-INSTALL_PATH=/u01/app/wls/install
+
 DOMAIN_HOME_PATH=/u02/domains/wlsd
 
 ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/startFormsReports.py > /dev/null 2>&1 &
-sleep 600
+
+echo Wait for Reports server ready
+
+code="404"
+while [ "${code}" != "200" ]
+do
+  code=$(curl -s -o /dev/null -w "%{http_code}" http://${MSPVM_ADDRESS}:9002/reports/)
+  sleep 2
+done
 
 echo Start Reports In-process server
-curl http://localhost:9002/reports/rwservlet/startserver > /dev/null 2>&1 &
-sleep 120
+curl http://${MSPVM_ADDRESS}:9002/reports/rwservlet/startserver > /dev/null 2>&1 &
 echo Done!
 EOF
 ```
@@ -923,7 +932,6 @@ INSTALL_PATH=/u01/app/wls/install
 DOMAIN_HOME_PATH=/u02/domains/wlsd
 
 ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py > /dev/null 2>&1 &
-sleep 120
 echo Done!
 EOF
 ```
