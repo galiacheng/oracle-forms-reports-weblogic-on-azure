@@ -36,7 +36,7 @@ See network and Availability Zone topology.
   - [Apply domain to managed servers](#create-domain-on-managed-machine)
   - [Create and start Reports components](#create-and-start-reports-components)
   - [Start Forms and Reports](#start-forms-and-reports-managed-servers)
-  - [Configure Forms and Reports as Linux service](configure-forms-and-reports-as-linux-service)
+  - [Configure Forms and Reports as Linux service](configure-forms-and-reports-as-a-linux-service)
 - [Add Forms and Reports replicas](#add-forms-and-reports-replicas)
   - [Create a new machine for new replicas](#create-a-new-machine-for-new-replicas)
   - [Create and start components](#create-forms-and-reports-components)
