@@ -892,11 +892,11 @@ echo Wait for Reports server ready
 
 code="404"
 counter=1
-while [ "\${code}" != "200" ] && [ \${couter} -lt 300 ]
+while [[ "\${code}" != "200" && \${couter} -lt 300 ]]
 do
   code=\$(curl -s -o /dev/null -w "%{http_code}" http://${MSPVM_ADDRESS}:9002/reports/)
   echo "http code: \${code}, counter: \${counter}"
-  counter=`expr \$counter + 1`
+  counter=\$((counter + 1))
   sleep 2
 done
 
