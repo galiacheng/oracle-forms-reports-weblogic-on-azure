@@ -854,18 +854,18 @@ Run the following command to store user config on mspVM1, you must apply the sam
 
 1. At the prompt, use `oracle` user (sudo su - oracle), enter the following command:
 
-```bash
-/u02/domains/wlsd/bin/startComponent.sh reptools1 storeUserConfig
-Please enter your password :
-```
+  ```bash
+  /u02/domains/wlsd/bin/startComponent.sh reptools1 storeUserConfig
+  Please enter your password :
+  ```
 
   The system will prompt for your Node Manager password.
 
 2. Type the password and press Enter. The system responds with this message:
 
-```text
-Creating a key file can reduce the security of your system if it is not a secured location after it is created. Do you want to create the key file? y or n.
-```
+  ```text
+  Creating a key file can reduce the security of your system if it is not a secured location after it is created. Do you want to create the key file? y or n.
+  ```
 
 3. Type y to store your Node manager password. When you subsequently use this command, you will not need to enter a password.
 
