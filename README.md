@@ -854,24 +854,24 @@ Run the following command to store user config on mspVM1, you must apply the sam
 
 1. At the prompt, use `oracle` user (sudo su - oracle), enter the following command:
 
-  ```bash
-  /u02/domains/wlsd/bin/startComponent.sh reptools1 storeUserConfig
-  Please enter your password :
-  ```
+    ```bash
+    bash /u02/domains/wlsd/bin/startComponent.sh reptools1 storeUserConfig
+    #Please enter your password :
+    ```
 
-  The system will prompt for your Node Manager password.
+    The system will prompt for your Node Manager password.
 
 2. Type the password and press Enter. The system responds with this message:
 
-  ```text
-  Creating a key file can reduce the security of your system if it is not a secured location after it is created. Do you want to create the key file? y or n.
-  ```
+    ```text
+    Creating a key file can reduce the security of your system if it is not a secured location after it is created. Do you want to create the key file? y or n.
+    ```
 
 3. Type y to store your Node manager password. When you subsequently use this command, you will not need to enter a password.
 
-  It creates hidden files in the users home directory after the above steps.
-  These files contain domain information.
-  When using startComponent.sh to start and stop Reports component after the above steps, password prompt is omitted.
+    It creates hidden files in the users home directory after the above steps.
+    These files contain domain information.
+    When using startComponent.sh to start and stop Reports component after the above steps, password prompt is omitted.
 
 The following script is to start node manager, `WLS_FORMS1`, `WLS_REPORTS1` and `reptools1` on mspVM1. 
 Please change `FORMS_SERVER_NAME`, `REPORTS_SERVER_NAME` and `REPORTS_COMP_NAME` for servers on mspVM2 and other replicas.
