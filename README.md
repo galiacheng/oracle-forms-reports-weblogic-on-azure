@@ -867,20 +867,31 @@ import os, sys
 connect('${WLS_USER}','${WLS_PSWD}','${ADMIN_SERVER_ADDRESS}:7001')
 domainRuntime()
 cd("/ServerLifeCycleRuntimes/${FORMS_SERVER_NAME}")
-status=cmo.getState('${FORMS_SERVER_NAME}')
-if stauts != "RUNNING":
+status=cmo.getState()
+if status != "RUNNING":
   start('${FORMS_SERVER_NAME}','Server')
 else:
   print 'Forms ${FORMS_SERVER_NAME} is already running'
 
 cd("/ServerLifeCycleRuntimes/${REPORT_SERVER_NAME}")
-status=cmo.getState('${REPORT_SERVER_NAME}')
-if stauts != "RUNNING":
+status=cmo.getState()
+if status != "RUNNING":
   start('${REPORT_SERVER_NAME}','Server')
 else:
   print 'Reports ${REPORT_SERVER_NAME} is already running'
 
 disconnect()
+EOF
+
+cat <<EOF >$DOMAIN_HOME_PATH/startFormsReports.sh
+INSTALL_PATH=/u01/app/wls/install
+DOMAIN_HOME_PATH=/u02/domains/wlsd
+
+${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/startFormsReports.py > /dev/null 2>&1 &
+
+echo Start Reports In-process server
+curl http://localhost:9002/reports/rwservlet/startserver > /dev/null 2>&1 &
+echo Done!
 EOF
 ```
 
@@ -904,12 +915,20 @@ shutdown('${REPORT_SERVER_NAME}','Server')
 
 disconnect()
 EOF
+
+cat <<EOF >$DOMAIN_HOME_PATH/stopFormsReports.sh
+INSTALL_PATH=/u01/app/wls/install
+DOMAIN_HOME_PATH=/u02/domains/wlsd
+
+${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py > /dev/null 2>&1 &
+
+echo Done!
+EOF
 ```
 
 Now, swith to `root` user with command `exit`, create and enable the service.
 
 ```bash
-INSTALL_PATH=/u01/app/wls/install
 DOMAIN_HOME_PATH=/u02/domains/wlsd
 cat <<EOF >/etc/systemd/system/ofmw.service
 [Unit]
@@ -920,8 +939,8 @@ Wants=wls_nodemanager.service
 Type=oneshot
 RemainAfterExit=true
 WorkingDirectory="/u02/domains/wlsd"
-ExecStart="${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/startFormsReports.py"
-ExecStop="${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py"
+ExecStart="$DOMAIN_HOME_PATH/startFormsReports.sh"
+ExecStop="$DOMAIN_HOME_PATH/stopFormsReports.sh"
 User=oracle
 Group=oracle
 KillMode=process
