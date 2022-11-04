@@ -931,6 +931,7 @@ FORMS_SERVER_NAME=WLS_FORMS1
 REPORT_SERVER_NAME=WLS_REPORTS1
 DOMAIN_HOME_PATH=/u02/domains/wlsd
 INSTALL_PATH=/u01/app/wls/install
+MSPVM_ADDRESS=10.0.0.6
 
 cat <<EOF > $DOMAIN_HOME_PATH/stopFormsReports.py 
 import os, sys
@@ -948,6 +949,17 @@ cat <<EOF >$DOMAIN_HOME_PATH/stopFormsReports.sh
 #!/bin/sh
 
 ${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py > /dev/null 2>&1 &
+echo Wait for Reports server shutdown
+
+code="200"
+counter=1
+while [[ "\${code}" == "200" && \${couter} -lt 300 ]]
+do
+  code=\$(curl -s -o /dev/null -w "%{http_code}" http://${MSPVM_ADDRESS}:9002/reports/)
+  echo "http code: \${code}, counter: \${counter}"
+  counter=\$((counter + 1))
+  sleep 2
+done
 echo Done!
 EOF
 ```
