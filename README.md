@@ -838,24 +838,24 @@ Now you are able to start Reports in process server from browser.
 
 ### Configure Forms and Reports as a Linux service
 
-Now, you have the Froms and Reports running on your managed machines. To start them automactically when the machine is rebooted, you have to configure them as Linux service.
+Now, you have the Forms and Reports running on your managed machines. To start them automactically when the machine is rebooted, you have to configure them as Linux service.
 
 Please note that, as Forms and Reports are running on managed nodes, no change needed for adminVM. 
 
-Orders to start Froms and Reports:
+Orders to start Forms and Reports:
 
-- Start node manager. We have created service `wls_nodemanager` to start node manager.
+- Start node manager. We have created a service `wls_nodemanager` to start node manager.
 - Start managed servers for Forms, they are `WLS_FORMS1` on mspVM1 and `WLS_FORMS2` on mspVM2, or `WLS_FORMSN` on mspVMN for new replicas.
 - Start managed servers for Reports, they are `WLS_REPORTS1` on mspVM1 and `WLS_REPORTS2` on mspVM2, or `WLS_REPORTSN` on mspVMN for new replicas.
 - Start Reports In-process server by accessing http://${MSPVM_ADDRESS}:9002/reports/rwservlet/startserver.
 
 The following WLST script is to start `WLS_FORMS1`, `WLS_REPORTS1` on mspVM1. 
 
-Change the user name `WLS_USER`, passowrd `WLS_PSWD` with your value, and `ADMIN_SERVER_ADDRESS` with the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), here is 10.0.0.16.
+Change the user name `WLS_USER`, password `WLS_PSWD` with your value, and `ADMIN_SERVER_ADDRESS` with the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), here is 10.0.0.16.
 
 To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME`, `REPORTS_SERVER_NAME` and `MSPVM_ADDRESS` with corresponding values.
 
-Swith to `oracle` with `sudo su - oracle` and create script.
+Switch to `oracle` with `sudo su - oracle` and create script.
 
 ```bash
 #weblogic admin account user name
@@ -919,7 +919,7 @@ EOF
 
 The following WLST script is to stop `WLS_FORMS1`, `WLS_REPORTS1` on mspVM1. 
 
-Change the user name `WLS_USER`, passowrd `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), here is 10.0.0.16.
+Change the user name `WLS_USER`, password `WLS_PSWD` and `ADMIN_SERVER_ADDRESS` with the virtual IP address created in [Configure Virtual IP for Admin Server](#configure-virtual-ip-for-admin-server), here is 10.0.0.16.
 
 To create the script on mspVM2 and new replicas, change `FORMS_SERVER_NAME` and `REPORTS_SERVER_NAME` with corresponding values.
 
@@ -953,7 +953,7 @@ echo Done!
 EOF
 ```
 
-Now, swith to `root` user with command `exit`, create and enable the service.
+Now, switch to `root` user with command `exit`, create and enable the service.
 
 ```bash
 DOMAIN_HOME_PATH=/u02/domains/wlsd
