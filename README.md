@@ -931,7 +931,6 @@ FORMS_SERVER_NAME=WLS_FORMS1
 REPORT_SERVER_NAME=WLS_REPORTS1
 DOMAIN_HOME_PATH=/u02/domains/wlsd
 INSTALL_PATH=/u01/app/wls/install
-MSPVM_ADDRESS=10.0.0.6
 
 cat <<EOF > $DOMAIN_HOME_PATH/stopFormsReports.py 
 import os, sys
@@ -943,6 +942,14 @@ cd("/ServerLifeCycleRuntimes/${REPORT_SERVER_NAME}")
 shutdown('${REPORT_SERVER_NAME}','Server')
 
 disconnect()
+EOF
+
+cat <<EOF >$DOMAIN_HOME_PATH/stopFormsReports.sh
+#!/bin/sh
+
+${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py
+sleep 2s
+echo Done!
 EOF
 ```
 
@@ -978,6 +985,7 @@ DOMAIN_HOME_PATH=/u02/domains/wlsd
 chmod 750 $DOMAIN_HOME_PATH/startFormsReports.py
 chmod 750 $DOMAIN_HOME_PATH/startFormsReports.sh
 chmod 750 $DOMAIN_HOME_PATH/stopFormsReports.py
+chmod 750 $DOMAIN_HOME_PATH/stopFormsReports.sh
 ```
 
 Enable the service:
