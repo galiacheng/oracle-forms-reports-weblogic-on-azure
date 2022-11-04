@@ -944,30 +944,13 @@ shutdown('${REPORT_SERVER_NAME}','Server')
 
 disconnect()
 EOF
-
-cat <<EOF >$DOMAIN_HOME_PATH/stopFormsReports.sh
-#!/bin/sh
-
-${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py > /dev/null 2>&1 &
-echo Wait for Reports server shutdown
-
-code="200"
-counter=1
-while [[ "\${code}" == "200" && \${couter} -lt 300 ]]
-do
-  code=\$(curl -s -o /dev/null -w "%{http_code}" http://${MSPVM_ADDRESS}:9002/reports/)
-  echo "http code: \${code}, counter: \${counter}"
-  counter=\$((counter + 1))
-  sleep 2
-done
-echo Done!
-EOF
 ```
 
 Now, swith to `root` user with command `exit`, create and enable the service.
 
 ```bash
 DOMAIN_HOME_PATH=/u02/domains/wlsd
+INSTALL_PATH=/u01/app/wls/install
 cat <<EOF >/etc/systemd/system/ofmw.service
 [Unit]
 Description=Oracle Fusion Middleware Forms and Reports 12c
@@ -978,7 +961,7 @@ Type=oneshot
 RemainAfterExit=true
 WorkingDirectory="/u02/domains/wlsd"
 ExecStart="$DOMAIN_HOME_PATH/startFormsReports.sh"
-ExecStop="$DOMAIN_HOME_PATH/stopFormsReports.sh"
+ExecStop="${INSTALL_PATH}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh $DOMAIN_HOME_PATH/stopFormsReports.py"
 User=oracle
 Group=oracle
 KillMode=process
@@ -995,7 +978,6 @@ DOMAIN_HOME_PATH=/u02/domains/wlsd
 chmod 750 $DOMAIN_HOME_PATH/startFormsReports.py
 chmod 750 $DOMAIN_HOME_PATH/startFormsReports.sh
 chmod 750 $DOMAIN_HOME_PATH/stopFormsReports.py
-chmod 750 $DOMAIN_HOME_PATH/stopFormsReports.sh
 ```
 
 Enable the service:
